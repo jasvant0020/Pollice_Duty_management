@@ -1,0 +1,58 @@
+{% load static tailwind_tags %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind Test Page</title>
+
+    <!-- Link compiled Tailwind CSS -->
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    {% tailwind_css %}
+</head>
+<body class="bg-[#273659] flex items-center justify-center h-screen">
+    <div class="bg-[#dce3ca] p-4 rounded-2xl shadow-lg">
+        <div class=" text-blue-600 font-bold flex items-center justify-center">
+            <h1>MistriSetu</h1>
+        </div>
+        <div class=" text-blue-950 pt-3.5 mb-3">
+            <p>Welcome To</p>
+            <h1 class="font-bold">MistriSetu</h1>
+        </div>
+        <div>
+            <form action="" class=" ">
+                <div class="border border-gray-950 text-black mb-4 rounded-2xl">
+                    <input type="email" name="email" placeholder="Email" class="pl-2.5 focus:outline-none">
+                </div>
+                <div class="border border-gray-950 text-black rounded-2xl mb-4">
+                    <input type="password" name="password" placeholder="password" class="pl-2.5 focus:outline-none">
+                </div>
+                <div class="flex flex-col items-center justify-center ">
+                    <button type="submit" name="login_type" value="user" class="text-fuchsia-100 text-xs bg-linear-to-r from-[#24335a] to-[#e6a453]  pl-4 pr-4 pt-2 pb-2 rounded-2xl">
+					USER LOGIN
+				    </button>
+                    <a href="#" class="text-fuchsia-950">Don't have account</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+
+
+
+
+{% comment %} 
+<body class="bg-gray-900 flex items-center justify-center h-screen">
+    <div class="text-center p-10 bg-white rounded-2xl shadow-lg">
+        <h1 class="text-4xl font-bold text-blue-600 mb-4">Hello, Tailwind!</h1>
+        <p class="text-gray-600 text-lg">🎉 Tailwind CSS is successfully working in Django.</p>
+        <button class="mt-6 px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition">
+            Test Button
+        </button>
+    </div>
+</body> {% endcomment %}
