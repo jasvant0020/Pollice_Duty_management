@@ -1,0 +1,64 @@
+# ============================
+# Django / Python .gitignore
+# ============================
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# Django specific
+*.log
+*.pot
+*.pyc
+# *.sqlite3
+# db.sqlite3
+
+# Media & Static (if using local dev folders)
+media/
+staticfiles/
+# Ignore compiled static files (Tailwind output)
+static/css/dist/
+static/js/dist/
+# But keep custom static source code if needed
+!static/css/src/
+!static/js/src/
+
+# IDE settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment & Secrets
+.env
+*.env
+
+# Node / Tailwind
+node_modules/
+npm-debug.log*
+package-lock.json
+theme/static_src/node_modules/
+theme/static_src/.cache/
+theme/static_src/package-lock.json
+theme/static_src/dist/
+
+# Migrations (optional — include only if you don’t want to track early test migrations)
+# **CAUTION:** usually you DO track migrations after first stable model
+# */migrations/
+# !*/migrations/__init__.py
+
+# Pytest / Coverage / Build
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
