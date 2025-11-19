@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block page_title %}Assign Duty{% endblock %}
+
+{% block content %}
+
+<div class="bg-white p-6 rounded-xl shadow max-w-2xl">
+
+<form class="space-y-6">
+
+    <div>
+        <label class="font-semibold text-gray-700">Select VVIP</label>
+        <select class="w-full mt-2 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-700">
+            {% for v in vvip_persons %}
+            <option class="py-3 px-4 font-medium text-gray-800">{{ v.name }} ({{ v.category }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label class="font-semibold text-gray-700">Select Police Personnel</label>
+        <select class="w-full mt-2 p-3 border border-gray-400 rounded-lg h-40" multiple>
+            {% for p in police_personnel %}
+            <option class="py-3 px-4 font-medium text-gray-800">{{ p.name }} - {{ p.category }} ({{ p.status }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button class="w-full bg-blue-700 text-white py-3 rounded-lg font-semibold hover:bg-blue-800">
+        Assign Duty
+    </button>
+
+</form>
+
+</div>
+
+{% endblock %}

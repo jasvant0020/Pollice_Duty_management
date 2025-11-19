@@ -1,0 +1,82 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Duty Management</title>
+    {% load static %}
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    {% tailwind_css %}
+
+    <!-- Heroicons -->
+    <script src="https://cdn.jsdelivr.net/npm/heroicons@2.0.13/outline/index.min.js"></script>
+</head>
+
+<body class="bg-gray-100 flex font-sans">
+
+    <!-- Sidebar -->
+    <aside class="w-64 h-screen bg-white shadow-xl fixed">
+        <div class="p-6 border-b">
+            <h1 class="text-2xl font-bold text-blue-700">Police Duty</h1>
+            <p class="text-sm text-gray-500">Management System</p>
+        </div>
+
+        <nav class="mt-4">
+            <a href="{% url 'dashboard' %}" class="menu-item">
+                <span class="material-icons">dashboard</span> Dashboard
+            </a>
+
+            <a href="{% url 'police_list' %}" class="menu-item">
+                👮 Police Personnel
+            </a>
+
+            <a href="{% url 'vvip_list' %}" class="menu-item">
+                ⭐ VVIP List
+            </a>
+
+            <a href="{% url 'assign_duty' %}" class="menu-item">
+                📌 Assign Duty
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 w-full min-h-screen">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <h2 class="text-2xl font-semibold text-gray-700">
+                {% block page_title %}{% endblock %}
+            </h2>
+
+            <div class="flex items-center space-x-3">
+                <span class="text-gray-600">Welcome Munsi</span>
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+                    M
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <style>
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #374151;
+            font-weight: 500;
+        }
+        .menu-item:hover {
+            background: #EEF2FF;
+            color: #4338CA;
+            border-right: 4px solid #4338CA;
+        }
+    </style>
+
+</body>
+</html>

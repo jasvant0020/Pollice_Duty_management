@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block page_title %}VVIP List{% endblock %}
+
+{% block content %}
+
+<div class="bg-white shadow rounded-xl p-6">
+
+<table class="min-w-full border-collapse">
+    <thead class="bg-green-700 text-white">
+        <tr>
+            <th class="text-left py-3 px-4">Name</th>
+            <th class="text-left py-3 px-4">Category</th>
+            <th class="text-left py-3 px-4">Location</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for v in vvip_persons %}
+        <tr class="border-b hover:bg-gray-50 transition">
+            <td class="py-3 px-4 font-medium text-gray-800">{{ v.name }}</td>
+            <td class="py-3 px-4 text-gray-800">{{ v.category }}</td>
+            <td class="py-3 px-4 text-gray-800">{{ v.location }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+
+{% endblock %}
