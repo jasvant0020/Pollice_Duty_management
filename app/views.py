@@ -19,11 +19,11 @@ POLICE_PERSONNEL = [
 VVIP_PERSONS = [
     {'name': 'Mr. President', 'category': 'High', 'location': 'City Hall'},
     {'name': 'Ambassador Lee', 'category': 'Medium', 'location': 'Embassy'},
-    {'name': 'Mr. President Modi', 'category': 'High', 'location': 'Sansad'},
+    {'name': 'Mr. President', 'category': 'High', 'location': 'Sansad'},
     {'name': 'CM Yogi', 'category': 'Medium', 'location': 'National Park'},
 ]
 
-@login_required
+
 def dashboard(request):
     context = {
         'role': 'Munsi',  # change to 'Admin' to test admin view
@@ -33,20 +33,34 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-@login_required
+
 def police_list(request):
     context = {'police_personnel': POLICE_PERSONNEL}
     return render(request, 'police_list.html', context)
 
-@login_required
+
 def vvip_list(request):
     context = {'vvip_persons': VVIP_PERSONS}
     return render(request, 'vvip_list.html', context)
 
-@login_required
+
 def assign_duty(request):
     context = {
         'police_personnel': POLICE_PERSONNEL,
         'vvip_persons': VVIP_PERSONS
     }
     return render(request, 'assign_duty.html', context)
+
+from django.shortcuts import render
+
+def admin_dashboard(request):
+    return render(request, "admin_panel/admin_dashboard.html")
+
+def manage_users(request):
+    return render(request, "admin_panel/manage_users.html")
+
+def manage_police_categories(request):
+    return render(request, "admin_panel/manage_police_categories.html")
+
+def manage_vvip_categories(request):
+    return render(request, "admin_panel/manage_vvip_categories.html")
