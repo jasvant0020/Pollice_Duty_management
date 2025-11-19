@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block page_title %}Police Personnel{% endblock %}
+
+{% block content %}
+
+<div class="bg-white shadow rounded-xl p-6">
+
+<table class="min-w-full border-collapse">
+    <thead class="bg-blue-700 text-white">
+        <tr>
+            <th class="text-left py-3 px-4">Name</th>
+            <th class="text-left py-3 px-4">Category</th>
+            <th class="text-left py-3 px-4">Status</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for p in police_personnel %}
+        <tr class="border-b hover:bg-gray-50 transition">
+            <td class="py-3 px-4 font-medium text-gray-800">{{ p.name }}</td>
+            <td class="py-3 px-4 text-gray-800">{{ p.category }}</td>
+            <td class="py-3 px-4">
+                {% if p.status == 'Available' %}
+                <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">Available</span>
+                {% else %}
+                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">Assigned</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>
+{% endblock %}
