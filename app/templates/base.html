@@ -22,20 +22,20 @@
             <p class="text-sm text-gray-500">Management System</p>
         </div>
 
-        <nav class="mt-4">
-            <a href="{% url 'dashboard' %}" class="menu-item">
-                <span class="material-icons">Dashboard</span>
+        <nav class="menu-item flex flex-col items-center gap-3 px-5 py-3 text-gray-700 font-medium">
+            <a href="{% url 'dashboard' %}" class="w-full pb-2 pt-2 hover:bg-indigo-50 hover:text-indigo-700 hover:border-r-4 hover:border-indigo-700" >
+                <span class="material-icons">📊 Dashboard</span>
             </a>
 
-            <a href="{% url 'police_list' %}" class="menu-item">
+            <a href="{% url 'police_list' %}" class="w-full pb-2 pt-2 hover:bg-indigo-50 hover:text-indigo-700 hover:border-r-4 hover:border-indigo-700">
                 👮 Police Personnel
             </a>
 
-            <a href="{% url 'vvip_list' %}" class="menu-item">
+            <a href="{% url 'vvip_list' %}" class="w-full pb-2 pt-2 hover:bg-indigo-50 hover:text-indigo-700 hover:border-r-4 hover:border-indigo-700">
                 ⭐ VVIP List
             </a>
 
-            <a href="{% url 'assign_duty' %}" class="menu-item">
+            <a href="{% url 'assign_duty' %}" class="w-full pb-2 pt-2 hover:bg-indigo-50 hover:text-indigo-700 hover:border-r-4 hover:border-indigo-700">
                 📌 Assign Duty
             </a>
         </nav>
@@ -61,22 +61,5 @@
             {% endblock %}
         </div>
     </main>
-
-    <style>
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 20px;
-            color: #374151;
-            font-weight: 500;
-        }
-        .menu-item:hover {
-            background: #EEF2FF;
-            color: #4338CA;
-            border-right: 4px solid #4338CA;
-        }
-    </style>
-
 </body>
 </html>
