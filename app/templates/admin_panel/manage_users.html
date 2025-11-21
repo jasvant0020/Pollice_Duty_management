@@ -1,9 +1,10 @@
+{% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Manage Users</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% tailwind_css %}
 </head>
 
 <body class="bg-gray-100 min-h-screen p-8">
@@ -30,9 +31,9 @@
             </thead>
             <tbody>
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3">Demo User</td>
-                    <td class="p-3">Inspector</td>
-                    <td class="p-3">Admin</td>
+                    <td class="p-3 text-gray-900">Demo User</td>
+                    <td class="p-3 text-gray-900">Inspector</td>
+                    <td class="p-3 text-gray-900">Admin</td>
                     <td class="p-3 text-right">
                         <button class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</button>
                         <button class="px-3 py-1 bg-red-600 text-white rounded">Delete</button>
