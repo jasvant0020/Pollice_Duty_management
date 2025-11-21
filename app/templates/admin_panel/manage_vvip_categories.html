@@ -1,12 +1,13 @@
+{% load static tailwind_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>VVIP Categories</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% tailwind_css %}
 </head>
 
-<body class="bg-gray-100 p-8">
+<body class="bg-gray-100 p-8 h-screen">
 
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage VVIP Categories</h1>
 
@@ -19,7 +20,7 @@
 
         <ul class="divide-y">
             <li class="py-3 flex items-center justify-between hover:bg-gray-50 px-2">
-                <span class="font-medium">Z+ Category (Highest)</span>
+                <span class="font-medium text-gray-900">Z+ Category (Highest)</span>
                 <div>
                     <button class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</button>
                     <button class="px-3 py-1 bg-red-600 text-white rounded">Delete</button>
