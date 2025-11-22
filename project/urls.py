@@ -14,4 +14,6 @@ urlpatterns = [
     path('admin-panel/manage-police-categories/', views.manage_police_categories, name='manage_police_categories'),
     path('admin-panel/manage-vvip-categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
     path("dashboard/", views.user_dashboard, name="user_dashboard"),
+
+    path('firebase-messaging-sw.js',views.showFirebaseJS,name="show_firebase_js"),
 ]

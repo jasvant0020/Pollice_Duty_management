@@ -4,6 +4,7 @@ from django.shortcuts import render
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 
 # Dummy data for testing frontend
 POLICE_PERSONNEL = [
@@ -118,3 +119,30 @@ def user_dashboard(request):
         "attendance": attendance,
     }
     return render(request, "user_panel/user_dashboard.html",current_duty)
+
+def showFirebaseJS(request):
+    data='importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js");' \
+         'importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"); ' \
+         'var firebaseConfig = {' \
+         '        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",' \
+         '        authDomain: "push-notification-cc870.firebaseapp.com",' \
+         '        databaseURL: "",' \
+         '        projectId: "push-notification-cc870",' \
+         '        storageBucket: "push-notification-cc870.firebasestorage.app",' \
+         '        messagingSenderId: "595457578638",' \
+         '        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",' \
+         '        measurementId: "G-E476M6ETBE"' \
+         ' };' \
+         'firebase.initializeApp(firebaseConfig);' \
+         'const messaging=firebase.messaging();' \
+         'messaging.setBackgroundMessageHandler(function (payload) {' \
+         '    console.log(payload);' \
+         '    const notification=JSON.parse(payload);' \
+         '    const notificationOption={' \
+         '        body:notification.body,' \
+         '        icon:notification.icon' \
+         '    };' \
+         '    return self.registration.showNotification(payload.notification.title,notificationOption);' \
+         '});'
+
+    return HttpResponse(data,content_type="text/javascript")
