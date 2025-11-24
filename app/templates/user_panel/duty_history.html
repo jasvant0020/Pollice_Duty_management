@@ -1,0 +1,24 @@
+{% extends "user_panel/user_base.html" %}
+{% block page_title %}Duty History{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 text-gray-800">
+        <!-- Duty History -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Past Duty History</h2>
+            {% for duty in duty_history %}
+            <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                <p><strong>Date:</strong> {{ date }}</p>
+                <p><strong>Location:</strong> {{ location }}</p>
+                <p><strong>Partner:</strong> {{ partner.name }}</p>
+                <p><strong>Status:</strong> {{ status }}</p>
+            </div>
+            {% empty %}
+            <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                <p>No past duty records found.</p>
+            </div>
+            {% endfor %}
+        </div>
+</div>
+{% endblock %}

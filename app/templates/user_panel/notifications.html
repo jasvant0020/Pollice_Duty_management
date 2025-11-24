@@ -1,0 +1,21 @@
+{% extends "user_panel/user_base.html" %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 text-gray-800">
+        <!-- Notifications -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Notifications</h2>
+            {% for note in notifications %}
+            <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                {{ note.text }}
+            </div>
+            {% empty %}
+            <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                <p>No notifications.</p>
+            </div>
+            {% endfor %}
+        </div>
+</div>
+{% endblock %}

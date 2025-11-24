@@ -1,0 +1,20 @@
+{% extends "user_panel/user_base.html" %}
+{% block page_title %}Send Request{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 text-gray-800">
+        <!-- Request Application Box -->
+        <div class="bg-white p-6 rounded-2xl shadow">           
+            <form method="post" enctype="multipart/form-data">
+                <h2 class="text-lg font-semibold mb-4">Send Request / Application</h2>
+                {% csrf_token %}
+                <textarea name="message" rows="5" class="w-full border rounded-lg p-3" placeholder="Write your request..."></textarea>
+                <input type="file" name="file" class="mt-2 block text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700
+" />
+                <button class="w-full bg-indigo-900 text-white py-2 rounded-lg mt-4">Submit Request</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
