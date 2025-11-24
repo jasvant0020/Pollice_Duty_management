@@ -53,73 +53,75 @@ def assign_duty(request):
 from django.shortcuts import render
 
 #------Custom Admin Panel Views------
+def admin_base(request):
+    return render(request, "admin_panel/admin_base.html")
 def admin_dashboard(request):
     return render(request, "admin_panel/admin_dashboard.html")
 
-def manage_users(request):
-    return render(request, "admin_panel/manage_users.html")
+# def manage_users(request):
+#     return render(request, "admin_panel/manage_users.html")
 
-def manage_police_categories(request):
-    return render(request, "admin_panel/manage_police_categories.html")
+# def manage_police_categories(request):
+#     return render(request, "admin_panel/manage_police_categories.html")
 
-def manage_vvip_categories(request):
-    return render(request, "admin_panel/manage_vvip_categories.html")
+# def manage_vvip_categories(request):
+#     return render(request, "admin_panel/manage_vvip_categories.html")
 
 
-def user_dashboard(request):
-        # ----- Dummy User -----
-    user = {
-        "full_name": "Officer Rohan Sharma",
-        "rank": "Constable",
-        "badge_number": "45231",
-        "station": "Sector 14 Police Station"
-    }
+# def user_dashboard(request):
+#         # ----- Dummy User -----
+#     user = {
+#         "full_name": "Officer Rohan Sharma",
+#         "rank": "Constable",
+#         "badge_number": "45231",
+#         "station": "Sector 14 Police Station"
+#     }
 
-    # ----- Dummy Current Duty -----
-    current_duty = {
-        "location": "City Center Road",
-        "partner": {"name": "Officer Rahul Singh"},
-        "start_time": "10:00 AM",
-        "end_time": "4:00 PM",
-        "status": "Active",
-    }
+#     # ----- Dummy Current Duty -----
+#     current_duty = {
+#         "location": "City Center Road",
+#         "partner": {"name": "Officer Rahul Singh"},
+#         "start_time": "10:00 AM",
+#         "end_time": "4:00 PM",
+#         "status": "Active",
+#     }
 
-    # ----- Dummy Duty History -----
-    duty_history = [
-        {
-            "date": "18 Nov 2025",
-            "location": "Highway 21",
-            "partner": {"name": "Officer Meena"},
-            "status": "Completed",
-        },
-        {
-            "date": "17 Nov 2025",
-            "location": "Bus Stand Sector 5",
-            "partner": {"name": "Officer Arjun"},
-            "status": "Completed",
-        },
-    ]
+#     # ----- Dummy Duty History -----
+#     duty_history = [
+#         {
+#             "date": "18 Nov 2025",
+#             "location": "Highway 21",
+#             "partner": {"name": "Officer Meena"},
+#             "status": "Completed",
+#         },
+#         {
+#             "date": "17 Nov 2025",
+#             "location": "Bus Stand Sector 5",
+#             "partner": {"name": "Officer Arjun"},
+#             "status": "Completed",
+#         },
+#     ]
 
-    # ----- Dummy Notifications -----
-    notifications = [
-        {"text": "New duty assigned for tomorrow at 8 AM."},
-        {"text": "Your leave request from 15 Nov approved."},
-    ]
+#     # ----- Dummy Notifications -----
+#     notifications = [
+#         {"text": "New duty assigned for tomorrow at 8 AM."},
+#         {"text": "Your leave request from 15 Nov approved."},
+#     ]
 
-    # ----- Dummy Attendance -----
-    attendance = {
-        "checkin": "09:55 AM",
-        "checkout": None,  # Means pending
-    }
+#     # ----- Dummy Attendance -----
+#     attendance = {
+#         "checkin": "09:55 AM",
+#         "checkout": None,  # Means pending
+#     }
 
-    context = {
-        "user": user,
-        "current_duty": current_duty,
-        "duty_history": duty_history,
-        "notifications": notifications,
-        "attendance": attendance,
-    }
-    return render(request, "user_panel/user_dashboard.html",current_duty)
+#     context = {
+#         "user": user,
+#         "current_duty": current_duty,
+#         "duty_history": duty_history,
+#         "notifications": notifications,
+#         "attendance": attendance,
+#     }
+#     return render(request, "user_panel/user_dashboard.html",current_duty)
 
 #-----Custom user Panel Views-----
 def user_base(request):

@@ -10,12 +10,13 @@ urlpatterns = [
     path('vvip/', views.vvip_list, name='vvip_list'),
     path('duty/assign/', views.assign_duty, name='assign_duty'),
      # Custom Admin Panel Pages
-    path('admin-panel/dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('admin-panel/manage-users/', views.manage_users, name='manage_users'),
-    path('admin-panel/manage-police-categories/', views.manage_police_categories, name='manage_police_categories'),
-    path('admin-panel/manage-vvip-categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
-    # Custom user Panel Pages 
-    path("dashboard/", views.user_dashboard, name="user_dashboard"),
+    path('admin_base/', views.admin_base, name='admin_base'),
+    path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    # path('admin-panel/manage-users/', views.manage_users, name='manage_users'),
+    # path('admin-panel/manage-police-categories/', views.manage_police_categories, name='manage_police_categories'),
+    # path('admin-panel/manage-vvip-categories/', views.manage_vvip_categories, name='manage_vvip_categories'), 
+    # path("dashboard/", views.user_dashboard, name="user_dashboard"),
+    # Custom user Panel Pages
     path("user_dashboard/", views.user_base, name="user_base"),
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
     path("request_application_box/", views.request_application_box, name="request_application_box"),

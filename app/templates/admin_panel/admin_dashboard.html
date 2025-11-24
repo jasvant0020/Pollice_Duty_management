@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'admin_panel/admin_base.html' %}
 {% block page_title %}Admin Dashboard{% endblock %}
 
 {% block content %}
@@ -31,17 +31,17 @@
 <!-- Action Buttons -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
-    <a href="{% url 'manage_users' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-blue-600">
+    <a href="" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-blue-600">
         <h2 class="text-xl font-semibold mb-2 text-green-700">Manage Users</h2>
         <p class="text-gray-600">Create, edit, or delete system users and assign roles based on rank.</p>
     </a>
 
-    <a href="{% url 'manage_police_categories' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-indigo-600">
+    <a href="" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-indigo-600">
         <h2 class="text-xl font-semibold mb-2 text-purple-700">Manage Police Categories</h2>
         <p class="text-gray-600">Organize police force hierarchy (SP → DSP → Inspector → Constable).</p>
     </a>
 
-    <a href="{% url 'manage_vvip_categories' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-green-600">
+    <a href="" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-green-600">
         <h2 class="text-xl font-semibold mb-2 text-blue-700">Manage VVIP Categories</h2>
         <p class="text-gray-600">Add or edit VVIP priority levels and maintain VIP list.</p>
     </a>
