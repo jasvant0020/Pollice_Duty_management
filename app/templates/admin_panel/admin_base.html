@@ -29,8 +29,8 @@
         </div>
 
         <nav class="flex flex-col items-center gap-3 px-5 py-3 text-white-700 font-medium">
-            <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm" >
-                <span class="material-icons">📊 Dashboard</span>
+            <a href="{%url 'admin_dashboard' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                👮 Dashboard
             </a>
 
             <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
@@ -67,48 +67,5 @@
             {% endblock %}
         </div>
     </main>
-
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",
-        authDomain: "push-notification-cc870.firebaseapp.com",
-        projectId: "push-notification-cc870",
-        storageBucket: "push-notification-cc870.firebasestorage.app",
-        messagingSenderId: "595457578638",
-        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",
-        measurementId: "G-E476M6ETBE"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-
-    // 👉 You forgot this line
-    const messaging = getMessaging(app);
-
-    function requestPermission() {
-        console.log('Requesting permission...');
-        Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-                console.log('Notification permission granted.');
-            }
-        });
-    }
-
-    getToken(messaging, { 
-        vapidKey: 'BLADm57-WPqRZgII0oHxLM53m4lmpvSHG1OaoLcPR-wgg22T-7YzmjTXQpniArC8u5XymiwhEYIhpMScne8AcKc' 
-    }).then((currentToken) => {
-        if (currentToken) {
-            console.log(currentToken);
-        } else {
-            console.log("No registration token available. Request permission first.");
-        }
-    }).catch((err) => {
-        console.error('An error occurred while retrieving token. ', err);
-    });
-</script>
-
 </body>
 </html>
