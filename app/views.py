@@ -22,7 +22,7 @@ VVIP_PERSONS = [
     {'name': 'CM Yogi', 'category': 'Medium', 'location': 'National Park'},
 ]
 
-
+#------Custom GD Munsi Panel Views------
 def dashboard(request):
     context = {
         'role': 'Munsi',  # change to 'Admin' to test admin view
@@ -52,6 +52,7 @@ def assign_duty(request):
 
 from django.shortcuts import render
 
+#------Custom Admin Panel Views------
 def admin_dashboard(request):
     return render(request, "admin_panel/admin_dashboard.html")
 
@@ -120,6 +121,7 @@ def user_dashboard(request):
     }
     return render(request, "user_panel/user_dashboard.html",current_duty)
 
+#-----Custom user Panel Views-----
 def user_base(request):
     return render(request, "user_panel/user_base.html")
 def user_assign_duty(request):
