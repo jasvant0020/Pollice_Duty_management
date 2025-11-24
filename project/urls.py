@@ -14,6 +14,14 @@ urlpatterns = [
     path('admin-panel/manage-police-categories/', views.manage_police_categories, name='manage_police_categories'),
     path('admin-panel/manage-vvip-categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
     path("dashboard/", views.user_dashboard, name="user_dashboard"),
+    path("user_dashboard/", views.user_base, name="user_base"),
+    path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
+    path("request_application_box/", views.request_application_box, name="request_application_box"),
+    path("duty_history/", views.duty_history, name="duty_history"),
+    path("Notifications/", views.Notifications, name="Notifications"),
+    path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
+    path("user_profile/", views.user_profile, name="user_profile"),
+
 
     path('firebase-messaging-sw.js',views.showFirebaseJS,name="show_firebase_js"),
 ]

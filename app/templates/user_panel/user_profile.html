@@ -1,0 +1,19 @@
+{% extends "user_panel/user_base.html" %}
+{% block page_title %}Profile{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 text-gray-800">
+        <!-- Profile -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Profile</h2>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <p><strong>Name:</strong> {{ user.full_name }}</p>
+                <p><strong>Rank:</strong> {{ user.rank }}</p>
+                <p><strong>Badge No:</strong> {{ user.badge_number }}</p>
+                <p><strong>Police Station:</strong> {{ user.station }}</p>
+            </div>
+            
+        </div>
+</div>
+{% endblock %}

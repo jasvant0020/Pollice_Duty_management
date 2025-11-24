@@ -120,6 +120,22 @@ def user_dashboard(request):
     }
     return render(request, "user_panel/user_dashboard.html",current_duty)
 
+def user_base(request):
+    return render(request, "user_panel/user_base.html")
+def user_assign_duty(request):
+    return render(request, "user_panel/user_assign_duty.html")
+def request_application_box(request):
+    return render(request, "user_panel/request_application_box.html")
+def duty_history(request):
+    return render(request, "user_panel/duty_history.html")
+def Notifications(request):
+    return render(request, "user_panel/Notifications.html")
+def attendance_panel(request):
+    return render(request, "user_panel/attendance_panel.html")
+def user_profile(request):
+    return render(request, "user_panel/user_profile.html")
+
+
 def showFirebaseJS(request):
     data='importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js");' \
          'importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"); ' \

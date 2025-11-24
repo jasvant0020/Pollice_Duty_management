@@ -1,0 +1,79 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Duty Management</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    <!-- Heroicons -->
+    <script src="https://cdn.jsdelivr.net/npm/heroicons@2.0.13/outline/index.min.js"></script>
+
+    {% tailwind_css %}
+</head>
+
+<body class="bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex font-sans">
+
+    <!-- Sidebar -->
+    <aside class="w-64 h-screen bg-linear-to-b from-[#1e3a8a] to-[#3b82f6] shadow-xl fixed">
+        <div class="p-6 border-b border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">🛡️</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Police Duty</h1>
+                    <p class="text-sm text-blue-200">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex flex-col items-center gap-3 px-5 py-3 text-white-700 font-medium">
+            <a href="{% url 'user_profile' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                👤 Profile
+            </a>
+
+            <a href="{% url 'user_assign_duty' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                🗓️ Assigned Duty
+            </a> 
+
+            <a href="{%url 'duty_history' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                📜 Duty History
+            </a>
+
+            <a href="{%url 'request_application_box' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                📝 Send Request
+            </a>
+
+            <a href="{% url 'Notifications' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                🔔 Notifications
+            </a>
+            
+            <a href="{% url 'attendance_panel' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-[12px]  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                📅 Attendance
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 w-full min-h-screen">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <h2 class="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {% block page_title %}{% endblock %}
+            </h2>
+
+            <div class="flex items-center space-x-3 bg-linear-to-r from-blue-500 to-purple-600 rounded-full px-4 py-2">
+                <span class="text-white font-semibold">Welcome GD Munsi</span>
+                <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-blue-900 font-bold shadow-lg">
+                    M
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+</body>
+</html>
