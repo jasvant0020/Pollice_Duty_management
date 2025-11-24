@@ -1,0 +1,114 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Police Duty Management</title>
+    <link href="{% static 'css/dist/styles.css' %}" rel="stylesheet">
+    <!-- Heroicons -->
+    <script src="https://cdn.jsdelivr.net/npm/heroicons@2.0.13/outline/index.min.js"></script>
+
+    {% tailwind_css %}
+</head>
+
+<body class="bg-gray-100 flex font-sans">
+
+    <!-- Sidebar -->
+    <aside class="w-64 h-screen bg-linear-to-b from-[#1e3a8a] to-[#3b82f6] shadow-xl fixed">
+        <div class="p-6 border-b border-white border-opacity-20">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">🛡️</span>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Police Duty</h1>
+                    <p class="text-sm text-blue-200">Management System</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="flex flex-col items-center gap-3 px-5 py-3 text-white-700 font-medium">
+            <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm" >
+                <span class="material-icons">📊 Dashboard</span>
+            </a>
+
+            <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                👮 Police Personnel
+            </a>
+
+            <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                ⭐ VVIP List
+            </a>
+
+            <a href="" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                📌 Assign Duty
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 w-full min-h-screen">
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <h2 class="text-2xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {% block page_title %}{% endblock %}
+            </h2>
+
+            <div class="flex items-center space-x-3 bg-linear-to-r from-blue-500 to-purple-600 rounded-full px-4 py-2">
+                <span class="text-white font-semibold">Welcome GD Munsi</span>
+                <div class="w-10 h-10 rounded-full bg-yellow-400 flex items-center justify-center text-blue-900 font-bold shadow-lg">
+                    M
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",
+        authDomain: "push-notification-cc870.firebaseapp.com",
+        projectId: "push-notification-cc870",
+        storageBucket: "push-notification-cc870.firebasestorage.app",
+        messagingSenderId: "595457578638",
+        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",
+        measurementId: "G-E476M6ETBE"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+
+    // 👉 You forgot this line
+    const messaging = getMessaging(app);
+
+    function requestPermission() {
+        console.log('Requesting permission...');
+        Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+                console.log('Notification permission granted.');
+            }
+        });
+    }
+
+    getToken(messaging, { 
+        vapidKey: 'BLADm57-WPqRZgII0oHxLM53m4lmpvSHG1OaoLcPR-wgg22T-7YzmjTXQpniArC8u5XymiwhEYIhpMScne8AcKc' 
+    }).then((currentToken) => {
+        if (currentToken) {
+            console.log(currentToken);
+        } else {
+            console.log("No registration token available. Request permission first.");
+        }
+    }).catch((err) => {
+        console.error('An error occurred while retrieving token. ', err);
+    });
+</script>
+
+</body>
+</html>
