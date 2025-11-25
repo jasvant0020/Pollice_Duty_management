@@ -22,6 +22,10 @@ VVIP_PERSONS = [
     {'name': 'CM Yogi', 'category': 'Medium', 'location': 'National Park'},
 ]
 
+#----- Login panel views -----
+def login(request):
+    return render(request, "login_panel/login.html")
+
 #------ Custom GD Munsi Panel Views ------
 def dashboard(request):
     context = {
