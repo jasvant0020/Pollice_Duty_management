@@ -15,7 +15,6 @@ urlpatterns = [
     path('assign_duty/', views.assign_duty, name='assign_duty'),
 
      # Custom Admin Panel Pages
-    path('admin_base/', views.admin_base, name='admin_base'),
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('manage/', views.manage, name='manage'),
     path('police_hierarchy_table/', views.police_hierarchy_table, name='police_hierarchy_table'),
@@ -24,13 +23,13 @@ urlpatterns = [
     path('manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
 
     # Custom user Panel Pages
-    path("user_base/", views.user_base, name="user_base"),
+    path("user_profile/", views.user_profile, name="user_profile"),
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
-    path("request_application_box/", views.request_application_box, name="request_application_box"),
     path("duty_history/", views.duty_history, name="duty_history"),
+    path("request_application_box/", views.request_application_box, name="request_application_box"),  
     path("Notifications/", views.Notifications, name="Notifications"),
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
-    path("user_profile/", views.user_profile, name="user_profile"),
+    
 
     # Firebase push notification 
     path('firebase-messaging-sw.js',views.showFirebaseJS,name="show_firebase_js"),
