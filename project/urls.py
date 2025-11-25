@@ -5,6 +5,9 @@ from app import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # Login panel pages
+    path('login/', views.login, name='login'),
+
     # GD Munsi Panel Pages
     path('', views.dashboard, name='dashboard'),
     path('police/', views.police_list, name='police_list'),
