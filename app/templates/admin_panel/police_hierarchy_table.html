@@ -1,0 +1,58 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}List Overview{% endblock %}
+
+{% block content %}
+
+<!-- Police Hierarchy Table -->
+<div class="bg-white shadow rounded-xl p-6">
+
+    <h2 class="text-xl text-gray-800 font-bold mb-4">Police Hierarchy Overview</h2>
+
+    <table class="min-w-full border-collapse">
+        <thead class="bg-blue-700 text-white">
+            <tr>
+                <th class="text-left py-3 px-4">Rank</th>
+                <th class="text-left py-3 px-4">Personnel Count</th>
+                <th class="text-left py-3 px-4">Status</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr class="border-b hover:bg-gray-50 transition">
+                <td class="py-3 px-4 font-semibold text-gray-600">SP</td>
+                <td class="py-3 px-4 text-gray-600">3</td>
+                <td class="py-3 px-4">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">Active</span>
+                </td>
+            </tr>
+
+            <tr class="border-b hover:bg-gray-50 transition">
+                <td class="py-3 px-4 font-semibold text-gray-600">DSP</td>
+                <td class="py-3 px-4 text-gray-600">5</td>
+                <td class="py-3 px-4">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">Active</span>
+                </td>
+            </tr>
+
+            <tr class="border-b hover:bg-gray-50 transition">
+                <td class="py-3 px-4 font-semibold text-gray-600">Inspector</td>
+                <td class="py-3 px-4 text-gray-600">8</td>
+                <td class="py-3 px-4">
+                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">Partially Filled</span>
+                </td>
+            </tr>
+
+            <tr class="border-b hover:bg-gray-50 transition">
+                <td class="py-3 px-4 font-semibold text-gray-600">Constable</td>
+                <td class="py-3 px-4 text-gray-600">25</td>
+                <td class="py-3 px-4">
+                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">Overloaded</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+
+{% endblock %}

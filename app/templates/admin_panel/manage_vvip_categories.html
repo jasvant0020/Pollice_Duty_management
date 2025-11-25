@@ -1,15 +1,10 @@
-{% load static tailwind_tags %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>VVIP Categories</title>
-    {% tailwind_css %}
-</head>
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}Manage{% endblock %}
 
-<body class="bg-gray-100 p-8 h-screen">
+{% block content %}
 
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage VVIP Categories</h1>
+<!-- Manage VVIP Categories -->
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Manage VVIP Categories</h1>
 
     <div class="bg-white shadow rounded-xl p-6">
 
@@ -29,6 +24,4 @@
         </ul>
 
     </div>
-
-</body>
-</html>
+{% endblock %}
