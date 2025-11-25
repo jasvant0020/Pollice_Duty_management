@@ -1,14 +1,9 @@
-{% load static tailwind_tags %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Manage Users</title>
-    {% tailwind_css %}
-</head>
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}Manage{% endblock %}
 
-<body class="bg-gray-100 min-h-screen p-8">
+{% block content %}
 
+<!-- Manage Users -->
     <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Users</h1>
 
     <div class="bg-white shadow rounded-xl p-6">
@@ -44,5 +39,5 @@
 
     </div>
 
-</body>
-</html>
+
+{% endblock %}

@@ -57,6 +57,16 @@ def admin_base(request):
     return render(request, "admin_panel/admin_base.html")
 def admin_dashboard(request):
     return render(request, "admin_panel/admin_dashboard.html")
+def manage(request):
+    return render(request, "admin_panel/manage.html")
+def police_hierarchy_table(request):
+    return render(request, "admin_panel/police_hierarchy_table.html")
+def manage_users(request):
+    return render(request, "admin_panel/manage_users.html")
+def manage_police_categories(request):
+    return render(request, "admin_panel/manage_police_categories.html")
+def manage_vvip_categories(request):
+    return render(request, "admin_panel/manage_vvip_categories.html")
 
 # def manage_users(request):
 #     return render(request, "admin_panel/manage_users.html")

@@ -12,6 +12,11 @@ urlpatterns = [
      # Custom Admin Panel Pages
     path('admin_base/', views.admin_base, name='admin_base'),
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('manage/', views.manage, name='manage'),
+    path('police_hierarchy_table/', views.police_hierarchy_table, name='police_hierarchy_table'),
+    path('manage/manage_users/', views.manage_users, name='manage_users'),
+    path('manage/manage_police_categories/', views.manage_police_categories, name='manage_police_categories'),
+    path('manage/manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
     # path('admin-panel/manage-users/', views.manage_users, name='manage_users'),
     # path('admin-panel/manage-police-categories/', views.manage_police_categories, name='manage_police_categories'),
     # path('admin-panel/manage-vvip-categories/', views.manage_vvip_categories, name='manage_vvip_categories'), 
