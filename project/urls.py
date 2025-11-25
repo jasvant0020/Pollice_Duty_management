@@ -6,7 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Login panel pages
-    path('', views.login, name='login'),
+    path('', views.login_view, name='login'),
 
     # GD Munsi Panel Pages
     path('munsi_dashboard/', views.dashboard, name='dashboard'),

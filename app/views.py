@@ -1,10 +1,15 @@
 from django.shortcuts import render
 
 # Create your views here.
-
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.contrib.auth import authenticate
+from django.contrib.auth import login as auth_login
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
+
+
 
 # Dummy data for testing frontend
 POLICE_PERSONNEL = [
@@ -21,10 +26,6 @@ VVIP_PERSONS = [
     {'name': 'Mr. President', 'category': 'High', 'location': 'Sansad'},
     {'name': 'CM Yogi', 'category': 'Medium', 'location': 'National Park'},
 ]
-
-#----- Login panel views -----
-def login(request):
-    return render(request, "login_panel/login.html")
 
 #------ Custom GD Munsi Panel Views ------
 def dashboard(request):
@@ -86,19 +87,35 @@ def user_profile(request):
     return render(request, "user_panel/user_profile.html")
 
 
+# views.py
+def login_view(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        password = request.POST.get("password")
 
+        # If you use username instead of email:
+        # user = authenticate(request, username=email, password=password)
 
+        # If your User model uses email as username:
+        user = authenticate(request, username=email, password=password)
 
+        if user is not None:
+            auth_login(request, user)
 
+            # Redirect based on user role
+            if user.is_superuser:
+                return redirect("admin_dashboard")   # Custom admin
 
+            elif user.is_staff:
+                return redirect("dashboard")         # GD Munsi Panel
 
+            else:
+                return redirect("user_profile")      # Normal user panel
 
+        else:
+            messages.error(request, "Invalid Email or Password")
 
-
-
-
-
-
+    return render(request, "login_panel/login.html")
 
 
 
