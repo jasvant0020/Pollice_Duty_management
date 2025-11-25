@@ -9,7 +9,7 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('police/', views.police_list, name='police_list'),
     path('vvip/', views.vvip_list, name='vvip_list'),
-    path('duty/assign/', views.assign_duty, name='assign_duty'),
+    path('assign_duty/', views.assign_duty, name='assign_duty'),
 
      # Custom Admin Panel Pages
     path('admin_base/', views.admin_base, name='admin_base'),
@@ -18,7 +18,7 @@ urlpatterns = [
     path('police_hierarchy_table/', views.police_hierarchy_table, name='police_hierarchy_table'),
     path('manage_users/', views.manage_users, name='manage_users'),
     path('manage_police_categories/', views.manage_police_categories, name='manage_police_categories'),
-    path('manage/manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
+    path('manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
 
     # Custom user Panel Pages
     path("user_base/", views.user_base, name="user_base"),
