@@ -57,8 +57,6 @@ def assign_duty(request):
 from django.shortcuts import render
 
 #------ Custom Admin Panel Views ------
-def admin_base(request):
-    return render(request, "admin_panel/admin_base.html")
 def admin_dashboard(request):
     return render(request, "admin_panel/admin_dashboard.html")
 def manage(request):
@@ -74,8 +72,6 @@ def manage_vvip_categories(request):
 
 
 #----- Custom user Panel Views -----
-def user_base(request):
-    return render(request, "user_panel/user_base.html")
 def user_assign_duty(request):
     return render(request, "user_panel/user_assign_duty.html")
 def request_application_box(request):
