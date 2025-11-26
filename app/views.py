@@ -103,17 +103,17 @@ def login(request):
             auth_login(request, user)
 
             # Redirect based on user role
-            if user.is_superuser:
+            if user.role == "custom_admin":
                 return redirect("admin_dashboard")   # Custom admin
 
-            elif user.is_staff:
+            elif user.role == "gd_munsi":
                 return redirect("dashboard")         # GD Munsi Panel
 
             else:
                 return redirect("user_profile")      # Normal user panel
 
         else:
-            messages.error(request, "Invalid Email or Password")
+            messages.error(request, "Invalid credentials")
 
     return render(request, "login_panel/login.html")
 
