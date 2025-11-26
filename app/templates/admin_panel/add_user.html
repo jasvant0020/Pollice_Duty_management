@@ -7,6 +7,7 @@
 <form method="POST" class="bg-white p-6 shadow rounded-xl space-y-4">
     {% csrf_token %}
 
+    <!-- Name -->
     <div>
         <label for="name" class="block text-gray-700 font-semibold mb-1">Name:</label>
         <input type="text" name="name" id="name"
@@ -14,23 +15,75 @@
                required>
     </div>
 
+    <!-- Email -->
     <div>
-        <label for="rank" class="block text-gray-700 font-semibold mb-1">Rank:</label>
-        <input type="text" name="rank" id="rank"
+        <label for="email" class="block text-gray-700 font-semibold mb-1">Email:</label>
+        <input type="email" name="email" id="email"
                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                required>
     </div>
 
+    <!-- Password -->
+    <div>
+        <label for="password" class="block text-gray-700 font-semibold mb-1">Password:</label>
+        <input type="password" name="password" id="password"
+               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+               required>
+    </div>
+
+    <!-- Confirm Password -->
+    <div>
+        <label for="confirm_password" class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
+        <input type="password" name="confirm_password" id="confirm_password"
+               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+               required>
+    </div>
+
+    <!-- Gender -->
+    <div>
+        <label for="gender" class="block text-gray-700 font-semibold mb-1">Gender:</label>
+        <select name="gender" id="gender"
+                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
+
+    <!-- DOB -->
+    <div>
+        <label for="dob" class="block text-gray-700 font-semibold mb-1">Date of Birth (DOB):</label>
+        <input type="date" name="dob" id="dob"
+               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+               required>
+    </div>
+
+    <!-- Rank (Existing Code) -->
+    <div>
+        <label for="rank" class="block text-gray-700 font-semibold mb-1">Rank:</label>
+        <select name="rank" id="rank"
+                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {% for r in rank %}
+            <option value="{{ r.rank }}" {% if officer.rank == r.rank %}selected{% endif %}>
+                {{ r.rank }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Role (Existing Code) -->
     <div>
         <label class="font-semibold text-gray-700">Role:</label>
-        <select name="role" class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select name="role"
+                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
             {% for r in role %}
             <option value="{{ r.role }}" class="py-3 px-4 font-medium text-gray-800">{{ r.role }}</option>
             {% endfor %}
         </select>
     </div>
 
-    <button type="submit" 
+    <button type="submit"
             class="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
         Save
     </button>

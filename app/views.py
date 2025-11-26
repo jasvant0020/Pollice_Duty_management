@@ -28,6 +28,28 @@ VVIP_PERSONS = [
 ]
 
 role = [
+    {'role': 'Admin'},
+    {'role': 'GD Munsi'},
+    {'role': 'User'}
+]
+
+rank = [
+    {'rank': 'Director General of Police (DGP)'},
+    {'rank': 'Additional Director General of Police (ADGP)'},
+    {'rank': 'Inspector General of Police (IGP)'},
+    {'rank': 'Deputy Inspector General of Police (DIG)'},
+    {'rank': 'Superintendent of Police (SP)'},
+    {'rank': 'Additional Superintendent of Police (Addl SP)'},
+    {'rank': 'Deputy Superintendent of Police (DSP) / Assistant Commissioner of Police (ACP)'},
+    {'rank': 'Inspector'},  
+    {'rank': 'Sub-Inspector (SI)'},
+    {'rank': 'Assistant Sub-Inspector (ASI)'},
+    {'rank': 'Head Constable (HC)'},
+    {'rank': 'Constable'},
+]
+
+
+role = [
     {'role':'Admin'},
     {'role':'GD Munsi'},
     {'role':'User'}
@@ -135,20 +157,50 @@ def manage_users(request):
 # Add User
 def add_user(request):
     context = {
-        'role': role
+        'role': role,
+        'rank': rank
     }
+
     if request.method == "POST":
         name = request.POST.get('name')
-        rank = request.POST.get('rank')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        gender = request.POST.get('gender')
+        dob = request.POST.get('dob')
+
+        selected_rank = request.POST.get('rank')
         selected_role = request.POST.get('role')
-        Officer.objects.create(name=name, rank=rank, role=selected_role)
+
+        # Basic password match validation
+        if password != confirm_password:
+            context['error'] = "Password and Confirm Password do not match."
+            return render(request, 'admin_panel/add_user.html', context)
+
+        # Create Officer record
+        Officer.objects.create(
+            name=name,
+            email=email,
+            password=password,  # (later you should hash this)
+            gender=gender,
+            dob=dob,
+            rank=selected_rank,
+            role=selected_role
+        )
+
         return redirect('manage_users')
-    return render(request, 'admin_panel/add_user.html',context)
+
+    return render(request, 'admin_panel/add_user.html', context)
+
 
 # Edit User
 def edit_user(request,user_id):
-    
     officer = get_object_or_404(Officer, id=user_id)
+    context = {
+        'officer': officer,
+        'role': role,
+        'rank':rank
+    }
 
     if request.method == "POST":
         officer.name = request.POST.get('name')
@@ -157,7 +209,7 @@ def edit_user(request,user_id):
         officer.save()
         return redirect('manage_users')
 
-    return render(request, 'admin_panel/edit_user.html', {'officer': officer})
+    return render(request, 'admin_panel/edit_user.html', context)
 
 # Delete User
 def delete_user(request, user_id):
