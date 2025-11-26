@@ -7,6 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.db.models import Count
 
 
 
@@ -232,8 +233,7 @@ def delete_user(request, user_id):
     officer = get_object_or_404(Officer, id=user_id)
     officer.delete()
     return redirect('manage_users')
-
-
+    
 
 #----- firebase push notification -----
 def showFirebaseJS(request):
