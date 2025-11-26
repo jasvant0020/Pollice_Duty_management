@@ -194,22 +194,38 @@ def add_user(request):
 
 
 # Edit User
-def edit_user(request,user_id):
+def edit_user(request, user_id):
     officer = get_object_or_404(Officer, id=user_id)
     context = {
         'officer': officer,
         'role': role,
-        'rank':rank
+        'rank': rank
     }
 
     if request.method == "POST":
+        # Update basic fields
         officer.name = request.POST.get('name')
+        officer.email = request.POST.get('email')
+        officer.gender = request.POST.get('gender')
+        officer.dob = request.POST.get('dob')
         officer.rank = request.POST.get('rank')
         officer.role = request.POST.get('role')
+
+        # Update password only if provided and matches confirm
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        if password:
+            if password == confirm_password:
+                officer.password = password  # Later you can hash it
+            else:
+                context['error'] = "Password and Confirm Password do not match."
+                return render(request, 'admin_panel/edit_user.html', context)
+
         officer.save()
         return redirect('manage_users')
 
     return render(request, 'admin_panel/edit_user.html', context)
+
 
 # Delete User
 def delete_user(request, user_id):
