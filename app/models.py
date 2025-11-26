@@ -15,3 +15,10 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.username
 
+class Officer(models.Model):
+    name = models.CharField(max_length=100)
+    rank = models.CharField(max_length=100)
+    role = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name

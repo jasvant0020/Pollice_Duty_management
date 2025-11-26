@@ -3,41 +3,52 @@
 
 {% block content %}
 
-<!-- Manage Users -->
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Users</h1>
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Users</h1>
 
-    <div class="bg-white shadow rounded-xl p-6">
+<div class="bg-white shadow rounded-xl p-6">
 
-        <div class="flex justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-700">User List</h2>
-            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-                + Add User
-            </button>
-        </div>
+    <div class="flex justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-700">User List</h2>
 
-        <table class="w-full text-left border-collapse">
-            <thead>
-                <tr class="bg-gray-200 text-gray-700">
-                    <th class="p-3">Name</th>
-                    <th class="p-3">Rank</th>
-                    <th class="p-3">Role</th>
-                    <th class="p-3 text-right">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="p-3 text-gray-900">Demo User</td>
-                    <td class="p-3 text-gray-900">Inspector</td>
-                    <td class="p-3 text-gray-900">Admin</td>
-                    <td class="p-3 text-right">
-                        <button class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</button>
-                        <button class="px-3 py-1 bg-red-600 text-white rounded">Delete</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-
+        <a href="{% url 'add_user' %}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+           + Add User
+        </a>
     </div>
 
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-200 text-gray-700">
+                <th class="p-3">Name</th>
+                <th class="p-3">Rank</th>
+                <th class="p-3">Role</th>
+                <th class="p-3 text-right">Actions</th>
+            </tr>
+        </thead>
 
+        <tbody>
+            {% for officer in officers %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-3 text-gray-900">{{ officer.name }}</td>
+                <td class="p-3 text-gray-900">{{ officer.rank }}</td>
+                <td class="p-3 text-gray-900">{{ officer.role }}</td>
+
+                <td class="p-3 text-right">
+                    <a href="{% url 'edit_user' officer.id %}"
+                       class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+
+                    <a href="{% url 'delete_user' officer.id %}"
+                       class="px-3 py-1 bg-red-600 text-white rounded"
+                       onclick="return confirm('Are you sure?')">
+                       Delete
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-4 text-center text-gray-500">No users found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
 {% endblock %}

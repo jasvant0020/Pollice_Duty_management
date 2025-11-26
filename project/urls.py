@@ -22,6 +22,14 @@ urlpatterns = [
     path('manage_police_categories/', views.manage_police_categories, name='manage_police_categories'),
     path('manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
 
+    # -------------------------------------------------------
+    # UPDATED: Added CRUD URLs for Manage Users functionality
+    # -------------------------------------------------------
+    path('manage_users/add/', views.add_user, name='add_user'),           # UPDATED
+    path('manage_users/edit/<int:user_id>/', views.edit_user, name='edit_user'),  # UPDATED
+    path('manage_users/delete/<int:user_id>/', views.delete_user, name='delete_user'),  # UPDATED
+    # -------------------------------------------------------
+
     # Custom user Panel Pages
     path("user_profile/", views.user_profile, name="user_profile"),
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
@@ -30,7 +38,6 @@ urlpatterns = [
     path("Notifications/", views.Notifications, name="Notifications"),
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
     
-
     # Firebase push notification 
-    path('firebase-messaging-sw.js',views.showFirebaseJS,name="show_firebase_js"),
+    path('firebase-messaging-sw.js', views.showFirebaseJS, name="show_firebase_js"),
 ]

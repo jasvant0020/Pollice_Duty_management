@@ -118,6 +118,42 @@ def login(request):
     return render(request, "login_panel/login.html")
 
 
+#-------- CRUD opration by admin to manage user ---------
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Officer
+
+def manage_users(request):
+    officers = Officer.objects.all()
+    return render(request, 'admin_panel/manage_users.html', {'officers': officers})
+
+# Add User
+def add_user(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        rank = request.POST.get('rank')
+        role = request.POST.get('role')
+        Officer.objects.create(name=name, rank=rank, role=role)
+        return redirect('manage_users')
+    return render(request, 'admin_panel/add_user.html')
+
+# Edit User
+def edit_user(request, officer_id):
+    officer = get_object_or_404(Officer, id=officer_id)
+
+    if request.method == "POST":
+        officer.name = request.POST.get('name')
+        officer.rank = request.POST.get('rank')
+        officer.role = request.POST.get('role')
+        officer.save()
+        return redirect('manage_users')
+
+    return render(request, 'admin_panel/edit_user.html', {'officer': officer})
+
+# Delete User
+def delete_user(request, officer_id):
+    officer = get_object_or_404(Officer, id=officer_id)
+    officer.delete()
+    return redirect('manage_users')
 
 
 
