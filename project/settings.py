@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
+AUTH_USER_MODEL = "app.CustomUser"
 
 
 TAILWIND_APP_NAME = 'theme'
