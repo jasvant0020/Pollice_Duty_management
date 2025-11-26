@@ -92,7 +92,39 @@ def admin_dashboard(request):
 def manage(request):
     return render(request, "admin_panel/manage.html")
 def police_hierarchy_table(request):
-    return render(request, "admin_panel/police_hierarchy_table.html")
+    # Group by rank and count personnel
+    rank_counts = Officer.objects.values('rank').annotate(personnel_count=Count('id'))
+
+    # Prepare status based on count (you can adjust thresholds later)
+    rank_status = []
+    for rc in rank_counts:
+        count = rc['personnel_count']
+        rank = rc['rank']
+        
+        # Example: define status logic (can adjust as needed)
+        if count >= 10:
+            status = "Active"
+            badge_color = "green"
+        elif 5 <= count < 10:
+            status = "Partially Filled"
+            badge_color = "yellow"
+        else:
+            status = "Overloaded"
+            badge_color = "red"
+
+        rank_status.append({
+            'rank': rank,
+            'count': count,
+            'status': status,
+            'badge_color': badge_color
+        })
+
+    context = {
+        'rank_status': rank_status
+    }
+
+    return render(request, 'admin_panel/police_hierarchy_table.html', context)
+
 def manage_users(request):
     return render(request, "admin_panel/manage_users.html")
 def manage_police_categories(request):
