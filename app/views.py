@@ -50,11 +50,16 @@ rank = [
 ]
 
 
-role = [
-    {'role':'Admin'},
-    {'role':'GD Munsi'},
-    {'role':'User'}
+category = [
+    {'category': 'X Security'},
+    {'category': 'Y Security'},
+    {'category': 'Y+ Security'},
+    {'category': 'Z Security'},
+    {'category': 'Z+ Security'},
+    {'category': 'SPG Security'},  # Special Protection Group (highest level, for PM of India)
+    {'category':'other'}
 ]
+
 
 #------ Custom GD Munsi Panel Views ------
 def dashboard(request):
@@ -237,6 +242,87 @@ def delete_user(request, user_id):
     officer.delete()
     return redirect('manage_users')
     
+
+
+#-------- CRUD opration by admin to Manage Police Categories ---------
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import SecurityCategory, Officer
+
+def manage_police_categories(request):
+    categories = SecurityCategory.objects.all()
+    return render(request, "admin_panel/manage_police_categories.html", {'categories': categories})
+
+
+def add_security_category(request):
+    ranks = Officer.objects.values_list('rank', flat=True).distinct()
+
+    context = {
+        'ranks': ranks,
+        'category': category
+    }
+
+    if request.method == "POST":
+
+        # 1️⃣ Get selected category name
+        selected_category = request.POST.get('category_name')
+        custom_category = request.POST.get('custom_category')
+
+        # 2️⃣ Decide final category name
+        if selected_category == "other" and custom_category:
+            name = custom_category
+        else:
+            name = selected_category
+
+        # 3️⃣ Continue with existing logic
+        total_personnel = int(request.POST.get('total_personnel', 0))
+        personnel_by_rank = {}
+
+        for rank in ranks:
+            count = request.POST.get(rank, 0)
+            personnel_by_rank[rank] = int(count)
+
+        SecurityCategory.objects.create(
+            name=name,
+            total_personnel=total_personnel,
+            personnel_by_rank=personnel_by_rank
+        )
+
+        return redirect('manage_police_categories')
+
+    return render(request, 'admin_panel/add_security_category.html', context)
+
+
+def edit_security_category(request, category_id):
+    ranks = Officer.objects.values_list('rank', flat=True).distinct()
+    context = {
+        'category': category,
+        'ranks': ranks
+    }
+    category = get_object_or_404(SecurityCategory, id=category_id)
+    if request.method == "POST":
+        category.name = request.POST.get('name')
+        category.total_personnel = int(request.POST.get('total_personnel', 0))
+
+        personnel_by_rank = {}
+        for rank in [r['rank'] for r in ranks]:
+            personnel_by_rank[rank] = int(request.POST.get(rank, 0))
+        category.personnel_by_rank = personnel_by_rank
+        category.save()
+        return redirect('manage_police_categories')
+
+    return render(request, 'admin_panel/edit_security_category.html',context)
+
+
+def delete_security_category(request, category_id):
+    category = get_object_or_404(SecurityCategory, id=category_id)
+    category.delete()
+    return redirect('manage_police_categories')
+
+
+
+
+
 
 #----- firebase push notification -----
 def showFirebaseJS(request):

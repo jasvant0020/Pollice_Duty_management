@@ -27,3 +27,14 @@ class Officer(models.Model):
 
     def __str__(self):
         return self.name
+
+class SecurityCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    total_personnel = models.PositiveIntegerField()
+    # Store number of officers by rank as JSON (optional)
+    personnel_by_rank = models.JSONField(default=dict, blank=True)  # e.g., {"SP": 2, "Addl SP": 3}
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
