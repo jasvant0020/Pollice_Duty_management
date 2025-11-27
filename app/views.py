@@ -267,6 +267,19 @@ def add_security_category(request):
         # 1️⃣ Get selected category name
         selected_category = request.POST.get('category_name')
         custom_category = request.POST.get('custom_category')
+        #  unique category validation
+        # Determine final category name
+        category_name = custom_category.strip() if custom_category else selected_category
+
+        if category_name:
+            # Check if this category already exists
+            if SecurityCategory.objects.filter(name__iexact=category_name).exists():
+                messages.error(request, f"Category '{category_name}' already exists!")
+            else:
+                SecurityCategory.objects.create(name=category_name)
+                messages.success(request, f"Category '{category_name}' added successfully!")
+        
+        return redirect('add_security_category')
 
         # 2️⃣ Decide final category name
         if selected_category == "other" and custom_category:
