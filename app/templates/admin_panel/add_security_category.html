@@ -1,0 +1,56 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}Add Security Category{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Add Security Category</h1>
+
+<div class="bg-white shadow rounded-xl p-6 max-w-xl">
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label class="font-semibold text-gray-700">Categories</label>
+        <select id="category-select" name="category_name"
+                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            {% for c in category %}
+            <option value="{{ c.category }}" class="py-3 px-4 font-medium text-gray-800">{{ c.category }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="text" id="custom-category" name="custom_category" placeholder="Enter custom category name"
+            style="display:none;"
+            class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+
+        <!-- Total Personnel -->
+        <label class="block mb-2 font-medium text-gray-700">Total Personnel</label>
+        <input type="number" name="total_personnel" value="0" min="0" required
+               class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+        <!-- Personnel by Rank -->
+        <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
+        {% for rank in ranks %}
+            <label class="block mb-1 text-gray-800">{{ rank }}</label>
+            <input type="number" name="{{ rank }}" value="0" min="0"
+                class="w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        {% endfor %}
+
+        <!-- Submit Button -->
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Category</button>
+    </form>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const categorySelect = document.getElementById('category-select');
+    const customInput = document.getElementById('custom-category');
+
+    categorySelect.addEventListener('change', function () {
+        if (this.value === 'other') {
+            customInput.style.display = 'block';
+        } else {
+            customInput.style.display = 'none';
+            customInput.value = ''; // clear custom input if not needed
+        }
+    });
+});
+</script>
+{% endblock %}

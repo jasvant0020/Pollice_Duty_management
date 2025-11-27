@@ -25,10 +25,15 @@ urlpatterns = [
     # -------------------------------------------------------
     # UPDATED: Added CRUD URLs for Manage Users functionality
     # -------------------------------------------------------
-    path('manage_users/add/', views.add_user, name='add_user'),           # UPDATED
-    path('manage_users/edit/<int:user_id>/', views.edit_user, name='edit_user'),  # UPDATED
-    path('manage_users/delete/<int:user_id>/', views.delete_user, name='delete_user'),  # UPDATED
+    path('manage_users/add/', views.add_user, name='add_user'),           
+    path('manage_users/edit/<int:user_id>/', views.edit_user, name='edit_user'),  
+    path('manage_users/delete/<int:user_id>/', views.delete_user, name='delete_user'),  
     # -------------------------------------------------------
+    # UPDATED: Added CRUD URLs for Manage Police Categories
+    # -------------------------------------------------------
+    path('add_security_category/', views.add_security_category, name='add_security_category'),
+    path('edit_security_category/<int:category_id>/', views.edit_security_category, name='edit_security_category'),
+    path('delete_security_category/<int:category_id>/', views.delete_security_category, name='delete_security_category'),
 
     # Custom user Panel Pages
     path("user_profile/", views.user_profile, name="user_profile"),
