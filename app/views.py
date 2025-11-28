@@ -256,41 +256,44 @@ def manage_police_categories(request):
 
 def add_security_category(request):
     ranks = Officer.objects.values_list('rank', flat=True).distinct()
-
+    
     context = {
         'ranks': ranks,
-        'category': category
+        'category': category  # Make sure 'category' is defined earlier
     }
 
     if request.method == "POST":
-
         selected_category = request.POST.get('category_name')
         custom_category = request.POST.get('custom_category')
-
         category_name = custom_category.strip() if custom_category else selected_category
 
-        # --- VALIDATION BLOCK ---
+        # --- VALIDATION: Duplicate category check ---
         if category_name:
             if SecurityCategory.objects.filter(name__iexact=category_name).exists():
                 messages.error(request, f"Category '{category_name}' already exists!")
-                return redirect('add_security_category')   # Stop here if duplicate
-        # ---------------------------------------------
+                return redirect('add_security_category')
 
-        # 2️⃣ Decide final category name
+        # --- Decide final category name ---
         if selected_category == "other" and custom_category:
             name = custom_category
         else:
             name = selected_category
 
-        # 3️⃣ Get personnel data
-        total_personnel = int(request.POST.get('total_personnel', 0))
+        # --- Collect personnel by rank ---
         personnel_by_rank = {}
-
         for rank in ranks:
-            count = request.POST.get(rank, 0)
-            personnel_by_rank[rank] = int(count)
+            count = request.POST.get(rank, '0')  # default to 0 if empty
+            try:
+                count = int(count)
+            except ValueError:
+                count = 0
+            if count > 0:  # only save ranks with personnel > 0
+                personnel_by_rank[rank] = count
 
-        # 4️⃣ Create final category
+        # --- Calculate total personnel ---
+        total_personnel = sum(personnel_by_rank.values())
+
+        # --- Save to DB ---
         SecurityCategory.objects.create(
             name=name,
             total_personnel=total_personnel,
