@@ -330,6 +330,7 @@ def edit_security_category(request, category_id):
 def delete_security_category(request, category_id):
     category = get_object_or_404(SecurityCategory, id=category_id)
     category.delete()
+    messages.success(request, f"' {category.name} ' deleted successfully!")
     return redirect('manage_police_categories')
 
 
