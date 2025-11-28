@@ -264,22 +264,17 @@ def add_security_category(request):
 
     if request.method == "POST":
 
-        # 1️⃣ Get selected category name
         selected_category = request.POST.get('category_name')
         custom_category = request.POST.get('custom_category')
-        #  unique category validation
-        # Determine final category name
+
         category_name = custom_category.strip() if custom_category else selected_category
 
+        # --- VALIDATION BLOCK ---
         if category_name:
-            # Check if this category already exists
             if SecurityCategory.objects.filter(name__iexact=category_name).exists():
                 messages.error(request, f"Category '{category_name}' already exists!")
-            else:
-                SecurityCategory.objects.create(name=category_name)
-                messages.success(request, f"Category '{category_name}' added successfully!")
-        
-        return redirect('add_security_category')
+                return redirect('add_security_category')   # Stop here if duplicate
+        # ---------------------------------------------
 
         # 2️⃣ Decide final category name
         if selected_category == "other" and custom_category:
@@ -287,7 +282,7 @@ def add_security_category(request):
         else:
             name = selected_category
 
-        # 3️⃣ Continue with existing logic
+        # 3️⃣ Get personnel data
         total_personnel = int(request.POST.get('total_personnel', 0))
         personnel_by_rank = {}
 
@@ -295,12 +290,14 @@ def add_security_category(request):
             count = request.POST.get(rank, 0)
             personnel_by_rank[rank] = int(count)
 
+        # 4️⃣ Create final category
         SecurityCategory.objects.create(
             name=name,
             total_personnel=total_personnel,
             personnel_by_rank=personnel_by_rank
         )
 
+        messages.success(request, f"Category '{name}' added successfully!")
         return redirect('manage_police_categories')
 
     return render(request, 'admin_panel/add_security_category.html', context)
