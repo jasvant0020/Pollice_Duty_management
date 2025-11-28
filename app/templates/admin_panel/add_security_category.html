@@ -33,7 +33,7 @@
         {% for rank in ranks %}
             <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank }}"> {{ rank }}</label>
             <input type="number" name="{{ rank }}" style="display:none;"
-                class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
 
         <!-- Submit Button -->
