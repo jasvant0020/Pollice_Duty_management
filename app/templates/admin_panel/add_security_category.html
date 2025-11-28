@@ -7,6 +7,7 @@
 <div class="bg-white shadow rounded-xl p-6 max-w-xl">
     <form method="POST">
         {% csrf_token %}
+        {% include "error_message/error_message.html" %}
         
         <label class="font-semibold text-gray-700">Categories</label>
         <select id="category-select" name="category_name"
