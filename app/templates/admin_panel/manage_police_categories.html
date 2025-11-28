@@ -26,7 +26,7 @@
             </div>
             <div>
                 <a href="{% url 'edit_security_category' category.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                <a href="{% url 'delete_security_category' category.id %}" class="px-3 py-1 bg-red-600 text-white rounded">Delete</a>
+                <a href="{% url 'delete_security_category' category.id %}" class="px-3 py-1 bg-red-600 text-white rounded" onclick="return confirm('Are you sure? you want to delete it')">Delete</a>
             </div>
         </li>
         {% endfor %}
