@@ -21,6 +21,8 @@ urlpatterns = [
     path('manage_users/', views.manage_users, name='manage_users'),
     path('manage_police_categories/', views.manage_police_categories, name='manage_police_categories'),
     path('manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
+    path('add_vvip/', views.add_vvip, name='add_vvip'),
+    path('edit_vvip/', views.edit_vvip, name='edit_vvip'),
 
     # -------------------------------------------------------
     # UPDATED: Added CRUD URLs for Manage Users functionality

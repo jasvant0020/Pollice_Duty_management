@@ -1,0 +1,63 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}Edit VVIP Profile{% endblock %}
+
+{% block content %}
+
+<h1 class="text-3xl font-bold text-gray-800 mb-6">Edit VVIP Profile – {{ vvip.name }}</h1>
+
+<div class="bg-white shadow rounded-2xl p-6 max-w-2xl border-t-4 border-yellow-500">
+
+    <form method="POST" class="space-y-5">
+        {% csrf_token %}
+        {% include "error_message/error_message.html" %}
+
+        <!-- VVIP Name -->
+        <div>
+            <label class="block text-gray-700 font-medium mb-2">VVIP Name</label>
+            <input 
+                type="text" 
+                name="name" 
+                value="{{ vvip.name }}"
+                class="w-full border px-4 py-2 rounded-lg focus:ring focus:border-yellow-500"
+                required
+            >
+        </div>
+
+        <!-- Category -->
+        <div>
+            <label class="block text-gray-700 font-medium mb-2">Security Category</label>
+            <select 
+                name="category" 
+                class="w-full border px-4 py-2 rounded-lg focus:ring focus:border-yellow-500"
+                required
+            >
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if vvip.category.id == cat.id %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Address -->
+        <div>
+            <label class="block text-gray-700 font-medium mb-2">Address</label>
+            <textarea 
+                name="address"
+                class="w-full border px-4 py-2 rounded-lg focus:ring focus:border-yellow-500"
+                rows="3"
+            >{{ vvip.address }}</textarea>
+        </div>
+
+        <!-- Update Button -->
+        <button 
+            type="submit"
+            class="w-full bg-yellow-500 text-white py-2 rounded-xl text-lg hover:bg-yellow-600"
+        >
+            Update VVIP
+        </button>
+    </form>
+
+</div>
+
+{% endblock %}

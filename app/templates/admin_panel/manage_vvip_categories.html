@@ -1,27 +1,78 @@
 {% extends 'admin_panel/admin_base.html' %}
-{% block page_title %}Manage VVIPs{% endblock %}
+{% block page_title %}Manage VVIP{% endblock %}
 
 {% block content %}
-
-<!-- Manage VVIP Categories -->
 <div class='pt-10'>
-    <div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
+<div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
 
-        <div class="flex justify-between mb-4">
-            <h2 class="text-xl font-semibold text-gray-700">VVIP Levels</h2>
-            <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">+ Add VVIP</button>
-        </div>
+    <div class="flex justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-700">VVIP List</h2>
 
-        <ul class="divide-y">
-            <li class="py-3 flex items-center justify-between hover:bg-gray-50 px-2">
-                <span class="font-medium text-gray-900">Z+ Category (Highest)</span>
-                <div>
-                    <button class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</button>
-                    <button class="px-3 py-1 bg-red-600 text-white rounded">Delete</button>
-                </div>
-            </li>
-        </ul>
-
+        <a href="{% url 'add_vvip' %}" 
+           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+           + Add VVIP
+        </a>
     </div>
+
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-200 text-gray-700">
+                <th class="p-3">Name</th>
+                <th class="p-3">Email</th>
+                <th class="p-3">Password</th>
+                <th class="p-3">Gender</th>
+                <th class="p-3">DOB</th>
+                <th class="p-3">Designation</th>
+                <th class="p-3 text-right">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for vvip in vvips %}
+            <tr class="border-b hover:bg-gray-50">
+                
+                <td class="p-3 text-gray-900">{{ vvip.name }}</td>
+                
+                <td class="p-3 text-gray-900">{{ vvip.email }}</td>
+
+                <td class="p-3 text-gray-900">{{ vvip.password }}</td>
+
+                <td class="p-3 text-gray-900">{{ vvip.gender }}</td>
+
+                <td class="p-3 text-gray-900">
+                    {% if vvip.dob %}
+                        {{ vvip.dob|date:"d-m-Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td class="p-3 text-gray-900">{{ vvip.rank }}</td>
+
+                <td class="p-3 text-gray-900">{{ vvip.role }}</td>
+
+                <td class="p-3 text-right">
+                    <a href="{% url 'edit_vvip' vvip.id %}"
+                       class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+
+                    <a href="{% url 'edit_vvip' vvip.id %}"
+                       class="px-3 py-1 bg-red-600 text-white rounded"
+                       onclick="return confirm('Are you sure?')">
+                       Delete
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="p-4 text-center text-gray-500">
+                    No VVIPs found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </div>
+</div>
+
 {% endblock %}
