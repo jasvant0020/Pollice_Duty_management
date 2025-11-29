@@ -1,22 +1,20 @@
 {% extends 'admin_panel/admin_base.html' %}
-{% block page_title %}List Overview{% endblock %}
+{% block page_title %}Police Hierarchy Overview{% endblock %}
 
 {% block content %}
 
 <!-- Police Hierarchy Table -->
-<div class="bg-white shadow rounded-xl p-6">
-
-    <h2 class="text-xl text-gray-800 font-bold mb-4">Police Hierarchy Overview</h2>
+<div class="bg-white shadow border-t-4 rounded-2xl p-6 border-indigo-600">
 
     <table class="min-w-full border-collapse">
         <thead class="bg-blue-700 text-white">
             <tr>
-                <th class="text-left py-3 px-4">Rank</th>
+                <th class="text-left py-3 px-4 rounded-tl-lg rounded-bl-lg">Rank</th>
                 <th class="text-left py-3 px-4">Personnel Count</th>
-                <th class="text-left py-3 px-4">Status</th>
+                <th class="text-left py-3 px-4 rounded-tr-lg rounded-br-lg">Status</th>
             </tr>
         </thead>
-        
+
         <tbody>
             {% for r in rank_status %}
             <tr class="border-b hover:bg-gray-50 transition">

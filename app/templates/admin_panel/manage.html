@@ -2,23 +2,36 @@
 {% block page_title %}Manage{% endblock %}
 
 {% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-<!-- Action Buttons -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-
-    <a href="{%url 'manage_users' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-blue-600">
-        <h2 class="text-xl font-semibold mb-2 text-green-700">Manage Users</h2>
-        <p class="text-gray-600">Create, edit, or delete system users and assign roles based on rank.</p>
+    <a href="{%url 'manage_users' %}" class="group block bg-white p-8 rounded-2xl shadow-xl hover:shadow-2x border-4 border-transparent transform hover:-translate-y-1 transition duration-300 ease-in-out">
+        <div class="flex items-center space-x-4">
+            <div class="p-3 rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zm-12 0a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 group-hover:text-blue-700 transition">Manage Users</h2>
+        </div>
+        <p class="text-gray-500 mt-4 border-t pt-4">Create, edit, or delete system users and assign roles based on rank. **(Access Control)**</p>
     </a>
 
-    <a href="{%url 'manage_police_categories' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-indigo-600">
-        <h2 class="text-xl font-semibold mb-2 text-purple-700">Manage Police Categories</h2>
-        <p class="text-gray-600">Organize police force hierarchy (SP → DSP → Inspector → Constable).</p>
+    <a href="{%url 'manage_police_categories' %}" class="group block bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl  border-4 border-transparent transform hover:-translate-y-1 transition duration-300 ease-in-out">
+        <div class="flex items-center space-x-4">
+            <div class="p-3 rounded-full bg-indigo-100 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 group-hover:text-indigo-700 transition">Manage Security Categories</h2>
+        </div>
+        <p class="text-gray-500 mt-4 border-t pt-4">Organize police force hierarchy (SP → DSP → Inspector → Constable) and manage ranks. **(Force Structure)**</p>
     </a>
 
-    <a href="{%url 'manage_vvip_categories' %}" class="block bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-l-4 border-green-600">
-        <h2 class="text-xl font-semibold mb-2 text-blue-700">Manage VVIP Categories</h2>
-        <p class="text-gray-600">Add or edit VVIP priority levels and maintain VIP list.</p>
+    <a href="{%url 'manage_vvip_categories' %}" class="group block bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl border-4 border-transparent transform hover:-translate-y-1 transition duration-300 ease-in-out">
+        <div class="flex items-center space-x-4">
+            <div class="p-3 rounded-full bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.921-.755 1.688-1.54 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.785.57-1.838-.197-1.539-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.381-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 group-hover:text-green-700 transition">Manage VVIP Categories</h2>
+        </div>
+        <p class="text-gray-500 mt-4 border-t pt-4">Add or edit VVIP priority levels and maintain the high-security VIP list. **(Priority Definition)**</p>
     </a>
 
 </div>
