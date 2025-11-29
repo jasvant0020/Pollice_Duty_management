@@ -307,24 +307,37 @@ def add_security_category(request):
 
 
 def edit_security_category(request, category_id):
+    category = get_object_or_404(SecurityCategory, id=category_id)
     ranks = Officer.objects.values_list('rank', flat=True).distinct()
+
     context = {
         'category': category,
         'ranks': ranks
     }
-    category = get_object_or_404(SecurityCategory, id=category_id)
+
     if request.method == "POST":
         category.name = request.POST.get('name')
-        category.total_personnel = int(request.POST.get('total_personnel', 0))
 
+        # Collect personnel by rank, only save ranks with >0 personnel
         personnel_by_rank = {}
-        for rank in [r['rank'] for r in ranks]:
-            personnel_by_rank[rank] = int(request.POST.get(rank, 0))
+        for rank in ranks:
+            count = request.POST.get(rank, '0')
+            try:
+                count = int(count)
+            except ValueError:
+                count = 0
+            if count > 0:
+                personnel_by_rank[rank] = count
+
+        # Update total personnel from non-zero ranks
+        category.total_personnel = sum(personnel_by_rank.values())
         category.personnel_by_rank = personnel_by_rank
         category.save()
+
+        messages.success(request, f"Category '{category.name}' updated successfully!")
         return redirect('manage_police_categories')
 
-    return render(request, 'admin_panel/edit_security_category.html',context)
+    return render(request, 'admin_panel/edit_security_category.html', context)
 
 
 def delete_security_category(request, category_id):
