@@ -120,6 +120,10 @@ def manage_police_categories(request):
     return render(request, "admin_panel/manage_police_categories.html")
 def manage_vvip_categories(request):
     return render(request, "admin_panel/manage_vvip_categories.html")
+def add_vvip(request):
+    return render(request, "admin_panel/add_vvip.html")
+def edit_vvip(request):
+    return render(request, "admin_panel/edit_vvip.html")
 
 
 #----- Custom user Panel Views -----
