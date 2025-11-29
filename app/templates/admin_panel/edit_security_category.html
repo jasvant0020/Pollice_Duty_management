@@ -16,11 +16,11 @@
                class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
 
         <!-- Total Personnel -->
-        <label class="block mb-2 font-medium text-gray-700">Total Personnel</label>
-        <input type="number" name="total_personnel" placeholder="Total Personnel" readonly
-               id="total_personnel"
-               value="{{ category.total_personnel }}"
-               class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <label for="total_personnel" class="block mb-1 text-sm font-medium uppercase text-blue-700">Total Personnel (Auto-Calculated)</label>
+                <input type="text" id="total_personnel" name="total_personnel" value="0" readonly
+                    class="w-full text-4xl font-extrabold text-blue-800 bg-transparent p-1 cursor-default select-none border-none focus:outline-none">
+        </div>
 
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
@@ -36,12 +36,22 @@
 </div>
 
 <script>
-// Toggle rank input visibility
+// script to show checkbox for rank selection
 document.querySelectorAll('.toggle-rank').forEach(cb => {
     cb.addEventListener('change', function() {
         const input = document.querySelector(`input[name="${this.dataset.rank}"]`);
-        input.style.display = this.checked ? 'block' : 'none';
-        if (!this.checked) input.value = '';
+        
+        if (this.checked) {
+            input.style.display = 'block';
+            input.focus();
+            // Set value to 1 if empty, to ensure it contributes to total if checked
+            if (!input.value || parseInt(input.value) === 0) {
+                input.value = 1; 
+            }
+        } else {
+            input.style.display = 'none';
+            input.value = ''; // Clear value on uncheck
+        }
         updateTotal();
     });
 });

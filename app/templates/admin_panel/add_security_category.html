@@ -2,9 +2,8 @@
 {% block page_title %}Add Security Category{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold text-gray-800 mb-6">Add Security Category</h1>
-
-<div class="bg-white shadow rounded-xl p-6 max-w-xl">
+<div class='pt-10'>
+<div class="bg-white shadow rounded-2xl p-6 max-w-xl border-t-4 border-indigo-600">
     <form method="POST">
         {% csrf_token %}
         {% include "error_message/error_message.html" %}
@@ -23,10 +22,11 @@
 
 
         <!-- Total Personnel -->
-        <label class="block mb-2 font-medium text-gray-700">Total Personnel</label>
-        <input type="number" name="total_personnel" placeholder='Enter number'  min="0" required
-            id="total_personnel" readonly
-            class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <label for="total_personnel" class="block mb-1 text-sm font-medium uppercase text-blue-700">Total Personnel (Auto-Calculated)</label>
+                <input type="text" id="total_personnel" name="total_personnel" value="0" readonly
+                    class="w-full text-4xl font-extrabold text-blue-800 bg-transparent p-1 cursor-default select-none border-none focus:outline-none">
+        </div>
 
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
@@ -40,19 +40,29 @@
         <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Category</button>
     </form>
 </div>
+</div>
 <script>
 
-//script to show  checkbox for rank selection
-    document.querySelectorAll('.toggle-rank').forEach(cb => {
+// script to show checkbox for rank selection
+document.querySelectorAll('.toggle-rank').forEach(cb => {
     cb.addEventListener('change', function() {
         const input = document.querySelector(`input[name="${this.dataset.rank}"]`);
-        input.style.display = this.checked ? 'block' : 'none';
-        if (!this.checked) input.value = '';
+        
+        if (this.checked) {
+            input.style.display = 'block';
+            input.focus();
+            // Set value to 1 if empty, to ensure it contributes to total if checked
+            if (!input.value || parseInt(input.value) === 0) {
+                input.value = 1; 
+            }
+        } else {
+            input.style.display = 'none';
+            input.value = ''; // Clear value on uncheck
+        }
+        updateTotal();
     });
 });
-
 //script to show calculated value in 'Total Personnel'  from rank inputs
-        // Select all rank inputs
     const rankInputs = document.querySelectorAll('.rank-input');
     const totalInput = document.getElementById('total_personnel');
 

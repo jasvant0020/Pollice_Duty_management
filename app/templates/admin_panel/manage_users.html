@@ -1,11 +1,9 @@
 {% extends 'admin_panel/admin_base.html' %}
-{% block page_title %}Manage{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
 
 {% block content %}
-
-<h1 class="text-3xl font-bold text-gray-800 mb-6">Manage Users</h1>
-
-<div class="bg-white shadow rounded-xl p-6">
+<div class='pt-10'>
+<div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
 
     <div class="flex justify-between mb-4">
         <h2 class="text-xl font-semibold text-gray-700">User List</h2>
@@ -75,6 +73,7 @@
         </tbody>
     </table>
 
+</div>
 </div>
 
 {% endblock %}
