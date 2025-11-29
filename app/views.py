@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from app.services.officer_stats import get_rank_status
+from app.services.officer_stats import get_rank_status,get_role_status
 
 
 
@@ -93,7 +93,20 @@ from django.shortcuts import render
 
 #------ Custom Admin Panel Views ------
 def admin_dashboard(request):
-    return render(request, "admin_panel/admin_dashboard.html")
+
+    # Prepare context AFTER calculation
+    stats = get_role_status()
+
+    context = {
+        'total_staff_count': stats['total_staff_count'],
+        'admin_staff_count': stats['admin_staff_count'],
+        'GD_munsi_count': stats['GD_munsi_count'],
+        'field_staff_count': stats['field_staff_count'],
+    }
+
+
+    return render(request, "admin_panel/admin_dashboard.html", context)
+
 def manage(request):
     return render(request, "admin_panel/manage.html")
 def police_hierarchy_table(request):

@@ -12,7 +12,6 @@ def get_rank_status():
         count = rc['personnel_count']
         rank = rc['rank']
 
-        # Your status logic (can be edited anytime)
         if count >= 10:
             status = "Active"
             badge_color = "green"
@@ -31,6 +30,35 @@ def get_rank_status():
         })
 
     return rank_status
+
+
+def get_role_status():
+    role_based_count = Officer.objects.values('role').annotate(personnel_count=Count('id'))
+
+    total_staff_count = 0
+    admin_staff_count = 0
+    GD_munsi_count = 0
+    field_staff_count = 0
+
+    for r in role_based_count:
+        count = r['personnel_count']
+        role = r['role']
+
+        total_staff_count += count
+
+        if role == "GD Munsi":
+            GD_munsi_count += count
+        elif role == "Admin":
+            admin_staff_count += count
+        elif role == "User":
+            field_staff_count += count
+
+    return {
+        'total_staff_count': total_staff_count,
+        'admin_staff_count': admin_staff_count,
+        'GD_munsi_count': GD_munsi_count,
+        'field_staff_count': field_staff_count
+    }
 
 
 def get_global_officer_stats():
