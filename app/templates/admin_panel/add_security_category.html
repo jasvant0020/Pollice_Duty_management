@@ -88,5 +88,27 @@
             }
         });
     });
+
+
+
+// Ensure at least one rank input is filled before submitting
+    document.querySelector("form").addEventListener("submit", function (e) {
+        let valid = false;
+
+        document.querySelectorAll('.toggle-rank').forEach(cb => {
+            if (cb.checked) {
+                const input = document.querySelector(`input[name="${cb.dataset.rank}"]`);
+                if (input.value && parseInt(input.value) > 0) {
+                    valid = true;
+                }
+            }
+        });
+
+        if (!valid) {
+            e.preventDefault();
+            alert("Please fill at least one field");
+        }
+    });
+
 </script>
 {% endblock %}

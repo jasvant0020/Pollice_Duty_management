@@ -31,7 +31,7 @@
         {% endfor %}
 
         <!-- Submit Button -->
-        <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Update Category</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Update Category</button>
     </form>
 </div>
 
@@ -64,5 +64,24 @@ rankInputs.forEach(input => {
 
 // Initialize total on page load
 updateTotal();
+
+// Ensure at least one rank input is filled before submitting
+    document.querySelector("form").addEventListener("submit", function (e) {
+        let valid = false;
+
+        document.querySelectorAll('.toggle-rank').forEach(cb => {
+            if (cb.checked) {
+                const input = document.querySelector(`input[name="${cb.dataset.rank}"]`);
+                if (input.value && parseInt(input.value) > 0) {
+                    valid = true;
+                }
+            }
+        });
+
+        if (!valid) {
+            e.preventDefault();
+            alert("Please fill at least one field");
+        }
+    });
 </script>
 {% endblock %}
