@@ -7,30 +7,62 @@
 <div class="bg-white shadow rounded-xl p-6 max-w-xl">
     <form method="POST">
         {% csrf_token %}
+        {% include "error_message/error_message.html" %}
 
         <!-- Category Name -->
         <label class="block mb-2 font-medium text-gray-700">Category Name</label>
         <input type="text" name="name" placeholder="Category Name" required
                value="{{ category.name }}"
-               class="w-full p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+               class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" readonly>
 
         <!-- Total Personnel -->
         <label class="block mb-2 font-medium text-gray-700">Total Personnel</label>
-        <input type="number" name="total_personnel" placeholder="Total Personnel" required
+        <input type="number" name="total_personnel" placeholder="Total Personnel" readonly
+               id="total_personnel"
                value="{{ category.total_personnel }}"
-               class="w-full p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+               class="w-full text-gray-800 p-2 mb-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
 
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
-        {% for r in rank_list %}
-            <label class="block mb-1">{{ r.rank }}</label>
-            <input type="number" name="{{ r.rank }}" min="0"
-                   value="{{ category.personnel_by_rank.r|get_item:r.rank|default:0 }}"
-                   class="w-full p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500">
+        {% for rank in ranks %}
+            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank }}"> {{ rank }}</label>
+            <input type="number" name="{{ rank }}" style="display:none;"
+                class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
 
         <!-- Submit Button -->
         <button type="submit" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Update Category</button>
     </form>
 </div>
+
+<script>
+// Toggle rank input visibility
+document.querySelectorAll('.toggle-rank').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const input = document.querySelector(`input[name="${this.dataset.rank}"]`);
+        input.style.display = this.checked ? 'block' : 'none';
+        if (!this.checked) input.value = '';
+        updateTotal();
+    });
+});
+
+// Calculate total personnel
+const rankInputs = document.querySelectorAll('.rank-input');
+const totalInput = document.getElementById('total_personnel');
+
+function updateTotal() {
+    let sum = 0;
+    rankInputs.forEach(input => {
+        sum += parseInt(input.value) || 0;
+    });
+    totalInput.value = sum;
+}
+
+rankInputs.forEach(input => {
+    input.addEventListener('input', updateTotal);
+});
+
+// Initialize total on page load
+updateTotal();
+</script>
 {% endblock %}
