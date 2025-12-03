@@ -306,7 +306,8 @@ def add_user(request):
             role=selected_role
         )
 
-        return redirect('manage_users')
+        messages.success(request, "user added successfully!")
+        return redirect("manage_users")
 
     return render(request, 'admin_panel/add_user.html', context)
 
@@ -340,7 +341,8 @@ def edit_user(request, user_id):
                 return render(request, 'admin_panel/edit_user.html', context)
 
         officer.save()
-        return redirect('manage_users')
+        messages.success(request, "user edited successfully!")
+        return redirect("manage_users")
 
     return render(request, 'admin_panel/edit_user.html', context)
 
@@ -349,7 +351,8 @@ def edit_user(request, user_id):
 def delete_user(request, user_id):
     officer = get_object_or_404(Officer, id=user_id)
     officer.delete()
-    return redirect('manage_users')
+    messages.success(request, "user added successfully!")
+    return redirect("manage_users")
     
 
 

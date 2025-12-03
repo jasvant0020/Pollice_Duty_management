@@ -1,79 +1,209 @@
 {% extends 'admin_panel/admin_base.html' %}
-{% block page_title %}Manage Users{% endblock %}
+{% block page_title %}Manage User{% endblock %}
 
 {% block content %}
-<div class='pt-10'>
-<div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
+<div class="pt-15">
+    {% include "error_message/error_message.html" %}
 
-    <div class="flex justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-700">User List</h2>
+    <div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
 
-        <a href="{% url 'add_user' %}" 
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-           + Add User
-        </a>
+        <div class="flex justify-between mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Manage User</h2>
+
+            <a href="{% url 'add_user' %}" 
+               class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+                + Add New Personnel
+            </a>
+        </div>
+
+        <!-- Alpine Tabs -->
+        <div x-data="{ activeTab: 'users' }">
+
+            <!-- TAB BUTTONS -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="flex space-x-8 -mb-px">
+
+                    <button @click="activeTab = 'users'"
+                        :class="activeTab === 'users' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
+                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        Users
+                    </button>
+
+                    <button @click="activeTab = 'admins'"
+                        :class="activeTab === 'admins' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
+                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        Admins
+                    </button>
+
+                    <button @click="activeTab = 'gd'"
+                        :class="activeTab === 'gd' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
+                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        GD Munshi
+                    </button>
+
+                    <button @click="activeTab = 'all'"
+                        :class="activeTab === 'all' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
+                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        All Staff
+                    </button>
+
+                </nav>
+            </div>
+
+
+            <!-- USERS TAB -->
+            <div x-show="activeTab === 'users'">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Users</h3>
+
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Gender</th>
+                            <th class="p-3">DOB</th>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                            {% if officer.role == "User" %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
+                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <!-- ADMINS TAB -->
+            <div x-show="activeTab === 'admins'" style="display:none">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Admins</h3>
+
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Gender</th>
+                            <th class="p-3">DOB</th>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                            {% if officer.role == "Admin" %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
+                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+
+            <!-- GD MUNSHI TAB -->
+            <div x-show="activeTab === 'gd'" style="display:none">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">GD Munshi</h3>
+
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Gender</th>
+                            <th class="p-3">DOB</th>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                            {% if officer.role == "GD Munsi" %}
+                            <tr class="border-b hover:bg-gray-100">
+                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
+                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- All STAFF TAB -->
+            <div x-show="activeTab === 'all'">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">All Staff</h3>
+
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Gender</th>
+                            <th class="p-3">DOB</th>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in officers %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
+                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
+                                       onclick="return confirm('Are you sure?')">Delete</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
     </div>
-
-    <table class="w-full text-left border-collapse">
-        <thead>
-            <tr class="bg-gray-200 text-gray-700">
-                <th class="p-3">Name</th>
-                <th class="p-3">Email</th>
-                <th class="p-3">Password</th>
-                <th class="p-3">Gender</th>
-                <th class="p-3">DOB</th>
-                <th class="p-3">Rank</th>
-                <th class="p-3">Role</th>
-                <th class="p-3 text-right">Actions</th>
-            </tr>
-        </thead>
-
-        <tbody>
-            {% for officer in officers %}
-            <tr class="border-b hover:bg-gray-50">
-                
-                <td class="p-3 text-gray-900">{{ officer.name }}</td>
-                
-                <td class="p-3 text-gray-900">{{ officer.email }}</td>
-
-                <td class="p-3 text-gray-900">{{ officer.password }}</td>
-
-                <td class="p-3 text-gray-900">{{ officer.gender }}</td>
-
-                <td class="p-3 text-gray-900">
-                    {% if officer.dob %}
-                        {{ officer.dob|date:"d-m-Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-
-                <td class="p-3 text-gray-900">{{ officer.rank }}</td>
-
-                <td class="p-3 text-gray-900">{{ officer.role }}</td>
-
-                <td class="p-3 text-right">
-                    <a href="{% url 'edit_user' officer.id %}"
-                       class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-
-                    <a href="{% url 'delete_user' officer.id %}"
-                       class="px-3 py-1 bg-red-600 text-white rounded"
-                       onclick="return confirm('Are you sure?')">
-                       Delete
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="p-4 text-center text-gray-500">
-                    No users found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
 </div>
-</div>
-
 {% endblock %}
