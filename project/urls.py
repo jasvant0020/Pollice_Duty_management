@@ -22,7 +22,9 @@ urlpatterns = [
     path('manage_police_categories/', views.manage_police_categories, name='manage_police_categories'),
     path('manage_vvip_categories/', views.manage_vvip_categories, name='manage_vvip_categories'),
     path('add_vvip/', views.add_vvip, name='add_vvip'),
-    path('edit_vvip/', views.edit_vvip, name='edit_vvip'),
+    path('edit_vvip/<int:vvip_id>/', views.edit_vvip, name='edit_vvip'),
+    path('vvip_delete/<int:vvip_id>/', views.delete_vvip, name='delete_vvip'),
+
 
     # -------------------------------------------------------
     # UPDATED: Added CRUD URLs for Manage Users functionality

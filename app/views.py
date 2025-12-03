@@ -8,6 +8,8 @@ from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from app.services.officer_stats import get_rank_status,get_role_status
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Officer,VVIP
 
 
 
@@ -119,11 +121,101 @@ def manage_users(request):
 def manage_police_categories(request):
     return render(request, "admin_panel/manage_police_categories.html")
 def manage_vvip_categories(request):
-    return render(request, "admin_panel/manage_vvip_categories.html")
+    vvips = VVIP.objects.all().order_by('-id')
+    return render(request, "admin_panel/manage_vvip_categories.html",{"vvips": vvips})
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import VVIP
+
 def add_vvip(request):
-    return render(request, "admin_panel/add_vvip.html")
-def edit_vvip(request):
-    return render(request, "admin_panel/edit_vvip.html")
+    # You can load designations from a list or DB
+    designation_list = [
+        "PM",
+        "CM",
+        "Governor",
+        "Minister",
+        "MP",
+        "MLA",
+        "Judge"
+    ]
+
+    if request.method == "POST":
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        gender = request.POST.get('gender')
+        dob = request.POST.get('dob')
+        designation = request.POST.get('designation')
+        custom_designation = request.POST.get('custom_designation')
+
+        # If "other" → use custom designation
+        final_designation = custom_designation if designation == "other" else designation
+
+        # Save VVIP
+        VVIP.objects.create(
+            name=name,
+            email=email,
+            password=password,
+            gender=gender,
+            dob=dob if dob else None,
+            designation=final_designation,
+        )
+
+        messages.success(request, "VVIP added successfully!")
+        return redirect("manage_vvip_categories")
+
+    return render(request, "admin_panel/add_vvip.html", {
+        "designation": designation_list
+    })
+
+def edit_vvip(request, vvip_id):
+
+    vvip = get_object_or_404(VVIP, id=vvip_id)
+
+    designation_list = [
+        "PM",
+        "CM",
+        "Governor",
+        "Minister",
+        "MP",
+        "MLA",
+        "Judge"
+    ]
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        gender = request.POST.get("gender")
+        dob = request.POST.get("dob")
+        designation = request.POST.get("designation")
+        custom_designation = request.POST.get("custom_designation")
+
+        final_designation = custom_designation if designation == "other" else designation
+
+        # Save updates
+        vvip.name = name
+        vvip.email = email
+        vvip.password = password
+        vvip.gender = gender
+        vvip.dob = dob if dob else None
+        vvip.designation = final_designation
+
+        vvip.save()
+
+        messages.success(request, "VVIP updated successfully!")
+        return redirect("manage_vvip_categories")
+
+    return render(request, "admin_panel/edit_vvip.html", {
+        "vvip": vvip,
+        "designation": designation_list
+    })
+
+def delete_vvip(request, vvip_id):
+    vvip = get_object_or_404(VVIP, id=vvip_id)
+    vvip.delete()
+    messages.success(request, "VVIP deleted successfully.")
+    return redirect('manage_vvip_categories')
 
 
 #----- Custom user Panel Views -----
@@ -173,8 +265,6 @@ def login(request):
 
 
 #-------- CRUD opration by admin to manage user ---------
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Officer
 
 def manage_users(request):
     officers = Officer.objects.all()
