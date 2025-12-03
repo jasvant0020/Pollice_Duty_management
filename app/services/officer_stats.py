@@ -1,6 +1,6 @@
 # services/officer_stats.py
 from django.db.models import Count
-from app.models import Officer  # update this import accordingly
+from app.models import Officer,SecurityCategory
 
 def get_rank_status():
     """Rankwise personnel count + status logic (your logic)."""

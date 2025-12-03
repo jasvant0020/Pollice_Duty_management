@@ -98,12 +98,14 @@ def admin_dashboard(request):
 
     # Prepare context AFTER calculation
     stats = get_role_status()
+    total_vvip_categories = SecurityCategory.objects.count()
 
     context = {
         'total_staff_count': stats['total_staff_count'],
         'admin_staff_count': stats['admin_staff_count'],
         'GD_munsi_count': stats['GD_munsi_count'],
         'field_staff_count': stats['field_staff_count'],
+        'total_vvip_categories':total_vvip_categories,
     }
 
 
