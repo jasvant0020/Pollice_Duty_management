@@ -351,7 +351,7 @@ def edit_user(request, user_id):
 def delete_user(request, user_id):
     officer = get_object_or_404(Officer, id=user_id)
     officer.delete()
-    messages.success(request, "user added successfully!")
+    messages.success(request, "user deleted successfully!")
     return redirect("manage_users")
     
 
