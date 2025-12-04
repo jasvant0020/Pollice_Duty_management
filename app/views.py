@@ -163,7 +163,7 @@ def add_vvip(request):
             designation=final_designation,
         )
 
-        messages.success(request, "VVIP added successfully!")
+        messages.success(request, f"{name} has been added as a VVIP successfully!")
         return redirect("manage_vvip_categories")
 
     return render(request, "admin_panel/add_vvip.html", {
@@ -205,7 +205,7 @@ def edit_vvip(request, vvip_id):
 
         vvip.save()
 
-        messages.success(request, "VVIP updated successfully!")
+        messages.success(request, f"{name} has been updated as a VVIP successfully!")
         return redirect("manage_vvip_categories")
 
     return render(request, "admin_panel/edit_vvip.html", {
@@ -216,7 +216,7 @@ def edit_vvip(request, vvip_id):
 def delete_vvip(request, vvip_id):
     vvip = get_object_or_404(VVIP, id=vvip_id)
     vvip.delete()
-    messages.success(request, "VVIP deleted successfully.")
+    messages.success(request, f"{vvip.name} has been deleted as a VVIP successfully.")
     return redirect('manage_vvip_categories')
 
 
