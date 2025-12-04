@@ -307,13 +307,13 @@ def add_user(request):
         )
 
         if selected_role == "User":
-            messages.success(request, "user added successfully!")
+            messages.success(request, f"{name} has been added as an User successfully!")
             return redirect("manage_users")
         elif selected_role == "Admin":
-            messages.success(request, "admin added successfully!")
+            messages.success(request, f"{name} has been added as an Admin successfully!")
             return redirect("manage_users")
         elif selected_role == "GD Munsi":
-            messages.success(request, "GD Munsi added successfully!")
+            messages.success(request, f"{name} has been added as a GD Munsi successfully!")
             return redirect("manage_users")
         
 
@@ -350,13 +350,13 @@ def edit_user(request, user_id):
 
         officer.save()
         if officer.role == "User":
-            messages.success(request, "user edited successfully!")
+            messages.success(request, f"{officer.name} has been updated as an User successfully!")
             return redirect("manage_users")
         elif officer.role == "Admin":
-            messages.success(request, "admin edited successfully!")
+            messages.success(request, f"{officer.name} has been updated as an Admin successfully!")
             return redirect("manage_users")
         elif officer.role == "GD Munsi":
-            messages.success(request, "GD Munsi edited successfully!")
+            messages.success(request, f"{officer.name} has been updated as a GD Munsi successfully!")
             return redirect("manage_users")
 
     return render(request, 'admin_panel/edit_user.html', context)
@@ -367,13 +367,13 @@ def delete_user(request, user_id):
     officer = get_object_or_404(Officer, id=user_id)
     officer.delete()
     if officer.role == "User":
-        messages.success(request, "user deleted successfully!")
+        messages.success(request, f"{officer.name} has been deleted as an User successfully!")
         return redirect("manage_users")
     elif officer.role == "Admin":
-        messages.success(request, "admin deleted successfully!")
+        messages.success(request, f"{officer.name} has been deleted as an Admin successfully!")
         return redirect("manage_users")
     elif officer.role == "GD Munsi":
-        messages.success(request, "GD Munsi deleted successfully!")
+        messages.success(request, f"{officer.name} has been deleted as a GD Munsi successfully!")
         return redirect("manage_users")
     
 
