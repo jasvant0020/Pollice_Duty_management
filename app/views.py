@@ -31,7 +31,6 @@ VVIP_PERSONS = [
 ]
 
 role = [
-    {'role': 'Admin'},
     {'role': 'GD Munsi'},
     {'role': 'User'}
 ]
@@ -308,9 +307,6 @@ def add_user(request):
 
         if selected_role == "User":
             messages.success(request, f"{name} has been added as an User successfully!")
-            return redirect("manage_users")
-        elif selected_role == "Admin":
-            messages.success(request, f"{name} has been added as an Admin successfully!")
             return redirect("manage_users")
         elif selected_role == "GD Munsi":
             messages.success(request, f"{name} has been added as a GD Munsi successfully!")
