@@ -1,7 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-class CustomUser(AbstractUser):
+
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class User(AbstractUser):
 
     ROLE_CHOICES = [
         ('developer', 'Developer'),
@@ -14,26 +18,38 @@ class CustomUser(AbstractUser):
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
+    # Who created this user?
     created_by = models.ForeignKey(
-        'self', on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name="children"
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_users"
     )
 
-    admin_owner = models.ForeignKey(
-        'self', on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name="admin_users"
+    # GD Munsi belongs to exactly ONE admin
+    admin = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="gd_munsi_admin",
+        limit_choices_to={'role': 'admin'}
     )
 
-    gd_munsi_owner = models.ForeignKey(
-        'self', on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name="gd_staffs"
+    # Field staff belong to exactly ONE GD Munsi
+    gd_munsi = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="field_staffs",
+        limit_choices_to={'role': 'gd_munsi'}
     )
 
     def __str__(self):
         return f"{self.username} ({self.role})"
+
 
 # class SecurityCategory(models.Model):
 #     name = models.CharField(max_length=100, unique=True)
