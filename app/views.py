@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
-from .models import CustomUser
+from .models import User
 from .decorators import role_required
 
 
@@ -219,14 +219,14 @@ def add_user(request):
         # --- RULE 2: ADMIN CAN CREATE GD MUNSI + FIELD STAFF ---
         if current_user.role == "admin" and role == "gd_munsi":
             # allow only 1 gd_munsi per admin
-            if CustomUser.objects.filter(
+            if User.objects.filter(
                 role="gd_munsi", admin_owner=current_user
             ).exists():
                 messages.error(request, "Each Admin can create ONLY ONE GD Munsi.")
                 return redirect("add_user")
 
         # Create user
-        new_user = CustomUser.objects.create(
+        new_user = User.objects.create(
             username=username,
             password=make_password(password),
             role=role,
@@ -242,7 +242,7 @@ def add_user(request):
 
         if role == "field_staff":
             # attach to admin’s gd munsi
-            gd = CustomUser.objects.filter(
+            gd = User.objects.filter(
                 role="gd_munsi", admin_owner=current_user
             ).first()
 
