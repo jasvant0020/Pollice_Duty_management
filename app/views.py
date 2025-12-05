@@ -1,5 +1,3 @@
-from django.shortcuts import render
-
 # Create your views here.
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
@@ -7,9 +5,8 @@ from django.contrib.auth import authenticate
 from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from app.services.officer_stats import get_rank_status,get_role_status
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Officer,VVIP
+from django.contrib.auth.hashers import make_password
 
 
 
@@ -35,19 +32,19 @@ role = [
     {'role': 'User'}
 ]
 
-rank = [
-    {'rank': 'Director General of Police (DGP)'},
-    {'rank': 'Additional Director General of Police (ADGP)'},
-    {'rank': 'Inspector General of Police (IGP)'},
-    {'rank': 'Deputy Inspector General of Police (DIG)'},
-    {'rank': 'Superintendent of Police (SP)'},
-    {'rank': 'Additional Superintendent of Police (Addl SP)'},
-    {'rank': 'Deputy Superintendent of Police (DSP) / Assistant Commissioner of Police (ACP)'},
-    {'rank': 'Inspector'},  
-    {'rank': 'Sub-Inspector (SI)'},
-    {'rank': 'Assistant Sub-Inspector (ASI)'},
-    {'rank': 'Head Constable (HC)'},
-    {'rank': 'Constable'},
+police_rank = [
+    {'police_rank': 'Director General of Police (DGP)'},
+    {'police_rank': 'Additional Director General of Police (ADGP)'},
+    {'police_rank': 'Inspector General of Police (IGP)'},
+    {'police_rank': 'Deputy Inspector General of Police (DIG)'},
+    {'police_rank': 'Superintendent of Police (SP)'},
+    {'police_rank': 'Additional Superintendent of Police (Addl SP)'},
+    {'police_rank': 'Deputy Superintendent of Police (DSP) / Assistant Commissioner of Police (ACP)'},
+    {'police_rank': 'Inspector'},  
+    {'police_rank': 'Sub-Inspector (SI)'},
+    {'police_rank': 'Assistant Sub-Inspector (ASI)'},
+    {'police_rank': 'Head Constable (HC)'},
+    {'police_rank': 'Constable'},
 ]
 
 
@@ -90,132 +87,24 @@ def assign_duty(request):
     }
     return render(request, 'GD_munsi_panel/assign_duty.html', context)
 
-from django.shortcuts import render
-
 #------ Custom Admin Panel Views ------
 def admin_dashboard(request):
-
-    # Prepare context AFTER calculation
-    stats = get_role_status()
-    total_vvip_categories = SecurityCategory.objects.count()
-
-    context = {
-        'total_staff_count': stats['total_staff_count'],
-        'admin_staff_count': stats['admin_staff_count'],
-        'GD_munsi_count': stats['GD_munsi_count'],
-        'field_staff_count': stats['field_staff_count'],
-        'total_vvip_categories':total_vvip_categories,
-    }
-
-
-    return render(request, "admin_panel/admin_dashboard.html", context)
-
+    return render(request, "admin_panel/admin_dashboard.html")
 def manage(request):
     return render(request, "admin_panel/manage.html")
 def police_hierarchy_table(request):
-    context = {
-        'rank_status': get_rank_status()
-    }
-    return render(request, 'admin_panel/police_hierarchy_table.html', context)
+    return render(request, 'admin_panel/police_hierarchy_table.html')
 def manage_users(request):
     return render(request, "admin_panel/manage_users.html")
 def manage_police_categories(request):
     return render(request, "admin_panel/manage_police_categories.html")
 def manage_vvip_categories(request):
-    vvips = VVIP.objects.all().order_by('-id')
-    return render(request, "admin_panel/manage_vvip_categories.html",{"vvips": vvips})
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .models import VVIP
-
+    return render(request, "admin_panel/manage_vvip_categories.html")
 def add_vvip(request):
-    # You can load designations from a list or DB
-    designation_list = [
-        "PM",
-        "CM",
-        "Governor",
-        "Minister",
-        "MP",
-        "MLA",
-        "Judge"
-    ]
-
-    if request.method == "POST":
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        gender = request.POST.get('gender')
-        dob = request.POST.get('dob')
-        designation = request.POST.get('designation')
-        custom_designation = request.POST.get('custom_designation')
-
-        # If "other" → use custom designation
-        final_designation = custom_designation if designation == "other" else designation
-
-        # Save VVIP
-        VVIP.objects.create(
-            name=name,
-            email=email,
-            password=password,
-            gender=gender,
-            dob=dob if dob else None,
-            designation=final_designation,
-        )
-
-        messages.success(request, f"{name} has been added as a VVIP successfully!")
-        return redirect("manage_vvip_categories")
-
-    return render(request, "admin_panel/add_vvip.html", {
-        "designation": designation_list
-    })
-
+    return render(request, "admin_panel/add_vvip.html")
 def edit_vvip(request, vvip_id):
-
-    vvip = get_object_or_404(VVIP, id=vvip_id)
-
-    designation_list = [
-        "PM",
-        "CM",
-        "Governor",
-        "Minister",
-        "MP",
-        "MLA",
-        "Judge"
-    ]
-
-    if request.method == "POST":
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-        gender = request.POST.get("gender")
-        dob = request.POST.get("dob")
-        designation = request.POST.get("designation")
-        custom_designation = request.POST.get("custom_designation")
-
-        final_designation = custom_designation if designation == "other" else designation
-
-        # Save updates
-        vvip.name = name
-        vvip.email = email
-        vvip.password = password
-        vvip.gender = gender
-        vvip.dob = dob if dob else None
-        vvip.designation = final_designation
-
-        vvip.save()
-
-        messages.success(request, f"{name} has been updated as a VVIP successfully!")
-        return redirect("manage_vvip_categories")
-
-    return render(request, "admin_panel/edit_vvip.html", {
-        "vvip": vvip,
-        "designation": designation_list
-    })
-
+    return render(request, "admin_panel/edit_vvip.html")
 def delete_vvip(request, vvip_id):
-    vvip = get_object_or_404(VVIP, id=vvip_id)
-    vvip.delete()
-    messages.success(request, f"{vvip.name} has been deleted as a VVIP successfully.")
     return redirect('manage_vvip_categories')
 
 
@@ -234,246 +123,26 @@ def user_profile(request):
     return render(request, "user_panel/user_profile.html")
 
 
-# views.py
-def login(request):
-    if request.method == "POST":
-        email = request.POST.get("email")
-        password = request.POST.get("password")
-
-        # If you use username instead of email:
-        # user = authenticate(request, username=email, password=password)
-
-        # If your User model uses email as username:
-        user = authenticate(request, username=email, password=password)
-
-        if user is not None:
-            auth_login(request, user)
-
-            # Redirect based on user role
-            if user.role == "custom_admin":
-                return redirect("admin_dashboard")   # Custom admin
-
-            elif user.role == "gd_munsi":
-                return redirect("dashboard")         # GD Munsi Panel
-
-            else:
-                return redirect("user_profile")      # Normal user panel
-
-        else:
-            messages.error(request, "Invalid credentials")
-
-    return render(request, "login_panel/login.html")
-
-
 #-------- CRUD opration by admin to manage user ---------
 
 def manage_users(request):
-    officers = Officer.objects.all()
-    return render(request, 'admin_panel/manage_users.html', {'officers': officers})
-
-# Add User
+    return render(request, 'admin_panel/manage_users.html')
 def add_user(request):
-    context = {
-        'role': role,
-        'rank': rank
-    }
-
-    if request.method == "POST":
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        gender = request.POST.get('gender')
-        dob = request.POST.get('dob')
-
-        selected_rank = request.POST.get('rank')
-        selected_role = request.POST.get('role')
-
-        # Basic password match validation
-        if password != confirm_password:
-            context['error'] = "Password and Confirm Password do not match."
-            return render(request, 'admin_panel/add_user.html', context)
-
-        # Create Officer record
-        Officer.objects.create(
-            name=name,
-            email=email,
-            password=password,  # (later you should hash this)
-            gender=gender,
-            dob=dob,
-            rank=selected_rank,
-            role=selected_role
-        )
-
-        if selected_role == "User":
-            messages.success(request, f"{name} has been added as an User successfully!")
-            return redirect("manage_users")
-        elif selected_role == "GD Munsi":
-            messages.success(request, f"{name} has been added as a GD Munsi successfully!")
-            return redirect("manage_users")
-        
-
-    return render(request, 'admin_panel/add_user.html', context)
-
-
-# Edit User
+    return render(request, "admin_panel/add_user.html")
 def edit_user(request, user_id):
-    officer = get_object_or_404(Officer, id=user_id)
-    context = {
-        'officer': officer,
-        'role': role,
-        'rank': rank
-    }
-
-    if request.method == "POST":
-        # Update basic fields
-        officer.name = request.POST.get('name')
-        officer.email = request.POST.get('email')
-        officer.gender = request.POST.get('gender')
-        officer.dob = request.POST.get('dob')
-        officer.rank = request.POST.get('rank')
-        officer.role = request.POST.get('role')
-
-        # Update password only if provided and matches confirm
-        password = request.POST.get('password')
-        confirm_password = request.POST.get('confirm_password')
-        if password:
-            if password == confirm_password:
-                officer.password = password  # Later you can hash it
-            else:
-                context['error'] = "Password and Confirm Password do not match."
-                return render(request, 'admin_panel/edit_user.html', context)
-
-        officer.save()
-        if officer.role == "User":
-            messages.success(request, f"{officer.name} has been updated as an User successfully!")
-            return redirect("manage_users")
-        elif officer.role == "Admin":
-            messages.success(request, f"{officer.name} has been updated as an Admin successfully!")
-            return redirect("manage_users")
-        elif officer.role == "GD Munsi":
-            messages.success(request, f"{officer.name} has been updated as a GD Munsi successfully!")
-            return redirect("manage_users")
-
-    return render(request, 'admin_panel/edit_user.html', context)
-
-
-# Delete User
+    return render(request, 'admin_panel/edit_user.html')
 def delete_user(request, user_id):
-    officer = get_object_or_404(Officer, id=user_id)
-    officer.delete()
-    if officer.role == "User":
-        messages.success(request, f"{officer.name} has been deleted as an User successfully!")
-        return redirect("manage_users")
-    elif officer.role == "Admin":
-        messages.success(request, f"{officer.name} has been deleted as an Admin successfully!")
-        return redirect("manage_users")
-    elif officer.role == "GD Munsi":
-        messages.success(request, f"{officer.name} has been deleted as a GD Munsi successfully!")
-        return redirect("manage_users")
-    
+    return redirect("manage_users")
 
 
 #-------- CRUD opration by admin to Manage Police Categories ---------
-
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import SecurityCategory, Officer
-
 def manage_police_categories(request):
-    categories = SecurityCategory.objects.all()
-    return render(request, "admin_panel/manage_police_categories.html", {'categories': categories})
-
-
+    return render(request, "admin_panel/manage_police_categories.html")
 def add_security_category(request):
-    ranks = Officer.objects.values_list('rank', flat=True).distinct()
-    
-    context = {
-        'ranks': ranks,
-        'category': category  # Make sure 'category' is defined earlier
-    }
-
-    if request.method == "POST":
-        selected_category = request.POST.get('category_name')
-        custom_category = request.POST.get('custom_category')
-        category_name = custom_category.strip() if custom_category else selected_category
-
-        # --- VALIDATION: Duplicate category check ---
-        if category_name:
-            if SecurityCategory.objects.filter(name__iexact=category_name).exists():
-                messages.error(request, f"Category '{category_name}' already exists!")
-                return redirect('add_security_category')
-
-        # --- Decide final category name ---
-        if selected_category == "other" and custom_category:
-            name = custom_category
-        else:
-            name = selected_category
-
-        # --- Collect personnel by rank ---
-        personnel_by_rank = {}
-        for rank in ranks:
-            count = request.POST.get(rank, '0')  # default to 0 if empty
-            try:
-                count = int(count)
-            except ValueError:
-                count = 0
-            if count > 0:  # only save ranks with personnel > 0
-                personnel_by_rank[rank] = count
-
-        # --- Calculate total personnel ---
-        total_personnel = sum(personnel_by_rank.values())
-
-        # --- Save to DB ---
-        SecurityCategory.objects.create(
-            name=name,
-            total_personnel=total_personnel,
-            personnel_by_rank=personnel_by_rank
-        )
-
-        messages.success(request, f"Category '{name}' added successfully!")
-        return redirect('manage_police_categories')
-
-    return render(request, 'admin_panel/add_security_category.html', context)
-
-
+    return render(request, 'admin_panel/add_security_category.html')
 def edit_security_category(request, category_id):
-    category = get_object_or_404(SecurityCategory, id=category_id)
-    ranks = Officer.objects.values_list('rank', flat=True).distinct()
-
-    context = {
-        'category': category,
-        'ranks': ranks
-    }
-
-    if request.method == "POST":
-        category.name = request.POST.get('name')
-
-        # Collect personnel by rank, only save ranks with >0 personnel
-        personnel_by_rank = {}
-        for rank in ranks:
-            count = request.POST.get(rank, '0')
-            try:
-                count = int(count)
-            except ValueError:
-                count = 0
-            if count > 0:
-                personnel_by_rank[rank] = count
-
-        # Update total personnel from non-zero ranks
-        category.total_personnel = sum(personnel_by_rank.values())
-        category.personnel_by_rank = personnel_by_rank
-        category.save()
-
-        messages.success(request, f"Category '{category.name}' updated successfully!")
-        return redirect('manage_police_categories')
-
-    return render(request, 'admin_panel/edit_security_category.html', context)
-
-
+    return render(request, 'admin_panel/edit_security_category.html')
 def delete_security_category(request, category_id):
-    category = get_object_or_404(SecurityCategory, id=category_id)
-    category.delete()
-    messages.success(request, f"' {category.name} ' deleted successfully!")
     return redirect('manage_police_categories')
 
 
