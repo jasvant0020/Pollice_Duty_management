@@ -96,10 +96,10 @@ def police_hierarchy_table(request):
     return render(request, 'admin_panel/police_hierarchy_table.html')
 def manage_users(request):
     return render(request, "admin_panel/manage_users.html")
-def manage_police_categories(request):
-    return render(request, "admin_panel/manage_police_categories.html")
-def manage_vvip_categories(request):
-    return render(request, "admin_panel/manage_vvip_categories.html")
+def manage_security_categories(request):
+    return render(request, "admin_panel/manage_security_categories.html")
+def manage_vvip(request):
+    return render(request, "admin_panel/manage_vvip.html")
 def add_vvip(request):
     return render(request, "admin_panel/add_vvip.html")
 def edit_vvip(request, vvip_id):
