@@ -2,11 +2,13 @@
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
-from django.contrib.auth import login as auth_login
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate, login, logout
+from .models import CustomUser
+
 
 
 
@@ -57,6 +59,46 @@ category = [
     {'category': 'SPG Security'},  # Special Protection Group (highest level, for PM of India)
     {'category':'other'}
 ]
+
+
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+
+            # ROLE BASED REDIRECTION
+            if user.role == "developer":
+                return redirect("admin:index")  # Use Django admin for developer
+
+            elif user.role == "master_admin":
+                return redirect("admin_dashboard")  # You can create dedicated dashboard later
+
+            elif user.role == "super_admin":
+                return redirect("admin_dashboard")
+
+            elif user.role == "admin":
+                return redirect("admin_dashboard")
+
+            elif user.role == "gd_munsi":
+                return redirect("dashboard")  # Munsi dashboard
+
+            elif user.role == "field_staff":
+                return redirect("user_profile")
+
+            else:
+                messages.error(request, "Unknown role assigned!")
+                return redirect("login")
+
+        else:
+            messages.error(request, "Invalid credentials")
+            return redirect("login")
+
+    return render(request, "login_panel/login.html")
 
 
 #------ Custom GD Munsi Panel Views ------
