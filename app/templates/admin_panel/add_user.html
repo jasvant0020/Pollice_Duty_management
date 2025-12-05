@@ -7,50 +7,38 @@
 
     <!-- Name -->
     <div>
-        <label for="name" class="block text-gray-700 font-semibold mb-1">Name:</label>
-        <input type="text" name="name" id="name"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Name:</label>
+        <input type="text" name="name" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Email -->
     <div>
-        <label for="email" class="block text-gray-700 font-semibold mb-1">Email:</label>
-        <input type="email" name="email" id="email"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Email:</label>
+        <input type="email" name="email" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Phone -->
     <div>
-        <label for="phone" class="block text-gray-700 font-semibold mb-1">Phone:</label>
-        <input type="text" name="phone" id="phone"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
+        <input type="text" name="phone" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Password -->
     <div>
-        <label for="password" class="block text-gray-700 font-semibold mb-1">Password:</label>
-        <input type="password" name="password" id="password"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Password:</label>
+        <input type="password" name="password" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Confirm Password -->
     <div>
-        <label for="confirm_password" class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
-        <input type="password" name="confirm_password" id="confirm_password"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
+        <input type="password" name="confirm_password" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Gender -->
     <div>
-        <label for="gender" class="block text-gray-700 font-semibold mb-1">Gender:</label>
-        <select name="gender" id="gender"
-                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required>
+        <label class="block text-gray-700 font-semibold mb-1">Gender:</label>
+        <select name="gender" class="w-full border rounded p-2" required>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
@@ -59,55 +47,47 @@
 
     <!-- DOB -->
     <div>
-        <label for="dob" class="block text-gray-700 font-semibold mb-1">Date of Birth:</label>
-        <input type="date" name="dob" id="dob"
-               class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-               required>
+        <label class="block text-gray-700 font-semibold mb-1">Date of Birth:</label>
+        <input type="date" name="dob" class="w-full border rounded p-2" required>
     </div>
 
     <!-- Role -->
     <div>
         <label class="font-semibold text-gray-700">Role:</label>
-        <select name="role" id="role"
-                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required onchange="toggleRankField()">
-            <option value="admin">Admin</option>
-            <option value="gd_munsi">GD Munsi</option>
-            <option value="police">Police</option>
-        </select>
-    </div>
-
-    <!-- Rank (Only Visible for Police / GD Munsi) -->
-    <div id="rank_section">
-        <label for="rank" class="block text-gray-700 font-semibold mb-1">Rank:</label>
-        <select name="rank" id="rank"
-                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            {% for r in police_rank %}
-                <option value="{{ r.rank }}">{{ r.police_rank }}</option>
+        <select name="role" id="role" class="w-full border rounded p-2" required onchange="toggleGDMunsi()">
+            {% for r in allowed_roles %}
+                <option value="{{ r }}">{{ r|title }}</option>
             {% endfor %}
         </select>
     </div>
 
-    <button type="submit"
-            class="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
+    <!-- GD Munsi selection (only for admin creating field staff) -->
+    <div id="gd_munsi_block" style="display:none;">
+        <label class="font-semibold text-gray-700">Select GD Munsi:</label>
+        <select name="gd_munsi_id" class="w-full border rounded p-2">
+            {% for gm in gd_munsi_list %}
+                <option value="{{ gm.id }}">{{ gm.first_name }} ({{ gm.email }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
         Save
     </button>
 </form>
 
 <script>
-function toggleRankField() {
+function toggleGDMunsi() {
     const role = document.getElementById("role").value;
-    const rankSection = document.getElementById("rank_section");
+    const block = document.getElementById("gd_munsi_block");
 
-    if (role === "police" || role === "gd_munsi") {
-        rankSection.style.display = "block";
+    if (role === "field_staff") {
+        block.style.display = "block";
     } else {
-        rankSection.style.display = "none";
+        block.style.display = "none";
     }
 }
-
-// Initial load handling
-toggleRankField();
+toggleGDMunsi();
 </script>
 
 {% endblock %}

@@ -201,8 +201,50 @@ def user_profile(request):
 def manage_users(request):
     return render(request, 'admin_panel/manage_users.html')
 
-@role_required(["admin", "super_admin"])
+@role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
 def add_user(request):
+
+    user = request.user
+    context = {}
+
+    # -----------------------------------------------------
+    # 1️⃣ Determine allowed roles for the logged-in user
+    # -----------------------------------------------------
+    if user.role == "developer":
+        allowed_roles = ["master_admin"]
+
+    elif user.role == "master_admin":
+        allowed_roles = ["super_admin"]
+
+    elif user.role == "super_admin":
+        allowed_roles = ["admin"]
+
+    elif user.role == "admin":
+        allowed_roles = ["gd_munsi", "field_staff"]
+
+    elif user.role == "gd_munsi":
+        allowed_roles = ["field_staff"]
+
+    else:
+        allowed_roles = []
+
+    context["allowed_roles"] = allowed_roles
+
+    # -----------------------------------------------------
+    # 2️⃣ Provide GD Munsi list only when needed
+    # -----------------------------------------------------
+    if user.role == "admin":
+        context["gd_munsi_list"] = User.objects.filter(role="gd_munsi", admin=user)
+
+    elif user.role == "gd_munsi":
+        context["gd_munsi_list"] = [user]   # force assign to itself
+
+    else:
+        context["gd_munsi_list"] = []
+
+    # -----------------------------------------------------
+    # 3️⃣ Handle user creation
+    # -----------------------------------------------------
     if request.method == "POST":
         name = request.POST.get("name")
         email = request.POST.get("email")
@@ -212,53 +254,37 @@ def add_user(request):
         role = request.POST.get("role")
         password = request.POST.get("password")
 
-        user = User(
+        new_user = User(
             username=email,
             email=email,
             first_name=name,
             role=role,
-            created_by=request.user,   # AUTO SET
+            created_by=request.user,
         )
 
-        # --- Hierarchy rules ---
-        if request.user.role == "admin":
-            # Admin creates GD Munsi or Field staff
+        # HIERARCHY LOGIC
+        if user.role == "admin":
             if role == "gd_munsi":
-                user.admin = request.user  # One admin → one GD Munsi
+                new_user.admin = user  
+
             elif role == "field_staff":
-                gd_munsi_id = request.POST.get("gd_munsi_id")
-                if gd_munsi_id:
-                    gd_munsi = User.objects.get(id=gd_munsi_id)
-                    user.gd_munsi = gd_munsi
-                    user.admin = request.user  # also connect to the admin
+                gd_id = request.POST.get("gd_munsi_id")
+                if gd_id:
+                    gm = User.objects.get(id=gd_id)
+                    new_user.gd_munsi = gm
+                    new_user.admin = user
 
-        elif request.user.role == "gd_munsi":
-            # GD Munsi creates only field staff
+        elif user.role == "gd_munsi":
             if role == "field_staff":
-                user.gd_munsi = request.user
-                user.admin = request.user.admin  # connect back to parent admin
+                new_user.gd_munsi = user
+                new_user.admin = user.admin
 
-        elif request.user.role == "super_admin":
-            # Super admin creates only admins
-            pass  # no extra linkage needed
+        # Higher hierarchy don't need linking
+        new_user.set_password(password)
+        new_user.save()
 
-        elif request.user.role == "master_admin":
-            # Master admin creates only super admins
-            pass
+        return redirect("user_list")
 
-        elif request.user.role == "developer":
-            # Developer creates master admin
-            pass
-
-        user.set_password(password)
-        user.save()
-
-        return redirect("user_list")  # adjust as needed
-
-    context = {
-        "gd_munsi_list": User.objects.filter(role="gd_munsi"),
-        "admin_list": User.objects.filter(role="admin"),
-    }
     return render(request, "add_user.html", context)
 
 @role_required(["admin"])
