@@ -203,62 +203,63 @@ def manage_users(request):
 
 @role_required(["admin", "super_admin"])
 def add_user(request):
-
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        gender = request.POST.get("gender")
+        dob = request.POST.get("dob")
         role = request.POST.get("role")
-        
-        current_user = request.user
+        password = request.POST.get("password")
 
-        # --- RULE 1: SUPER ADMIN CAN CREATE ONLY ADMIN ---
-        if current_user.role == "super_admin" and role not in ["admin"]:
-            messages.error(request, "Super Admin can only create Admin users.")
-            return redirect("add_user")
-
-        # --- RULE 2: ADMIN CAN CREATE GD MUNSI + FIELD STAFF ---
-        if current_user.role == "admin" and role == "gd_munsi":
-            # allow only 1 gd_munsi per admin
-            if User.objects.filter(
-                role="gd_munsi", admin_owner=current_user
-            ).exists():
-                messages.error(request, "Each Admin can create ONLY ONE GD Munsi.")
-                return redirect("add_user")
-
-        # Create user
-        new_user = User.objects.create(
-            username=username,
-            password=make_password(password),
+        user = User(
+            username=email,
+            email=email,
+            first_name=name,
             role=role,
-            created_by=current_user,
+            created_by=request.user,   # AUTO SET
         )
 
-        # Assign ownership logic
-        if role == "admin":
-            new_user.admin_owner = current_user
+        # --- Hierarchy rules ---
+        if request.user.role == "admin":
+            # Admin creates GD Munsi or Field staff
+            if role == "gd_munsi":
+                user.admin = request.user  # One admin → one GD Munsi
+            elif role == "field_staff":
+                gd_munsi_id = request.POST.get("gd_munsi_id")
+                if gd_munsi_id:
+                    gd_munsi = User.objects.get(id=gd_munsi_id)
+                    user.gd_munsi = gd_munsi
+                    user.admin = request.user  # also connect to the admin
 
-        if role == "gd_munsi":
-            new_user.admin_owner = current_user
+        elif request.user.role == "gd_munsi":
+            # GD Munsi creates only field staff
+            if role == "field_staff":
+                user.gd_munsi = request.user
+                user.admin = request.user.admin  # connect back to parent admin
 
-        if role == "field_staff":
-            # attach to admin’s gd munsi
-            gd = User.objects.filter(
-                role="gd_munsi", admin_owner=current_user
-            ).first()
+        elif request.user.role == "super_admin":
+            # Super admin creates only admins
+            pass  # no extra linkage needed
 
-            if gd is None:
-                messages.error(request, "Create GD Munsi first before adding Field Staff.")
-                return redirect("add_user")
+        elif request.user.role == "master_admin":
+            # Master admin creates only super admins
+            pass
 
-            new_user.gd_munsi_owner = gd
-            new_user.admin_owner = current_user
+        elif request.user.role == "developer":
+            # Developer creates master admin
+            pass
 
-        new_user.save()
+        user.set_password(password)
+        user.save()
 
-        messages.success(request, f"{role} created successfully!")
-        return redirect("manage_users")
+        return redirect("user_list")  # adjust as needed
 
-    return render(request, "admin_panel/add_user.html")
+    context = {
+        "gd_munsi_list": User.objects.filter(role="gd_munsi"),
+        "admin_list": User.objects.filter(role="admin"),
+    }
+    return render(request, "add_user.html", context)
 
 @role_required(["admin"])
 def edit_user(request, user_id):
@@ -286,6 +287,38 @@ def edit_security_category(request, category_id):
 def delete_security_category(request, category_id):
     return redirect('manage_police_categories')
 
+
+
+
+
+
+def list_users(request):
+
+    user = request.user
+
+    if user.role == "developer":
+        users = User.objects.all()
+
+    elif user.role == "master_admin":
+        users = User.objects.filter(role="super_admin")
+
+    elif user.role == "super_admin":
+        users = User.objects.filter(created_by=user)
+
+    elif user.role == "admin":
+        users = User.objects.filter(admin=user)
+
+    elif user.role == "gd_munsi":
+        users = User.objects.filter(gd_munsi=user)
+
+    elif user.role == "field_staff":
+        users = User.objects.filter(id=user.id)
+
+    context = {
+        "users": users,
+    }
+
+    return render(request, "user_list.html", context)
 
 
 
