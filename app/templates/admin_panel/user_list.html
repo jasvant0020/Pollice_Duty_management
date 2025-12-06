@@ -1,0 +1,33 @@
+{% extends 'admin_panel/admin_base.html' %}
+{% block page_title %}User List{% endblock %}
+{% block content %}
+
+<h2 class="text-xl font-semibold mb-4">Users</h2>
+
+<table class="w-full border-collapse border">
+    <thead>
+        <tr class="bg-gray-200">
+            <th class="p-2 border">Name</th>
+            <th class="p-2 border">Email</th>
+            <th class="p-2 border">Role</th>
+            <th class="p-2 border">Created By</th>
+            <th class="p-2 border">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in users %}
+        <tr class="text-center border">
+            <td class="p-2">{{ u.first_name }}</td>
+            <td class="p-2">{{ u.email }}</td>
+            <td class="p-2">{{ u.role|title }}</td>
+            <td class="p-2">{{ u.created_by.first_name if u.created_by else '-' }}</td>
+            <td class="p-2">
+                <a href="{% url 'edit_user' u.id %}" class="text-blue-600">Edit</a> |
+                <a href="{% url 'delete_user' u.id %}" class="text-red-600">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

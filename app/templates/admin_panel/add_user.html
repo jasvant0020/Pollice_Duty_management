@@ -8,37 +8,37 @@
     <!-- Name -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Name:</label>
-        <input type="text" name="name" class="w-full border rounded p-2" required>
+        <input type="text" name="name" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Email -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Email:</label>
-        <input type="email" name="email" class="w-full border rounded p-2" required>
+        <input type="email" name="email" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Phone -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
-        <input type="text" name="phone" class="w-full border rounded p-2" required>
+        <input type="text" name="phone" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Password -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Password:</label>
-        <input type="password" name="password" class="w-full border rounded p-2" required>
+        <input type="password" name="password" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Confirm Password -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
-        <input type="password" name="confirm_password" class="w-full border rounded p-2" required>
+        <input type="password" name="confirm_password" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Gender -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Gender:</label>
-        <select name="gender" class="w-full border rounded p-2" required>
+        <select name="gender" class="w-full text-gray-800 border rounded p-2" required>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
@@ -48,13 +48,13 @@
     <!-- DOB -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Date of Birth:</label>
-        <input type="date" name="dob" class="w-full border rounded p-2" required>
+        <input type="date" name="dob" class="w-full text-gray-800 border rounded p-2" required>
     </div>
 
     <!-- Role -->
     <div>
         <label class="font-semibold text-gray-700">Role:</label>
-        <select name="role" id="role" class="w-full border rounded p-2" required onchange="toggleGDMunsi()">
+        <select name="role" id="role" class="w-full text-gray-800 border rounded p-2" required onchange="toggleGDMunsi()">
             {% for r in allowed_roles %}
                 <option value="{{ r }}">{{ r|title }}</option>
             {% endfor %}
@@ -64,7 +64,7 @@
     <!-- GD Munsi selection (only for admin creating field staff) -->
     <div id="gd_munsi_block" style="display:none;">
         <label class="font-semibold text-gray-700">Select GD Munsi:</label>
-        <select name="gd_munsi_id" class="w-full border rounded p-2">
+        <select name="gd_munsi_id" class="w-full text-gray-800 border rounded p-2">
             {% for gm in gd_munsi_list %}
                 <option value="{{ gm.id }}">{{ gm.first_name }} ({{ gm.email }})</option>
             {% endfor %}
