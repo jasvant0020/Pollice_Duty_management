@@ -29,12 +29,6 @@
                         Users
                     </button>
 
-                    {% comment %} <button @click="activeTab = 'admins'"
-                        :class="activeTab === 'admins' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
-                        class="py-3 px-1 border-b-2 font-medium text-sm">
-                        Admins
-                    </button> {% endcomment %}
-
                     <button @click="activeTab = 'gd'"
                         :class="activeTab === 'gd' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
                         class="py-3 px-1 border-b-2 font-medium text-sm">
@@ -69,7 +63,7 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
-                            {% if officer.role == "User" %}
+                            {% if officer.role == "field_staff" %}
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-gray-800">{{ officer.name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
@@ -89,46 +83,6 @@
                 </table>
             </div>
 
-
-            {% comment %} <!-- ADMINS TAB -->
-            <div x-show="activeTab === 'admins'" style="display:none">
-                <h3 class="text-xl font-semibold text-gray-700 mb-4">Admins</h3>
-
-                <table class="w-full border-collapse text-left">
-                    <thead>
-                        <tr class="bg-gray-200 text-gray-700">
-                            <th class="p-3">Name</th>
-                            <th class="p-3">Email</th>
-                            <th class="p-3">Gender</th>
-                            <th class="p-3">DOB</th>
-                            <th class="p-3">Rank</th>
-                            <th class="p-3">Role</th>
-                            <th class="p-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for officer in officers %}
-                            {% if officer.role == "Admin" %}
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
-                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
-                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
-                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
-                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
-                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
-                                <td class="p-3 text-right">
-                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
-                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
-                                </td>
-                            </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div> {% endcomment %}
-
-
             <!-- GD MUNSHI TAB -->
             <div x-show="activeTab === 'gd'" style="display:none">
                 <h3 class="text-xl font-semibold text-gray-700 mb-4">GD Munshi</h3>
@@ -147,7 +101,7 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
-                            {% if officer.role == "GD Munsi" %}
+                            {% if officer.role == "gd_munsi" %}
                             <tr class="border-b hover:bg-gray-100">
                                 <td class="p-3 text-gray-800">{{ officer.name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
