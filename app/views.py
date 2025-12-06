@@ -187,9 +187,23 @@ def manage(request):
 def police_hierarchy_table(request):
     return render(request, 'admin_panel/police_hierarchy_table.html')
 
-@role_required(["admin"])
+@role_required(["admin", "Admin"])
 def manage_users(request):
-    return render(request, "admin_panel/manage_users.html")
+    admin_user = request.user
+
+    # Get all officers related to this admin
+    officers = User.objects.filter(
+        Q(role="gd_munsi", admin=admin_user) |             # GD Munsis under this admin
+        Q(role="field_staff", gd_munsi__admin=admin_user) |  # Field staff under GD Munsis of this admin
+        Q(created_by=admin_user)                             # Users directly created by admin
+    ).distinct().order_by('role', 'username')
+
+    # Debugging: print all officers in console
+    print("Total officers:", officers.count())
+    for o in officers:
+        print(f"{o.username} | role: {o.role} | admin: {o.admin} | gd_munsi: {o.gd_munsi} | created_by: {o.created_by}")
+
+    return render(request, "admin_panel/manage_users.html", {"officers": officers})
 
 @role_required(["admin"])
 def manage_security_categories(request):
@@ -239,9 +253,9 @@ def user_profile(request):
 
 
 #-------- CRUD opration by admin to manage user ---------
-@role_required(["admin"])
-def manage_users(request):
-    return render(request, 'admin_panel/manage_users.html')
+# @role_required(["admin"])
+# def manage_users(request):
+#     return render(request, 'admin_panel/manage_users.html')
 
 @role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
 def add_user(request):
@@ -360,63 +374,63 @@ def delete_security_category(request, category_id):
 
 
 
-def list_users(request):
+# def list_users(request):
 
-    user = request.user
+#     user = request.user
 
-    if user.role == "developer":
-        users = User.objects.all()
+#     if user.role == "developer":
+#         users = User.objects.all()
 
-    elif user.role == "master_admin":
-        users = User.objects.filter(role="super_admin")
+#     elif user.role == "master_admin":
+#         users = User.objects.filter(role="super_admin")
 
-    elif user.role == "super_admin":
-        users = User.objects.filter(created_by=user)
+#     elif user.role == "super_admin":
+#         users = User.objects.filter(created_by=user)
 
-    elif user.role == "admin":
-        users = User.objects.filter(admin=user)
+#     elif user.role == "admin":
+#         users = User.objects.filter(admin=user)
 
-    elif user.role == "gd_munsi":
-        users = User.objects.filter(gd_munsi=user)
+#     elif user.role == "gd_munsi":
+#         users = User.objects.filter(gd_munsi=user)
 
-    elif user.role == "field_staff":
-        users = User.objects.filter(id=user.id)
+#     elif user.role == "field_staff":
+#         users = User.objects.filter(id=user.id)
 
-    context = {
-        "users": users,
-    }
+#     context = {
+#         "users": users,
+#     }
 
-    return render(request, "admin_panel/user_list.html", context)
+#     return render(request, "admin_panel/user_list.html", context)
 
-@role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi", "field_staff"])
-def user_list(request):
-    user = request.user
+# @role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi", "field_staff"])
+# def user_list(request):
+#     user = request.user
 
-    if user.role == "developer":
-        users = User.objects.all()
+#     if user.role == "developer":
+#         users = User.objects.all()
 
-    elif user.role == "master_admin":
-        users = User.objects.filter(role="super_admin")
+#     elif user.role == "master_admin":
+#         users = User.objects.filter(role="super_admin")
 
-    elif user.role == "super_admin":
-        users = User.objects.filter(created_by=user)
+#     elif user.role == "super_admin":
+#         users = User.objects.filter(created_by=user)
 
-    elif user.role == "admin":
-        users = User.objects.filter(
-            Q(role="gd_munsi", admin=user) | 
-            Q(role="field_staff", admin=user)
-        )
+#     elif user.role == "admin":
+#         users = User.objects.filter(
+#             Q(role="gd_munsi", admin=user) | 
+#             Q(role="field_staff", admin=user)
+#         )
 
-    elif user.role == "gd_munsi":
-        users = User.objects.filter(gd_munsi=user)
+#     elif user.role == "gd_munsi":
+#         users = User.objects.filter(gd_munsi=user)
 
-    else:  # field_staff
-        users = User.objects.filter(id=user.id)
+#     else:  # field_staff
+#         users = User.objects.filter(id=user.id)
 
-    context = {
-        "users": users
-    }
-    return render(request, "admin_panel/user_list.html", context)
+#     context = {
+#         "users": users
+#     }
+#     return render(request, "admin_panel/user_list.html", context)
 
 
 
