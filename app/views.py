@@ -9,6 +9,12 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from .models import User
 from .decorators import role_required
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from app.models import User
+from app.decorators import role_required
+from django.db.models import Q
+
 
 
 
@@ -65,9 +71,18 @@ category = [
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
+        email = request.POST.get("email")
         password = request.POST.get("password")
 
+        # Get user by email
+        try:
+            user_obj = User.objects.get(email=email)
+            username = user_obj.username
+        except User.DoesNotExist:
+            messages.error(request, "Email not found!")
+            return redirect("login")
+
+        # Authenticate using username + password
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
@@ -75,19 +90,13 @@ def login_view(request):
 
             # ROLE BASED REDIRECTION
             if user.role == "developer":
-                return redirect("admin:index")  # Use Django admin for developer
+                return redirect("admin:index")
 
-            elif user.role == "master_admin":
-                return redirect("admin_dashboard")  # You can create dedicated dashboard later
-
-            elif user.role == "super_admin":
-                return redirect("admin_dashboard")
-
-            elif user.role == "admin":
+            elif user.role in ["master_admin", "super_admin", "admin"]:
                 return redirect("admin_dashboard")
 
             elif user.role == "gd_munsi":
-                return redirect("dashboard")  # Munsi dashboard
+                return redirect("dashboard")
 
             elif user.role == "field_staff":
                 return redirect("user_profile")
@@ -104,15 +113,48 @@ def login_view(request):
 
 
 #------ Custom GD Munsi Panel Views ------
-@role_required(["gd_munsi"])
+@login_required
 def dashboard(request):
-    context = {
-        'role': 'Munsi',  # change to 'Admin' to test admin view
-        'police_count': len(POLICE_PERSONNEL),
-        'vvip_count': len(VVIP_PERSONS),
-        'assignments_today': 2
-    }
-    return render(request, 'GD_munsi_panel/dashboard.html', context)
+    role = request.user.role
+
+    # Developer Dashboard
+    if role == "developer":
+        return render(request, "developer/dashboard.html", {
+            "total_users": User.objects.count(),
+            "master_admin_count": User.objects.filter(role="master_admin").count()
+        })
+
+    # Master Admin Dashboard
+    if role == "master_admin":
+        return render(request, "master_admin/dashboard.html", {
+            "super_admin_count": User.objects.filter(role="super_admin").count(),
+        })
+
+    # Super Admin Dashboard
+    if role == "super_admin":
+        return render(request, "super_admin/dashboard.html", {
+            "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
+        })
+
+    # Admin Dashboard
+    if role == "admin":
+        return render(request, "admin_panel/admin_dashboard.html", {
+            "gd_munsi_count": User.objects.filter(role="gd_munsi", admin=request.user).count(),
+            "field_staff_count": User.objects.filter(role="field_staff", admin=request.user).count(),
+        })
+
+    # GD Munsi Dashboard
+    if role == "gd_munsi":
+        return render(request, "GD_munsi_panel/dashboard.html", {
+            "field_staff_count": User.objects.filter(gd_munsi=request.user).count(),
+        })
+
+    # Field Staff Dashboard
+    if role == "field_staff":
+        return render(request, "user_panel/user_profile.html", {
+            "user_data": request.user
+        })
+
 
 @role_required(["gd_munsi"])
 def police_list(request):
@@ -283,9 +325,9 @@ def add_user(request):
         new_user.set_password(password)
         new_user.save()
 
-        return redirect("user_list")
+        return redirect("admin_panel/user_list")
 
-    return render(request, "add_user.html", context)
+    return render(request, "admin_panel/add_user.html", context)
 
 @role_required(["admin"])
 def edit_user(request, user_id):
@@ -344,7 +386,37 @@ def list_users(request):
         "users": users,
     }
 
-    return render(request, "user_list.html", context)
+    return render(request, "admin_panel/user_list.html", context)
+
+@role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi", "field_staff"])
+def user_list(request):
+    user = request.user
+
+    if user.role == "developer":
+        users = User.objects.all()
+
+    elif user.role == "master_admin":
+        users = User.objects.filter(role="super_admin")
+
+    elif user.role == "super_admin":
+        users = User.objects.filter(created_by=user)
+
+    elif user.role == "admin":
+        users = User.objects.filter(
+            Q(role="gd_munsi", admin=user) | 
+            Q(role="field_staff", admin=user)
+        )
+
+    elif user.role == "gd_munsi":
+        users = User.objects.filter(gd_munsi=user)
+
+    else:  # field_staff
+        users = User.objects.filter(id=user.id)
+
+    context = {
+        "users": users
+    }
+    return render(request, "admin_panel/user_list.html", context)
 
 
 
