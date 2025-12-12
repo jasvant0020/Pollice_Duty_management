@@ -111,8 +111,8 @@
                                 <td class="p-3 text-gray-800">{{ officer.role }}</td>
                                 <td class="p-3 text-right">
                                     <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
-                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
+                                    {% comment %} <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
+                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a> {% endcomment %}
                                 </td>
                             </tr>
                             {% endif %}

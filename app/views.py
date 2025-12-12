@@ -54,7 +54,7 @@ police_rank = [
     {'police_rank': 'Sub-Inspector (SI)'},
     {'police_rank': 'Assistant Sub-Inspector (ASI)'},
     {'police_rank': 'Head Constable (HC)'},
-    {'police_rank': 'Constable'},
+    {'police_rank': 'Constable'}
 ]
 
 
@@ -253,15 +253,13 @@ def user_profile(request):
 
 
 #-------- CRUD opration by admin to manage user ---------
-# @role_required(["admin"])
-# def manage_users(request):
-#     return render(request, 'admin_panel/manage_users.html')
-
 @role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
 def add_user(request):
 
     user = request.user
-    context = {}
+    context = {
+        'police_rank':police_rank,
+    }
 
     # -----------------------------------------------------
     # 1️⃣ Determine allowed roles for the logged-in user
@@ -307,6 +305,7 @@ def add_user(request):
         phone = request.POST.get("phone")
         gender = request.POST.get("gender")
         dob = request.POST.get("dob")
+        rank = request.POST.get("rank")
         role = request.POST.get("role")
         password = request.POST.get("password")
 
@@ -314,9 +313,14 @@ def add_user(request):
             username=email,
             email=email,
             first_name=name,
+            phone=phone,
+            gender=gender,
+            dob=dob,
             role=role,
+            rank=rank,
             created_by=request.user,
         )
+
 
         # HIERARCHY LOGIC
         if user.role == "admin":
@@ -339,13 +343,118 @@ def add_user(request):
         new_user.set_password(password)
         new_user.save()
 
-        return redirect("admin_panel/user_list")
+        if role == "field_staff":
+            messages.success(request, f"{name} has been added as an Field Staff successfully!")
+            return redirect("manage_users")
+        elif role == "gd_munsi":
+            messages.success(request, f"{name} has been added as a GD Munsi successfully!")
+            return redirect("manage_users")
+
+        # return redirect("admin_panel/user_list")
 
     return render(request, "admin_panel/add_user.html", context)
 
-@role_required(["admin"])
+@role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
 def edit_user(request, user_id):
-    return render(request, 'admin_panel/edit_user.html')
+
+    user = request.user                          # logged in user
+    officer = User.objects.get(id=user_id)       # user being edited
+    context = {
+        'police_rank':police_rank,
+    }
+
+    # -----------------------------------------------------
+    # Determine allowed roles based on logged-in user
+    # -----------------------------------------------------
+    if user.role == "developer":
+        allowed_roles = ["master_admin"]
+
+    elif user.role == "master_admin":
+        allowed_roles = ["super_admin"]
+
+    elif user.role == "super_admin":
+        allowed_roles = ["admin"]
+
+    elif user.role == "admin":
+        allowed_roles = ["gd_munsi", "field_staff"]
+
+    elif user.role == "gd_munsi":
+        allowed_roles = ["field_staff"]
+
+    else:
+        allowed_roles = []
+
+    context["role"] = allowed_roles
+    context["officer"] = officer
+
+    # -----------------------------------------------------
+    # Provide GD Munsi dropdown logic
+    # -----------------------------------------------------
+    if user.role == "admin":
+        context["gd_munsi_list"] = User.objects.filter(role="gd_munsi", admin=user)
+
+    elif user.role == "gd_munsi":
+        context["gd_munsi_list"] = [user]
+
+    else:
+        context["gd_munsi_list"] = []
+
+    # -----------------------------------------------------
+    # Handle UPDATE
+    # -----------------------------------------------------
+    if request.method == "POST":
+        officer.first_name = request.POST.get("name")
+        officer.email = request.POST.get("email")
+        officer.username = request.POST.get("email")
+        officer.gender = request.POST.get("gender")
+        officer.dob = request.POST.get("dob")
+
+        new_role = request.POST.get("role")
+
+        # ----------------------------
+        # Password Update
+        # ----------------------------
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if password:
+            if password == confirm_password:
+                officer.set_password(password)
+            else:
+                messages.error(request, "Passwords do not match!")
+                return redirect("edit_user", user_id=user_id)
+
+        # ----------------------------
+        # Hierarchy Logic
+        # ----------------------------
+        if user.role == "admin":
+
+            if new_role == "gd_munsi":
+                officer.gd_munsi = None
+                officer.admin = user
+
+            elif new_role == "field_staff":
+                gd_id = request.POST.get("gd_munsi_id")
+                if gd_id:
+                    gm = User.objects.get(id=gd_id)
+                    officer.gd_munsi = gm
+                    officer.admin = user
+
+        elif user.role == "gd_munsi":
+            if new_role == "field_staff":
+                officer.gd_munsi = user
+                officer.admin = user.admin
+
+        # Update role last
+        officer.role = new_role
+
+        officer.save()
+
+        messages.success(request, "User updated successfully!")
+        return redirect("manage_users")
+
+    return render(request, "admin_panel/edit_user.html", context)
+
 
 @role_required(["admin"])
 def delete_user(request, user_id):

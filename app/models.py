@@ -1,9 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import RegexValidator
 
-
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 
 class User(AbstractUser):
 
@@ -15,8 +13,17 @@ class User(AbstractUser):
         ('gd_munsi', 'GD Munsi'),
         ('field_staff', 'Field Staff'),
     ]
+    GENDER_CHOICES = [
+        ("male", "Male"),
+        ("female", "Female"),
+        ("other", "Other"),
+    ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    phone = models.CharField(max_length=15,validators=[RegexValidator(r'^[0-9]{10}$', 'Enter a valid 10-digit phone number')],null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
+    rank = models.CharField(max_length=50, null=True, blank=True)
+    dob = models.DateField(null=True, blank=True)
 
     # Who created this user?
     created_by = models.ForeignKey(
