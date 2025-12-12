@@ -408,6 +408,8 @@ def edit_user(request, user_id):
         officer.username = request.POST.get("email")
         officer.gender = request.POST.get("gender")
         officer.dob = request.POST.get("dob")
+        officer.rank = request.POST.get("rank")
+        officer.phone = request.POST.get("phone")
 
         new_role = request.POST.get("role")
 
@@ -450,8 +452,14 @@ def edit_user(request, user_id):
 
         officer.save()
 
-        messages.success(request, "User updated successfully!")
-        return redirect("manage_users")
+        if officer.role == "field_staff":
+            messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
+            return redirect("manage_users")
+        elif officer.role == "gd_munsi":
+            messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
+            return redirect("manage_users")
+        # messages.success(request, "User updated successfully!")
+        # return redirect("manage_users")
 
     return render(request, "admin_panel/edit_user.html", context)
 

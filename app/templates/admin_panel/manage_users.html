@@ -54,6 +54,7 @@
                         <tr class="bg-gray-200 text-gray-700">
                             <th class="p-3">Name</th>
                             <th class="p-3">Email</th>
+                            <th class="p-3">Phone</th>
                             <th class="p-3">Gender</th>
                             <th class="p-3">DOB</th>
                             <th class="p-3">Rank</th>
@@ -65,8 +66,9 @@
                         {% for officer in officers %}
                             {% if officer.role == "field_staff" %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
                                 <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
                                 <td class="p-3 text-gray-800">{{ officer.rank }}</td>
@@ -92,6 +94,7 @@
                         <tr class="bg-gray-200 text-gray-700">
                             <th class="p-3">Name</th>
                             <th class="p-3">Email</th>
+                            <th class="p-3">Phone</th>
                             <th class="p-3">Gender</th>
                             <th class="p-3">DOB</th>
                             <th class="p-3">Rank</th>
@@ -103,8 +106,9 @@
                         {% for officer in officers %}
                             {% if officer.role == "gd_munsi" %}
                             <tr class="border-b hover:bg-gray-100">
-                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
                                 <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
                                 <td class="p-3 text-gray-800">{{ officer.rank }}</td>
@@ -130,6 +134,7 @@
                         <tr class="bg-gray-200 text-gray-700">
                             <th class="p-3">Name</th>
                             <th class="p-3">Email</th>
+                            <th class="p-3">Phone</th>
                             <th class="p-3">Gender</th>
                             <th class="p-3">DOB</th>
                             <th class="p-3">Rank</th>
@@ -140,16 +145,19 @@
                     <tbody>
                         {% for officer in officers %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
                                 <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
                                 <td class="p-3 text-gray-800">{{ officer.rank }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.role }}</td>
                                 <td class="p-3 text-right">
                                     <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    {% if officer.role == "field_staff" %}
                                     <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
                                        onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
