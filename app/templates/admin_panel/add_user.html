@@ -61,6 +61,16 @@
         </select>
     </div>
 
+    <!-- Rank -->
+    <div>
+        <label class="font-semibold text-gray-700">Rank:</label>
+        <select name="rank" id="rank" class="w-full text-gray-800 border rounded p-2">
+            {% for r in police_rank %}
+                <option value="{{ r.police_rank }}">{{ r.police_rank }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <!-- GD Munsi selection (only for admin creating field staff) -->
     <div id="gd_munsi_block" style="display:none;">
         <label class="font-semibold text-gray-700">Select GD Munsi:</label>
