@@ -309,6 +309,23 @@ def add_user(request):
         role = request.POST.get("role")
         password = request.POST.get("password")
 
+        # -----------------------------------------------------
+        # ❌ BLOCK MULTIPLE GD CREATION BY SAME ADMIN
+        # -----------------------------------------------------
+        if user.role == "admin" and role == "gd_munsi":
+            gd_exists = User.objects.filter(
+                role="gd_munsi",
+                admin=user
+            ).exists()
+
+            if gd_exists:
+                messages.error(
+                    request,
+                    "You already have a GD Munsi. Only one GD Munsi is allowed per Admin."
+                )
+                return redirect("manage_users")
+
+
         new_user = User(
             username=email,
             email=email,
@@ -412,6 +429,23 @@ def edit_user(request, user_id):
         officer.phone = request.POST.get("phone")
 
         new_role = request.POST.get("role")
+
+        # -----------------------------------------------------
+        # ❌ BLOCK MULTIPLE GD ASSIGNMENT ON EDIT
+        # -----------------------------------------------------
+        if user.role == "admin" and new_role == "gd_munsi":
+            gd_exists = User.objects.filter(
+                role="gd_munsi",
+                admin=user
+            ).exclude(id=officer.id).exists()
+
+            if gd_exists:
+                messages.error(
+                    request,
+                    "You already have a GD Munsi. Cannot assign another."
+                )
+                return redirect("edit_user", user_id=user_id)
+
 
         # ----------------------------
         # Password Update
