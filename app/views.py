@@ -274,7 +274,10 @@ def add_user(request):
         allowed_roles = ["admin"]
 
     elif user.role == "admin":
-        allowed_roles = ["gd_munsi", "field_staff"]
+        if User.objects.filter(role="gd_munsi", admin=user).exists():
+            allowed_roles = ["field_staff"]
+        else:
+            allowed_roles = ["gd_munsi", "field_staff"]
 
     elif user.role == "gd_munsi":
         allowed_roles = ["field_staff"]
@@ -393,7 +396,10 @@ def edit_user(request, user_id):
         allowed_roles = ["admin"]
 
     elif user.role == "admin":
-        allowed_roles = ["gd_munsi", "field_staff"]
+        if officer.role == "gd_munsi":
+            allowed_roles = ["gd_munsi"]
+        else:
+            allowed_roles = ["field_staff"]
 
     elif user.role == "gd_munsi":
         allowed_roles = ["field_staff"]
@@ -523,65 +529,6 @@ def delete_security_category(request, category_id):
 
 
 
-
-
-# def list_users(request):
-
-#     user = request.user
-
-#     if user.role == "developer":
-#         users = User.objects.all()
-
-#     elif user.role == "master_admin":
-#         users = User.objects.filter(role="super_admin")
-
-#     elif user.role == "super_admin":
-#         users = User.objects.filter(created_by=user)
-
-#     elif user.role == "admin":
-#         users = User.objects.filter(admin=user)
-
-#     elif user.role == "gd_munsi":
-#         users = User.objects.filter(gd_munsi=user)
-
-#     elif user.role == "field_staff":
-#         users = User.objects.filter(id=user.id)
-
-#     context = {
-#         "users": users,
-#     }
-
-#     return render(request, "admin_panel/user_list.html", context)
-
-# @role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi", "field_staff"])
-# def user_list(request):
-#     user = request.user
-
-#     if user.role == "developer":
-#         users = User.objects.all()
-
-#     elif user.role == "master_admin":
-#         users = User.objects.filter(role="super_admin")
-
-#     elif user.role == "super_admin":
-#         users = User.objects.filter(created_by=user)
-
-#     elif user.role == "admin":
-#         users = User.objects.filter(
-#             Q(role="gd_munsi", admin=user) | 
-#             Q(role="field_staff", admin=user)
-#         )
-
-#     elif user.role == "gd_munsi":
-#         users = User.objects.filter(gd_munsi=user)
-
-#     else:  # field_staff
-#         users = User.objects.filter(id=user.id)
-
-#     context = {
-#         "users": users
-#     }
-#     return render(request, "admin_panel/user_list.html", context)
 
 
 
