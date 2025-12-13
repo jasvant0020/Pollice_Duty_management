@@ -80,6 +80,12 @@
                                 </td>
                             </tr>
                             {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-gray-500">
+                                    No field_staff found.
+                                </td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -120,6 +126,12 @@
                                 </td>
                             </tr>
                             {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-gray-500">
+                                    No gd_munsi found.
+                                </td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -158,6 +170,12 @@
                                     <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
                                        onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
                                     {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-gray-500">
+                                    No staff found.
                                 </td>
                             </tr>
                         {% endfor %}
