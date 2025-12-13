@@ -111,6 +111,12 @@ def login_view(request):
 
     return render(request, "login_panel/login.html")
 
+def logout_view(request):
+    if request.method == 'POST':
+        logout(request)
+    messages.success(request,"you have been logged out successfully!")
+    return redirect('login')
+
 
 #------ Custom GD Munsi Panel Views ------
 @login_required
