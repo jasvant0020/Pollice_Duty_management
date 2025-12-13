@@ -15,6 +15,7 @@ from app.models import User
 from app.decorators import role_required
 from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts
+from django.db.models import Count
 
 
 
@@ -199,7 +200,50 @@ def manage(request):
 
 @role_required(["admin"])
 def police_hierarchy_table(request):
-    return render(request, 'admin_panel/police_hierarchy_table.html')
+    admin_user = request.user
+
+    # Fetch only ranks that exist in DB for this admin
+    rank_qs = (
+        User.objects
+        .filter(
+            admin=admin_user,
+            rank__isnull=False
+        )
+        .exclude(rank="")
+        .values("rank")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+
+    rank_status = []
+
+    for r in rank_qs:
+        count = r["count"]
+
+        # Dynamic status logic
+        if count >= 10:
+            status = "Healthy"
+            badge_color = "green"
+        elif count >= 5:
+            status = "Moderate"
+            badge_color = "yellow"
+        else:
+            status = "Critical"
+            badge_color = "red"
+
+        rank_status.append({
+            "rank": r["rank"],
+            "count": count,
+            "status": status,
+            "badge_color": badge_color,
+        })
+
+    context = {
+        "rank_status": rank_status
+    }
+
+    return render(request, "admin_panel/police_hierarchy_table.html", context)
+
 
 @role_required(["admin", "Admin"])
 def manage_users(request):

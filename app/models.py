@@ -28,7 +28,7 @@ class User(AbstractUser):
         null=True, blank=True
     )
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
-    rank = models.CharField(max_length=50, null=True, blank=True)
+    rank = models.CharField(max_length=150, null=True, blank=True)
     dob = models.DateField(null=True, blank=True)
 
     created_by = models.ForeignKey(
