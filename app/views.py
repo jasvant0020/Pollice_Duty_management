@@ -14,7 +14,7 @@ from django.shortcuts import render
 from app.models import User
 from app.decorators import role_required
 from django.db.models import Q
-
+from app.utils.user_counts import get_admin_staff_counts
 
 
 
@@ -183,7 +183,15 @@ def assign_duty(request):
 #------ Custom Admin Panel Views ------
 @role_required(["admin"])
 def admin_dashboard(request):
-    return render(request, "admin_panel/admin_dashboard.html")
+    admin_user = request.user
+
+    # Get all counts from utility
+    staff_counts = get_admin_staff_counts(admin_user)
+
+    context = {
+        **staff_counts,   # unpack counts
+    }
+    return render(request, "admin_panel/admin_dashboard.html", context)
 
 @role_required(["admin"])
 def manage(request):
