@@ -62,3 +62,6 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+
+# Node / Tailwind
+theme/static_src/node_modules/
