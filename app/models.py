@@ -1,5 +1,6 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import Q
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
 
@@ -13,6 +14,7 @@ class User(AbstractUser):
         ('gd_munsi', 'GD Munsi'),
         ('field_staff', 'Field Staff'),
     ]
+
     GENDER_CHOICES = [
         ("male", "Male"),
         ("female", "Female"),
@@ -20,12 +22,15 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    phone = models.CharField(max_length=15,validators=[RegexValidator(r'^[0-9]{10}$', 'Enter a valid 10-digit phone number')],null=True, blank=True)
+    phone = models.CharField(
+        max_length=15,
+        validators=[RegexValidator(r'^[0-9]{10}$', 'Enter a valid 10-digit phone number')],
+        null=True, blank=True
+    )
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, null=True, blank=True)
     rank = models.CharField(max_length=50, null=True, blank=True)
     dob = models.DateField(null=True, blank=True)
 
-    # Who created this user?
     created_by = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -34,7 +39,7 @@ class User(AbstractUser):
         related_name="created_users"
     )
 
-    # GD Munsi belongs to exactly ONE admin
+    # GD Munsi → ONE Admin
     admin = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -44,7 +49,7 @@ class User(AbstractUser):
         limit_choices_to={'role': 'admin'}
     )
 
-    # Field staff belong to exactly ONE GD Munsi
+    # Field staff → ONE GD
     gd_munsi = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
@@ -54,8 +59,18 @@ class User(AbstractUser):
         limit_choices_to={'role': 'gd_munsi'}
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["admin"],
+                condition=Q(role="gd_munsi"),
+                name="one_gd_per_admin"
+            )
+        ]
+
     def __str__(self):
         return f"{self.username} ({self.role})"
+
 
 
 # class SecurityCategory(models.Model):
