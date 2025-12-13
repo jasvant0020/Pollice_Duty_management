@@ -10,10 +10,12 @@
 </head>
 <body class="min-h-screen bg-cover bg-center flex items-center justify-center p-4"
       style="background-image: url('{% static 'bg_image/login-bg.jpg' %}');">
+    
+    {% include "error_message/error_message.html" %}
 
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome</h1>
             <p class="text-gray-600">Sign in to your account</p>
         </div>
 

@@ -8,6 +8,7 @@ urlpatterns = [
     # Login panel pages
     path("", views.login_view, name="login"),
     path("login/", views.login_view, name="login"),
+    path('logout/', views.logout_view, name='logout'),
 
     # GD Munsi Panel Pages
     path('munsi_dashboard/', views.dashboard, name='dashboard'),
