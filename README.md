@@ -1,4 +1,4 @@
-# Mujrim_Duty_management
+# police_Duty_management
 ```mermaid
 flowchart TD
     A[System Start] --> B[Login Page]
