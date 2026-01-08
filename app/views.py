@@ -16,7 +16,7 @@ from app.decorators import role_required
 from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts
 from django.db.models import Count
-
+from app.models import SecurityCategory
 
 
 
@@ -569,10 +569,16 @@ def delete_user(request, user_id):
 
 #-------- CRUD opration by admin to Manage Police Categories ---------
 @role_required(["admin"])
-def manage_police_categories(request):
-    return render(request, "admin_panel/manage_police_categories.html")
+def manage_security_categories(request):
+    categories = SecurityCategory.objects.filter(admin_id=request.user.id).order_by("-created_at")
 
-from .models import SecurityCategory
+    return render(
+        request,
+        "admin_panel/manage_security_categories.html",
+        {"categories": categories}
+    )
+
+
 @role_required(["admin"])
 def add_security_category(request):
 
@@ -600,7 +606,7 @@ def add_security_category(request):
         # Prevent duplicate category for same admin
         if SecurityCategory.objects.filter(
             name__iexact=category_name,
-            admin=request.user
+            admin_id=request.user.id
         ).exists():
             messages.error(request, "This category already exists.")
             return redirect(request.path)
@@ -636,7 +642,7 @@ def add_security_category(request):
             name=category_name,
             personnel_by_rank=personnel_by_rank,
             total_personnel=total_personnel,
-            admin=request.user
+            admin_id=request.user.id
         )
 
         messages.success(request,"Security category added successfully.")
