@@ -572,9 +572,77 @@ def delete_user(request, user_id):
 def manage_police_categories(request):
     return render(request, "admin_panel/manage_police_categories.html")
 
+from .models import SecurityCategory
 @role_required(["admin"])
 def add_security_category(request):
-    return render(request, 'admin_panel/add_security_category.html')
+
+    context = {
+        'police_rank':police_rank,
+        'category' :category,
+    }
+
+    # 🔐 Only categories created by THIS admin
+    # categories = SecurityCategory.objects.filter(admin=request.user)
+
+    if request.method == "POST":
+
+        category_name = request.POST.get("category_name")
+        custom_category = request.POST.get("custom_category", "").strip()
+
+        # Handle custom category
+        if category_name == "other":
+            category_name = custom_category
+
+        if not category_name:
+            messages.error(request, "Category name is required.")
+            return redirect(request.path)
+
+        # Prevent duplicate category for same admin
+        if SecurityCategory.objects.filter(
+            name__iexact=category_name,
+            admin=request.user
+        ).exists():
+            messages.error(request, "This category already exists.")
+            return redirect(request.path)
+
+        personnel_by_rank = {}
+        total_personnel = 0
+
+        # Collect rank-wise data
+        for key, value in request.POST.items():
+            if key.startswith("rank_") and value:
+                try:
+                    count = int(value)
+                    if count > 0:
+                        rank_name = (
+                            key.replace("rank_", "")
+                               .replace("-", " ")
+                               .title()
+                        )
+                        personnel_by_rank[rank_name] = count
+                        total_personnel += count
+                except ValueError:
+                    continue
+
+        if total_personnel == 0:
+            messages.error(
+                request,
+                "Please enter personnel for at least one rank."
+            )
+            return redirect(request.path)
+
+        # ✅ Create category (admin-owned)
+        SecurityCategory.objects.create(
+            name=category_name,
+            personnel_by_rank=personnel_by_rank,
+            total_personnel=total_personnel,
+            admin=request.user
+        )
+
+        messages.success(request,"Security category added successfully.")
+        return redirect("manage_security_categories")
+
+    return render(request,"admin_panel/add_security_category.html",context)
 
 @role_required(["admin"])
 def edit_security_category(request, category_id):

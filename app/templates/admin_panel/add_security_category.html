@@ -30,9 +30,9 @@
 
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
-        {% for rank in ranks %}
-            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank }}"> {{ rank }}</label>
-            <input type="number" name="{{ rank }}" style="display:none;"
+        {% for rank in police_rank %}
+            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank|slugify }}"> {{ rank.police_rank }}</label>
+            <input type="number" name="rank_{{ rank.police_rank|slugify }}" style="display:none;"
                 class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
 
@@ -46,7 +46,7 @@
 // script to show checkbox for rank selection
 document.querySelectorAll('.toggle-rank').forEach(cb => {
     cb.addEventListener('change', function() {
-        const input = document.querySelector(`input[name="${this.dataset.rank}"]`);
+        const input = document.querySelector(`input[name="rank_${this.dataset.rank}"]`);
         
         if (this.checked) {
             input.style.display = 'block';
@@ -107,7 +107,7 @@ document.querySelectorAll('.toggle-rank').forEach(cb => {
 
         document.querySelectorAll('.toggle-rank').forEach(cb => {
             if (cb.checked) {
-                const input = document.querySelector(`input[name="${cb.dataset.rank}"]`);
+                const input = document.querySelector(`input[name="rank_${this.dataset.rank}"]`);
                 if (input.value && parseInt(input.value) > 0) {
                     valid = true;
                 }
