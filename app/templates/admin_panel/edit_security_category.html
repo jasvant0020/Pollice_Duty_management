@@ -18,28 +18,29 @@
         <!-- Total Personnel -->
         <div class="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
                 <label for="total_personnel" class="block mb-1 text-sm font-medium uppercase text-blue-700">Total Personnel (Auto-Calculated)</label>
-                <input type="text" id="total_personnel" name="total_personnel" value="0" readonly
+                <input type="text" id="total_personnel" name="total_personnel" value="{{ category.total_personnel }}" readonly
                     class="w-full text-4xl font-extrabold text-blue-800 bg-transparent p-1 cursor-default select-none border-none focus:outline-none">
         </div>
 
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
-        {% for rank in ranks %}
-            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank }}"> {{ rank }}</label>
-            <input type="number" name="{{ rank }}" style="display:none;"
+        {% for rank in police_rank %}
+            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank|slugify }}"> {{ rank.police_rank }}</label>
+            <input type="number" name="rank_{{ rank.police_rank|slugify }}" style="display:none;"
                 class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
 
         <!-- Submit Button -->
-        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Update Category</button>
+        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Category</button>
     </form>
 </div>
-
+</div>
 <script>
+
 // script to show checkbox for rank selection
 document.querySelectorAll('.toggle-rank').forEach(cb => {
     cb.addEventListener('change', function() {
-        const input = document.querySelector(`input[name="${this.dataset.rank}"]`);
+        const input = document.querySelector(`input[name="rank_${this.dataset.rank}"]`);
         
         if (this.checked) {
             input.style.display = 'block';
@@ -55,25 +56,35 @@ document.querySelectorAll('.toggle-rank').forEach(cb => {
         updateTotal();
     });
 });
-
-// Calculate total personnel
-const rankInputs = document.querySelectorAll('.rank-input');
-const totalInput = document.getElementById('total_personnel');
+const totalInput = document.getElementById("total_personnel");
+const rankInputs = document.querySelectorAll(".rank-input");
 
 function updateTotal() {
     let sum = 0;
-    rankInputs.forEach(input => {
-        sum += parseInt(input.value) || 0;
-    });
+    rankInputs.forEach(i => sum += parseInt(i.value) || 0);
     totalInput.value = sum;
 }
 
-rankInputs.forEach(input => {
-    input.addEventListener('input', updateTotal);
+document.querySelectorAll(".toggle-rank").forEach(cb => {
+    cb.addEventListener("change", function () {
+        const input = document.querySelector(
+            `input[name="rank_${this.dataset.key}"]`
+        );
+
+        if (this.checked) {
+            input.style.display = "block";
+            if (!input.value) input.value = 1;
+        } else {
+            input.style.display = "none";
+            input.value = "";
+        }
+        updateTotal(); // ✅ recalc only after change
+    });
 });
 
-// Initialize total on page load
-updateTotal();
+rankInputs.forEach(i =>
+    i.addEventListener("input", updateTotal)
+);
 
 // Ensure at least one rank input is filled before submitting
     document.querySelector("form").addEventListener("submit", function (e) {
@@ -81,7 +92,7 @@ updateTotal();
 
         document.querySelectorAll('.toggle-rank').forEach(cb => {
             if (cb.checked) {
-                const input = document.querySelector(`input[name="${cb.dataset.rank}"]`);
+                const input = document.querySelector(`input[name="rank_${this.dataset.rank}"]`);
                 if (input.value && parseInt(input.value) > 0) {
                     valid = true;
                 }
@@ -93,5 +104,6 @@ updateTotal();
             alert("Please fill at least one field");
         }
     });
+
 </script>
 {% endblock %}

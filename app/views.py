@@ -652,11 +652,55 @@ def add_security_category(request):
 
 @role_required(["admin"])
 def edit_security_category(request, category_id):
-    return render(request, 'admin_panel/edit_security_category.html')
+
+    category = get_object_or_404(
+        SecurityCategory,
+        id=category_id,
+        admin=request.user   # 🔐 admin scoped
+    )
+
+    ranks = list(category.personnel_by_rank.keys())
+
+    if request.method == "POST":
+        personnel_by_rank = {}
+        total_personnel = 0
+
+        for key, value in request.POST.items():
+            if key.startswith("rank_") and value:
+                try:
+                    count = int(value)
+                    if count > 0:
+                        rank_name = (
+                            key.replace("rank_", "")
+                               .replace("-", " ")
+                               .title()
+                        )
+                        personnel_by_rank[rank_name] = count
+                        total_personnel += count
+                except ValueError:
+                    continue
+
+        if total_personnel == 0:
+            messages.error(request, "At least one rank is required.")
+            return redirect(request.path)
+
+        category.personnel_by_rank = personnel_by_rank
+        category.total_personnel = total_personnel
+        category.save()
+
+        messages.success(request, "Security category updated successfully.")
+        return redirect("manage_security_categories")
+
+    context = {
+        "category": category,
+        "police_rank": police_rank,  # all available ranks
+    }
+    return render(request, "admin_panel/edit_security_category.html", context)
+
 
 @role_required(["admin"])
 def delete_security_category(request, category_id):
-    return redirect('manage_police_categories')
+    return redirect('manage_security_categories')
 
 
 
