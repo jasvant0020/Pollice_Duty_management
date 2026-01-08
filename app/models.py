@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
+from django.conf import settings
 
 
 class User(AbstractUser):
@@ -73,12 +74,23 @@ class User(AbstractUser):
 
 
 
-# class SecurityCategory(models.Model):
-#     name = models.CharField(max_length=100, unique=True)
-#     total_personnel = models.PositiveIntegerField()
-#     personnel_by_rank = models.JSONField(default=dict, blank=True)  # e.g., {"SP": 2, "Addl SP": 3}
+class SecurityCategory(models.Model):
+    name = models.CharField(max_length=100)
+    total_personnel = models.PositiveIntegerField(default=0)
+    personnel_by_rank = models.JSONField(default=dict, blank=True)
 
-#     created_at = models.DateTimeField(auto_now_add=True)
+    # 🔐 Owner admin
+    admin = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="security_categories",
+        limit_choices_to={"role": "admin"}
+    )
 
-#     def __str__(self):
-#         return self.name
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("name", "admin")  # same name allowed for different admins
+
+    def __str__(self):
+        return f"{self.name} ({self.admin})"
