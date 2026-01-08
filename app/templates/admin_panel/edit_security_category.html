@@ -25,7 +25,7 @@
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
         {% for rank in police_rank %}
-            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank|slugify }}"> {{ rank.police_rank }}</label>
+            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank|slugify }}"  {% if rank.police_rank in rank.police_rank %}checked{% endif %}> {{ rank.police_rank }}</label>
             <input type="number" name="rank_{{ rank.police_rank|slugify }}" style="display:none;"
                 class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
@@ -104,6 +104,22 @@ rankInputs.forEach(i =>
             alert("Please fill at least one field");
         }
     });
+
+// ✅ Auto-check checkboxes for prefilled rank values (EDIT MODE)
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".rank-input").forEach(input => {
+        if (input.value && parseInt(input.value) > 0) {
+            const slug = input.name.replace("rank_", "");
+            const checkbox = document.querySelector(
+                `.toggle-rank[data-rank="${slug}"]`
+            );
+            if (checkbox) {
+                checkbox.checked = true;
+                input.style.display = "block";
+            }
+        }
+    });
+});
 
 </script>
 {% endblock %}
