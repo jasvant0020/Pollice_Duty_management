@@ -37,22 +37,26 @@
         <input type="date" name="dob" class="w-full p-2 border rounded-lg mb-4">
 
         <!-- Designation -->
-        <label class="block font-medium">Designation</label>
-        <select id="designation-select" name="designation" class="w-full p-2 border rounded-lg mb-4" required>
+        <label class="block font-medium">Rank</label>
+        <select id="rank-select" name="rank"
+                class="w-full p-2 border rounded-lg mb-4" required>
+
             <option value="">-- Select --</option>
-            <option value="pm">PM</option>
-            {% for d in designation %}
-                <option value="{{ d }}">{{ d }}</option>
+            <option value="PM">PM</option>
+
+            {% for r in ranks %}
+                <option value="{{ r }}">{{ r }}</option>
             {% endfor %}
+
             <option value="other">Other</option>
         </select>
 
         <!-- Custom designation input -->
-        <input type="text" id="custom-designation"
-               name="custom_designation"
-               placeholder="Enter custom designation"
-               class="w-full p-2 border rounded-lg mb-4"
-               style="display:none;">
+        <input type="text" id="custom-rank"
+            name="custom_rank"
+            placeholder="Enter custom rank"
+            class="w-full p-2 border rounded-lg mb-4"
+            style="display:none;">
         
         <!-- category -->
         <label class="block font-medium">Category</label>
@@ -77,8 +81,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const select = document.getElementById('designation-select');
-    const customInput = document.getElementById('custom-designation');
+    const select = document.getElementById('rank-select');
+    const customInput = document.getElementById('custom-rank');
 
     select.addEventListener('change', function () {
         if (this.value === 'other') {
