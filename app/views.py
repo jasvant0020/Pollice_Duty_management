@@ -620,11 +620,7 @@ def add_security_category(request):
                 try:
                     count = int(value)
                     if count > 0:
-                        rank_name = (
-                            key.replace("rank_", "")
-                               .replace("-", " ")
-                               .title()
-                        )
+                        rank_name = key.replace("rank_", "")
                         personnel_by_rank[rank_name] = count
                         total_personnel += count
                 except ValueError:
@@ -659,8 +655,6 @@ def edit_security_category(request, category_id):
         admin=request.user   # 🔐 admin scoped
     )
 
-    ranks = list(category.personnel_by_rank.keys())
-
     if request.method == "POST":
         personnel_by_rank = {}
         total_personnel = 0
@@ -670,11 +664,7 @@ def edit_security_category(request, category_id):
                 try:
                     count = int(value)
                     if count > 0:
-                        rank_name = (
-                            key.replace("rank_", "")
-                               .replace("-", " ")
-                               .title()
-                        )
+                        rank_name = key.replace("rank_", "")
                         personnel_by_rank[rank_name] = count
                         total_personnel += count
                 except ValueError:
@@ -698,9 +688,26 @@ def edit_security_category(request, category_id):
     return render(request, "admin_panel/edit_security_category.html", context)
 
 
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+
 @role_required(["admin"])
 def delete_security_category(request, category_id):
-    return redirect('manage_security_categories')
+    category = get_object_or_404(
+        SecurityCategory,
+        id=category_id,
+        admin=request.user   # 🔐 admin scoped
+    )
+
+    if request.method == "POST":
+        category.delete()
+        messages.success(request, "Security category deleted successfully.")
+        return redirect("manage_security_categories")
+
+    # ❌ Do not allow GET delete
+    messages.error(request, "Invalid delete request.")
+    return redirect("manage_security_categories")
+
 
 
 

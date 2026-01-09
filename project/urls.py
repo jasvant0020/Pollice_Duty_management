@@ -37,7 +37,7 @@ urlpatterns = [
     # path('user_list/', views.user_list, name='user_list'),
 
     # -------------------------------------------------------
-    # UPDATED: Added CRUD URLs for Manage Police Categories
+    # UPDATED: Added CRUD URLs for Manage security Categories
     # -------------------------------------------------------
     path('add_security_category/', views.add_security_category, name='add_security_category'),
     path('edit_security_category/<int:category_id>/', views.edit_security_category, name='edit_security_category'),
