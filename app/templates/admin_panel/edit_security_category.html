@@ -25,14 +25,36 @@
         <!-- Personnel by Rank -->
         <h2 class="text-xl font-semibold text-gray-700 mb-2">Personnel by Rank</h2>
         {% for rank in police_rank %}
-            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank|slugify }}"  {% if rank.police_rank in rank.police_rank %}checked{% endif %}> {{ rank.police_rank }}</label>
-            <input type="number" name="rank_{{ rank.police_rank|slugify }}" style="display:none;"
+            <label class="block mb-1 text-gray-800"><input type="checkbox" class="toggle-rank" data-rank="{{ rank.police_rank }}"  {% if rank.police_rank in category.personnel_by_rank %}checked{% endif %}> {{ rank.police_rank }}</label>
+            <input type="number" name="rank_{{ rank.police_rank }}" style="display:none;"
                 class="rank-input w-full text-gray-800 p-2 mb-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 valid:border-green-500">
         {% endfor %}
 
         <!-- Submit Button -->
         <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Save Category</button>
     </form>
+    <!-- Delete Category -->
+    <form method="POST"
+        action="{% url 'delete_security_category' category.id %}"
+        onsubmit="return confirm(
+            'WARNING: Are you sure you want to permanently delete the {{ category.name }} category?'
+        );"
+        class="mt-6">
+        {% csrf_token %}
+        <button type="submit"
+                class="flex items-center justify-center space-x-2  px-4 py-2
+                    text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7
+                        m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                </path>
+            </svg>
+            <span class="font-semibold">Delete Category</span>
+        </button>
+    </form>
+
 </div>
 </div>
 <script>
@@ -64,23 +86,6 @@ function updateTotal() {
     rankInputs.forEach(i => sum += parseInt(i.value) || 0);
     totalInput.value = sum;
 }
-
-document.querySelectorAll(".toggle-rank").forEach(cb => {
-    cb.addEventListener("change", function () {
-        const input = document.querySelector(
-            `input[name="rank_${this.dataset.key}"]`
-        );
-
-        if (this.checked) {
-            input.style.display = "block";
-            if (!input.value) input.value = 1;
-        } else {
-            input.style.display = "none";
-            input.value = "";
-        }
-        updateTotal(); // ✅ recalc only after change
-    });
-});
 
 rankInputs.forEach(i =>
     i.addEventListener("input", updateTotal)
