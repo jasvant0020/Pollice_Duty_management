@@ -269,11 +269,13 @@ def manage_users(request):
 
 @role_required(["admin"])
 def manage_vvip(request):
-    return render(request, "admin_panel/manage_vvip.html")
+    vvips = User.objects.filter(role="vvip",admin=request.user).select_related("category")
+    context = {
+            "vvips": vvips,
+        }
 
-from app.models import User, SecurityCategory
-from django.contrib.auth.hashers import make_password
-from django.contrib import messages
+    return render(request,"admin_panel/manage_vvip.html",context)
+
 
 @role_required(["admin"])
 def add_vvip(request):

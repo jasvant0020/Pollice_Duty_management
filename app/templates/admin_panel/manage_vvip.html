@@ -2,78 +2,132 @@
 {% block page_title %}Manage VVIP{% endblock %}
 
 {% block content %}
-<div class='pt-15'>
+<div class="pt-15">
     {% include "error_message/error_message.html" %}
-<div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
 
-    <div class="flex justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-700">VVIP List</h2>
+    <div class="bg-white shadow rounded-2xl p-6 border-t-4 border-indigo-600">
 
-        <a href="{% url 'add_vvip' %}" 
-           class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
-           + Add VVIP
-        </a>
+        <div class="flex justify-between mb-4">
+            <h2 class="text-xl font-semibold text-gray-700">VVIP List</h2>
+
+            <a href="{% url 'add_vvip' %}"
+               class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700">
+               + Add VVIP
+            </a>
+        </div>
+
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-200 text-gray-700">
+                    <th class="p-3">Name</th>
+                    <th class="p-3">Email</th>
+                    <th class="p-3">Phone</th>
+                    <th class="p-3">Gender</th>
+                    <th class="p-3">DOB</th>
+                    <th class="p-3">Designation</th>
+                    <th class="p-3">Category</th>
+                    <th class="p-3 text-right">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for vvip in vvips %}
+                <tr class="border-b hover:bg-gray-50">
+
+                    <td class="p-3 text-gray-900">
+                        {{ vvip.first_name|default:"-" }}
+                    </td>
+
+                    <td class="p-3 text-gray-900">{{ vvip.email }}</td>
+
+                    <td class="p-3 text-gray-900">
+                        {{ vvip.phone|default:"-" }}
+                    </td>
+
+                    <td class="p-3 text-gray-900">
+                        {{ vvip.gender|title|default:"-" }}
+                    </td>
+
+                    <td class="p-3 text-gray-900">
+                        {% if vvip.dob %}
+                            {{ vvip.dob|date:"d-m-Y" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="p-3 text-gray-900">
+                        {{ vvip.rank|default:"-" }}
+                    </td>
+
+                    <td class="p-3 text-gray-900 relative group overflow-visible">
+
+                        {% if vvip.category %}
+                            <!-- Hover trigger -->
+                            <span class="cursor-pointer text-blue-600 ">
+                                {{ vvip.category.name }}
+                            </span>
+
+                            <!-- Tooltip -->
+                            <div class="absolute right-full mr-3 top-0
+                                    w-80 max-h-60 overflow-y-auto
+                                    bg-white border border-gray-300 shadow-xl rounded-lg
+                                    p-4 text-sm text-gray-800
+                                    opacity-0 group-hover:opacity-100
+                                    invisible group-hover:visible
+                                    transition-all duration-200
+                                    z-[9999]">
+
+                                <h4 class="font-semibold text-gray-700 mb-2">
+                                    {{ vvip.category.name }}
+                                </h4>
+
+                                <p class="mb-2">
+                                    <strong>Total:</strong> {{ vvip.category.total_personnel }}
+                                </p>
+
+                                <p class="font-semibold mb-1">Personnel Breakdown:</p>
+
+                                <ul class="list-disc list-inside space-y-1">
+                                    {% for rank, count in vvip.category.personnel_by_rank.items %}
+                                        <li>{{ rank }} : {{ count }}</li>
+                                    {% empty %}
+                                        <li>No breakdown available</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+
+                        {% else %}
+                            -
+                        {% endif %}
+
+                    </td>
+
+
+                    <td class="p-3 text-right space-x-2">
+                        <a href="{% url 'edit_vvip' vvip.id %}"
+                           class="px-3 py-1 bg-yellow-500 text-white rounded">
+                           Edit
+                        </a>
+
+                        <a href="{% url 'delete_vvip' vvip.id %}"
+                           class="px-3 py-1 bg-red-600 text-white rounded"
+                           onclick="return confirm('Are you sure you want to delete {{ vvip.first_name }}?')">
+                           Delete
+                        </a>
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="p-4 text-center text-gray-500">
+                        No VVIPs found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
     </div>
-
-    <table class="w-full text-left border-collapse">
-        <thead>
-            <tr class="bg-gray-200 text-gray-700">
-                <th class="p-3">Name</th>
-                <th class="p-3">Email</th>
-                <th class="p-3">Phone</th>
-                <th class="p-3">Gender</th>
-                <th class="p-3">DOB</th>
-                <th class="p-3">Rank</th>
-                <th class="p-3">Role</th>
-                <th class="p-3 text-right">Actions</th>
-            </tr>               
-        </thead>
-
-        <tbody>
-            {% for vvip in vvips %}
-            <tr class="border-b hover:bg-gray-50">
-
-                <td class="p-3 text-gray-900">{{ vvip.name }}</td>
-                
-                <td class="p-3 text-gray-900">{{ vvip.email }}</td>
-
-                <td class="p-3 text-gray-900">{{ vvip.password }}</td>
-
-                <td class="p-3 text-gray-900">{{ vvip.gender }}</td>
-
-                <td class="p-3 text-gray-900">
-                    {% if vvip.dob %}
-                        {{ vvip.dob|date:"d-m-Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-
-                <td class="p-3 text-gray-900">{{ vvip.designation }}</td>
-
-                <td class="p-3 text-right space-x-2">
-                    <a href="{% url 'edit_vvip' vvip.id %}"
-                       class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-
-                    <a href="{% url 'delete_vvip' vvip.id %}"
-                        class="px-3 py-1 bg-red-600 text-white rounded"
-                        onclick="return confirm('Are you sure you want to delete &quot;{{vvip.name}} - {{vvip.designation}}&quot;?')">
-                        Delete
-                    </a>
-                </td>
-
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7" class="p-4 text-center text-gray-500">
-                    No VVIPs found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
 </div>
-</div>
-
 {% endblock %}
