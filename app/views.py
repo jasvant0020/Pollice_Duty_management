@@ -263,17 +263,64 @@ def manage_users(request):
 
     return render(request, "admin_panel/manage_users.html", {"officers": officers})
 
-@role_required(["admin"])
-def manage_security_categories(request):
-    return render(request, "admin_panel/manage_security_categories.html")
+# @role_required(["admin"])
+# def manage_security_categories(request):
+#     return render(request, "admin_panel/manage_security_categories.html")
 
 @role_required(["admin"])
 def manage_vvip(request):
     return render(request, "admin_panel/manage_vvip.html")
 
+from app.models import User, SecurityCategory
+from django.contrib.auth.hashers import make_password
+from django.contrib import messages
+
 @role_required(["admin"])
 def add_vvip(request):
-    return render(request, "admin_panel/add_vvip.html")
+
+    categories = SecurityCategory.objects.filter(admin=request.user)
+    context = {
+            "category": categories,   # 👈 pass to template
+        }
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        gender = request.POST.get("gender")
+        dob = request.POST.get("dob")
+
+        designation = request.POST.get("designation")
+        custom_designation = request.POST.get("custom_designation")
+        category_id = request.POST.get("category")  # 👈 selected category
+
+        final_designation = (
+            custom_designation if designation == "other" else designation
+        )
+
+        category_obj = SecurityCategory.objects.get(
+            id=category_id,
+            admin=request.user  # 🔒 security check
+        )
+
+        User.objects.create(
+            username=email,
+            email=email,
+            password=make_password(password),
+            first_name=name,
+            gender=gender.lower(),
+            dob=dob or None,
+            rank=final_designation,
+            role="vvip",
+            admin=request.user,
+            created_by=request.user,
+            category=category_obj  # 👈 assign category
+        )
+
+        messages.success(request, "VVIP created successfully")
+        return redirect("manage_vvip")
+
+    return render(request,"admin_panel/add_vvip.html",context)
 
 @role_required(["admin"])
 def edit_vvip(request, vvip_id):
