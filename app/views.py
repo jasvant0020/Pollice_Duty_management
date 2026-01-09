@@ -279,11 +279,10 @@ def manage_vvip(request):
 
 @role_required(["admin"])
 def add_vvip(request):
-
     categories = SecurityCategory.objects.filter(admin=request.user)
     context = {
-            "category": categories,   # 👈 pass to template
-        }
+        "category": categories,
+    }
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -292,17 +291,17 @@ def add_vvip(request):
         gender = request.POST.get("gender")
         dob = request.POST.get("dob")
 
-        designation = request.POST.get("designation")
-        custom_designation = request.POST.get("custom_designation")
-        category_id = request.POST.get("category")  # 👈 selected category
+        # Rank handling
+        rank = request.POST.get("rank")
+        custom_rank = request.POST.get("custom_rank")
+        if rank == "other":
+            rank = custom_rank
 
-        final_designation = (
-            custom_designation if designation == "other" else designation
-        )
-
+        # Category handling
+        category_id = request.POST.get("category")
         category_obj = SecurityCategory.objects.get(
             id=category_id,
-            admin=request.user  # 🔒 security check
+            admin=request.user
         )
 
         User.objects.create(
@@ -312,18 +311,17 @@ def add_vvip(request):
             first_name=name,
             gender=gender.lower(),
             dob=dob or None,
-            rank=final_designation,
+            rank=rank,           # ✅ assign rank
             role="vvip",
             admin=request.user,
             created_by=request.user,
-            category=category_obj  # 👈 assign category
+            category=category_obj
         )
 
         messages.success(request, "VVIP created successfully")
         return redirect("manage_vvip")
 
-    return render(request,"admin_panel/add_vvip.html",context)
-
+    return render(request, "admin_panel/add_vvip.html", context)
 
 @role_required(["admin"])
 def edit_vvip(request, vvip_id):
@@ -331,29 +329,35 @@ def edit_vvip(request, vvip_id):
         User,
         id=vvip_id,
         role="vvip",
-        admin=request.user   # 🔒 ownership check
+        admin=request.user
     )
 
     categories = SecurityCategory.objects.filter(admin=request.user)
+    ranks = ["PM"] + [c.name for c in categories]  # Or your predefined list of ranks
+    is_custom_rank = vvip.rank not in ranks
+
     context = {
-            "vvip": vvip,
-            "category": categories,
-        }
+        "vvip": vvip,
+        "category": categories,
+        "ranks": ranks,
+        "is_custom_rank": is_custom_rank
+    }
 
     if request.method == "POST":
         vvip.first_name = request.POST.get("name")
         vvip.email = request.POST.get("email")
-        vvip.username = request.POST.get("email")  # keep login synced
+        vvip.username = request.POST.get("email")
         vvip.gender = request.POST.get("gender").lower()
         vvip.dob = request.POST.get("dob") or None
 
-        designation = request.POST.get("designation")
-        custom_designation = request.POST.get("custom_designation")
+        # Rank
+        rank = request.POST.get("rank")
+        custom_rank = request.POST.get("custom_rank")
+        if rank == "other":
+            rank = custom_rank
+        vvip.rank = rank
 
-        vvip.rank = (
-            custom_designation if designation == "other" else designation
-        )
-
+        # Category
         category_id = request.POST.get("category")
         vvip.category = get_object_or_404(
             SecurityCategory,
@@ -361,7 +365,7 @@ def edit_vvip(request, vvip_id):
             admin=request.user
         )
 
-        # Password change ONLY if entered
+        # Password change
         password = request.POST.get("password")
         if password:
             vvip.set_password(password)
@@ -370,7 +374,7 @@ def edit_vvip(request, vvip_id):
         messages.success(request, "VVIP profile updated successfully")
         return redirect("manage_vvip")
 
-    return render(request,"admin_panel/edit_vvip.html",context)
+    return render(request, "admin_panel/edit_vvip.html", context)
 
 @role_required(["admin"])
 def delete_vvip(request, vvip_id):
