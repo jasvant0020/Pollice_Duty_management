@@ -206,37 +206,36 @@ def police_hierarchy_table(request):
     rank_qs = (
         User.objects
         .filter(
-            admin=admin_user,
+            admin=admin_user,      # only users belonging to this admin
+            role="field_staff",    # ✅ only Field Staff
             rank__isnull=False
         )
-        .exclude(rank="")
-        .values("rank")
+        .exclude(rank="")          # exclude empty ranks
+        .values("rank")            # group by rank
         .annotate(count=Count("id"))
-        .order_by("-count")
+        .order_by("-count")        # descending count
     )
 
     rank_status = []
-
     for r in rank_qs:
         count = r["count"]
-
-        # Dynamic status logic
-        if count >= 10:
-            status = "Healthy"
-            badge_color = "green"
-        elif count >= 5:
-            status = "Moderate"
-            badge_color = "yellow"
-        else:
-            status = "Critical"
+        if count > 10:
             badge_color = "red"
+            status = "High"
+        elif count > 5:
+            badge_color = "yellow"
+            status = "Medium"
+        else:
+            badge_color = "green"
+            status = "Low"
 
         rank_status.append({
             "rank": r["rank"],
             "count": count,
-            "status": status,
             "badge_color": badge_color,
+            "status": status
         })
+
 
     context = {
         "rank_status": rank_status
@@ -378,7 +377,7 @@ def edit_vvip(request, vvip_id):
 
 @role_required(["admin"])
 def delete_vvip(request, vvip_id):
-    return redirect('manage_vvip_categories')
+    return redirect('manage_vvip')
 
 
 #----- Custom user Panel Views -----
