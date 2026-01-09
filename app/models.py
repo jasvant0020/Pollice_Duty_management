@@ -14,6 +14,7 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('gd_munsi', 'GD Munsi'),
         ('field_staff', 'Field Staff'),
+        ('vvip', 'VVIP'),
     ]
 
     GENDER_CHOICES = [
@@ -46,7 +47,7 @@ class User(AbstractUser):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="gd_munsi_admin",
+        related_name="gd_munsi_admin", #this ensure that "GD Munsi and VVIP belongs to Admin"
         limit_choices_to={'role': 'admin'}
     )
 
@@ -56,9 +57,19 @@ class User(AbstractUser):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="field_staffs",
+        related_name="field_staffs", #this ensure that "field_staffs belongs to gd_munsi"
         limit_choices_to={'role': 'gd_munsi'}
     )
+
+    # category → VVIP
+    category = models.ForeignKey(
+        "SecurityCategory",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="vvips"
+    )
+
 
     class Meta:
         constraints = [
