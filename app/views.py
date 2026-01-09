@@ -187,7 +187,7 @@ def admin_dashboard(request):
     admin_user = request.user
 
     # Get all counts from utility
-    staff_counts = get_admin_staff_counts(admin_user)
+    staff_counts = get_admin_staff_counts(request.user)
 
     context = {
         **staff_counts,   # unpack counts
@@ -572,11 +572,7 @@ def delete_user(request, user_id):
 def manage_security_categories(request):
     categories = SecurityCategory.objects.filter(admin_id=request.user.id).order_by("-created_at")
 
-    return render(
-        request,
-        "admin_panel/manage_security_categories.html",
-        {"categories": categories}
-    )
+    return render(request,"admin_panel/manage_security_categories.html",{"categories": categories})
 
 
 @role_required(["admin"])

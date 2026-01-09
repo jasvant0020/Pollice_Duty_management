@@ -1,5 +1,5 @@
 from django.db.models import Count, Q
-from app.models import User
+from app.models import User,SecurityCategory
 
 
 def get_admin_staff_counts(admin_user):
@@ -9,8 +9,11 @@ def get_admin_staff_counts(admin_user):
         gd_munsi=Count("id", filter=Q(role="gd_munsi")),
     )
 
+    category_count = SecurityCategory.objects.filter(admin_id=admin_user.id).count()
+
     return {
         "total_staff_count": counts["total_staff"],
         "field_staff_count_admin_id": counts["field_staff"],
         "gd_munsi_count_admin_id": counts["gd_munsi"],
+        "security_category_count": category_count,
     }
