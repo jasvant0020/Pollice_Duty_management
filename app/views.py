@@ -324,9 +324,53 @@ def add_vvip(request):
 
     return render(request,"admin_panel/add_vvip.html",context)
 
+
 @role_required(["admin"])
 def edit_vvip(request, vvip_id):
-    return render(request, "admin_panel/edit_vvip.html")
+    vvip = get_object_or_404(
+        User,
+        id=vvip_id,
+        role="vvip",
+        admin=request.user   # 🔒 ownership check
+    )
+
+    categories = SecurityCategory.objects.filter(admin=request.user)
+    context = {
+            "vvip": vvip,
+            "category": categories,
+        }
+
+    if request.method == "POST":
+        vvip.first_name = request.POST.get("name")
+        vvip.email = request.POST.get("email")
+        vvip.username = request.POST.get("email")  # keep login synced
+        vvip.gender = request.POST.get("gender").lower()
+        vvip.dob = request.POST.get("dob") or None
+
+        designation = request.POST.get("designation")
+        custom_designation = request.POST.get("custom_designation")
+
+        vvip.rank = (
+            custom_designation if designation == "other" else designation
+        )
+
+        category_id = request.POST.get("category")
+        vvip.category = get_object_or_404(
+            SecurityCategory,
+            id=category_id,
+            admin=request.user
+        )
+
+        # Password change ONLY if entered
+        password = request.POST.get("password")
+        if password:
+            vvip.set_password(password)
+
+        vvip.save()
+        messages.success(request, "VVIP profile updated successfully")
+        return redirect("manage_vvip")
+
+    return render(request,"admin_panel/edit_vvip.html",context)
 
 @role_required(["admin"])
 def delete_vvip(request, vvip_id):
