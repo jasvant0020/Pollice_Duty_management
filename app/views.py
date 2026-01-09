@@ -248,23 +248,23 @@ def police_hierarchy_table(request):
 def manage_users(request):
     admin_user = request.user
 
-    # Get all officers related to this admin
     officers = User.objects.filter(
-        Q(role="gd_munsi", admin=admin_user) |             # GD Munsis under this admin
-        Q(role="field_staff", gd_munsi__admin=admin_user) |  # Field staff under GD Munsis of this admin
-        Q(created_by=admin_user)                             # Users directly created by admin
-    ).distinct().order_by('role', 'username')
+        (
+            Q(role="gd_munsi", admin=admin_user) |
+            Q(role="field_staff", gd_munsi__admin=admin_user) |
+            Q(created_by=admin_user)
+        )
+    ).exclude(role="vvip") \
+     .distinct() \
+     .order_by("role", "username")
 
-    # Debugging: print all officers in console
-    print("Total officers:", officers.count())
-    for o in officers:
-        print(f"{o.username} | role: {o.role} | admin: {o.admin} | gd_munsi: {o.gd_munsi} | created_by: {o.created_by}")
+    return render(
+        request,
+        "admin_panel/manage_users.html",
+        {"officers": officers}
+    )
 
-    return render(request, "admin_panel/manage_users.html", {"officers": officers})
 
-# @role_required(["admin"])
-# def manage_security_categories(request):
-#     return render(request, "admin_panel/manage_security_categories.html")
 
 @role_required(["admin"])
 def manage_vvip(request):
