@@ -8,6 +8,7 @@
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
+        {% if request.user.role == "admin" %}
         <a href="{% url "manage_users" %}">
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-blue-600 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
@@ -20,7 +21,9 @@
             <p class="text-sm text-gray-500 mt-4">No any_staff yet</p>
             {% endif %}
         </div>
+        {% endif %}
 
+        {% if request.user.role == "admin" %}
         <a href="{% url "manage_users" %}">
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-teal-500 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
@@ -34,15 +37,9 @@
             {% endif %}
         </div>
         </a>
-        
-        {% comment %} <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-red-500 transform hover:scale-[1.02] transition duration-300 ease-in-out">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-semibold uppercase text-red-600">Admin Staff</span>
-                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.525.32 1.144.374 1.724-.106z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            </div>
-            <p class="text-4xl font-extrabold text-gray-900 mt-4">{{admin_staff_count}}</p>
-        </div> {% endcomment %}
+        {% endif %}
 
+        {% if request.user.role == "admin" %}
         <a href="{% url "manage_users" %}">
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-yellow-500 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
@@ -56,15 +53,9 @@
             {% endif %}
         </div>
         </a>
+        {% endif %}
 
-        {% comment %} <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-indigo-600 transform hover:scale-[1.02] transition duration-300 ease-in-out">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-semibold uppercase text-indigo-600">Total Police Categories</span>
-                <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            </div>
-            <p class="text-4xl font-extrabold text-gray-900 mt-4">6</p>
-        </div> {% endcomment %}
-
+        {% if request.user.role == "admin" %}
         <a href="{% url "manage_security_categories" %}">
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-green-600 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
@@ -78,7 +69,9 @@
             {% endif %}
         </div>
         </a>
+        {% endif %}
 
+        {% if request.user.role == "admin" %}
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-purple-600 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold uppercase text-purple-600">Active Duties</span>
@@ -90,6 +83,42 @@
             <p class="text-sm text-gray-500 mt-4">No active_duty yet</p>
             {% endif %}
         </div>
+        {% endif %}
+
+        {% comment %}------master admin section-----------{% endcomment %}
+        {% if request.user.role == "master_admin" %}
+        {% for sa in super_admin_data %}
+
+        <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-teal-500 mb-6">
+
+            <p class="text-xs uppercase text-gray-500">Super Admin</p>
+            <p class="text-lg font-bold text-gray-900">{{ sa.name }}</p>
+
+            <hr class="my-4">
+
+            <div class="space-y-2 text-sm text-gray-500">
+                <div class="flex justify-between">
+                    <span>Total Admins</span>
+                    <span class="font-semibold">{{ sa.admin_count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>GD Munsi</span>
+                    <span class="font-semibold">{{ sa.gd_munsi_count }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Field Staff</span>
+                    <span class="font-semibold">{{ sa.field_staff_count }}</span>
+                </div>
+            </div>
+
+        </div>
+
+        {% empty %}
+        <p class="text-sm text-gray-500">No Super Admins assigned</p>
+        {% endfor %}
+        {% endif %}
+
+
 
     </div>
 </div>

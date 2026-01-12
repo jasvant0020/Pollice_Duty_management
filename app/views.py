@@ -14,7 +14,7 @@ from django.shortcuts import render
 from app.models import User
 from app.decorators import role_required
 from django.db.models import Q
-from app.utils.user_counts import get_admin_staff_counts
+from app.utils.user_counts import get_admin_staff_counts,get_super_admin_dashboard_data
 from django.db.models import Count
 from app.models import SecurityCategory
 
@@ -124,24 +124,24 @@ def logout_view(request):
 def dashboard(request):
     role = request.user.role
 
-    # Developer Dashboard
-    if role == "developer":
-        return render(request, "developer/dashboard.html", {
-            "total_users": User.objects.count(),
-            "master_admin_count": User.objects.filter(role="master_admin").count()
-        })
+    # # Developer Dashboard
+    # if role == "developer":
+    #     return render(request, "developer/dashboard.html", {
+    #         "total_users": User.objects.count(),
+    #         "master_admin_count": User.objects.filter(role="master_admin").count()
+    #     })
 
-    # Master Admin Dashboard
-    if role == "master_admin":
-        return render(request, "master_admin/dashboard.html", {
-            "super_admin_count": User.objects.filter(role="super_admin").count(),
-        })
+    # # Master Admin Dashboard
+    # if role == "master_admin":
+    #     return render(request, "master_admin/dashboard.html", {
+    #         "super_admin_count": User.objects.filter(role="super_admin").count(),
+    #     })
 
-    # Super Admin Dashboard
-    if role == "super_admin":
-        return render(request, "super_admin/dashboard.html", {
-            "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
-        })
+    # # Super Admin Dashboard
+    # if role == "super_admin":
+    #     return render(request, "super_admin/dashboard.html", {
+    #         "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
+    #     })
 
     # Admin Dashboard
     if role == "admin":
@@ -182,23 +182,32 @@ def assign_duty(request):
     return render(request, 'GD_munsi_panel/assign_duty.html', context)
 
 #------ Custom Admin Panel Views ------
-@role_required(["admin"])
+@role_required(["admin", "master_admin", "super_admin"])
 def admin_dashboard(request):
-    admin_user = request.user
+    user = request.user
 
-    # Get all counts from utility
-    staff_counts = get_admin_staff_counts(request.user)
+    super_admin_data = []
+
+    if user.role == "master_admin":
+        super_admin_data = get_super_admin_dashboard_data(user)
 
     context = {
-        **staff_counts,   # unpack counts
+        **get_admin_staff_counts(user),
+        "super_admin_data": super_admin_data,
     }
+
     return render(request, "admin_panel/admin_dashboard.html", context)
 
-@role_required(["admin"])
+
+
+    return render(request, "admin_panel/admin_dashboard.html", context)
+
+
+@role_required(["admin","master_admin","super_admin"])
 def manage(request):
     return render(request, "admin_panel/manage.html")
 
-@role_required(["admin"])
+@role_required(["admin","master_admin","super_admin"])
 def police_hierarchy_table(request):
     admin_user = request.user
 
