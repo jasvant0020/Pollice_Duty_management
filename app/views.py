@@ -255,7 +255,7 @@ def police_hierarchy_table(request):
     return render(request, "admin_panel/police_hierarchy_table.html", context)
 
 
-@role_required(["admin", "master_admin"])
+@role_required(["admin", "master_admin","super_admin"])
 def manage_users(request):
     admin_user = request.user
 
@@ -699,6 +699,9 @@ def edit_user(request, user_id):
             messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
             return redirect("manage_users")
         elif user.role == "master_admin":
+            messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
+            return redirect("manage_users")
+        elif user.role == "super_admin":
             messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
             return redirect("manage_users")
 

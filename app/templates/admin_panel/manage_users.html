@@ -17,12 +17,13 @@
         </div>
 
         <!-- Alpine Tabs -->
-        <div x-data="{ activeTab: 'users' }">
+        <div x-data="{ activeTab: 'all' }">
 
             <!-- TAB BUTTONS -->
             <div class="border-b border-gray-200 mb-6">
                 <nav class="flex space-x-8 -mb-px">
 
+                    {% if request.user.role == "admin" %}
                     <button @click="activeTab = 'users'"
                         :class="activeTab === 'users' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
                         class="py-3 px-1 border-b-2 font-medium text-sm">
@@ -34,7 +35,7 @@
                         class="py-3 px-1 border-b-2 font-medium text-sm">
                         GD Munshi
                     </button>
-
+                    {% endif %}
                     <button @click="activeTab = 'all'"
                         :class="activeTab === 'all' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
                         class="py-3 px-1 border-b-2 font-medium text-sm">
