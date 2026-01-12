@@ -14,7 +14,7 @@ from django.shortcuts import render
 from app.models import User
 from app.decorators import role_required
 from django.db.models import Q
-from app.utils.user_counts import get_admin_staff_counts,get_super_admin_dashboard_data
+from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashboard_data, get_admin_dashboard_data
 from django.db.models import Count
 from app.models import SecurityCategory
 
@@ -187,20 +187,22 @@ def admin_dashboard(request):
     user = request.user
 
     super_admin_data = []
+    admin_data = []
 
     if user.role == "master_admin":
         super_admin_data = get_super_admin_dashboard_data(user)
 
+    elif user.role == "super_admin":
+        admin_data = get_admin_dashboard_data(user)
+
     context = {
         **get_admin_staff_counts(user),
         "super_admin_data": super_admin_data,
+        "admin_data": admin_data,
     }
 
     return render(request, "admin_panel/admin_dashboard.html", context)
 
-
-
-    return render(request, "admin_panel/admin_dashboard.html", context)
 
 
 @role_required(["admin","master_admin","super_admin"])

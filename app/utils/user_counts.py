@@ -19,10 +19,6 @@ def get_admin_staff_counts(admin_user):
     }
 
 
-# from django.db.models import Count, Q
-# from app.models import User
-
-
 def get_super_admin_dashboard_data(master_admin):
     super_admins = User.objects.filter(
         role="super_admin",
@@ -52,6 +48,35 @@ def get_super_admin_dashboard_data(master_admin):
             "id": sa.id,
             "name": sa.get_full_name() or sa.username,
             "admin_count": admins.count(),
+            "gd_munsi_count": staff_counts["gd_munsi"] or 0,
+            "field_staff_count": staff_counts["field_staff"] or 0,
+        })
+
+    return data
+
+def get_admin_dashboard_data(super_admin):
+    """
+    For Super Admin:
+    returns admin-wise cards with staff counts
+    """
+    admins = User.objects.filter(
+        role="admin",
+        created_by=super_admin
+    )
+
+    data = []
+
+    for admin in admins:
+        staff_counts = User.objects.filter(
+            admin=admin
+        ).aggregate(
+            gd_munsi=Count("id", filter=Q(role="gd_munsi")),
+            field_staff=Count("id", filter=Q(role="field_staff")),
+        )
+
+        data.append({
+            "id": admin.id,
+            "name": admin.get_full_name() or admin.username,
             "gd_munsi_count": staff_counts["gd_munsi"] or 0,
             "field_staff_count": staff_counts["field_staff"] or 0,
         })

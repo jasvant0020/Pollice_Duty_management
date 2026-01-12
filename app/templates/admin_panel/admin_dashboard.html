@@ -85,7 +85,7 @@
         </div>
         {% endif %}
 
-        {% comment %}------master admin section-----------{% endcomment %}
+        {# ----------MASTER ADMIN VIEW-------------- #}
         {% if request.user.role == "master_admin" %}
         {% for sa in super_admin_data %}
 
@@ -94,7 +94,7 @@
             <p class="text-xs uppercase text-gray-500">Super Admin</p>
             <p class="text-lg font-bold text-gray-900">{{ sa.name }}</p>
 
-            <hr class="my-4">
+            <hr class="my-4 border-gray-100">
 
             <div class="space-y-2 text-sm text-gray-500">
                 <div class="flex justify-between">
@@ -118,6 +118,30 @@
         {% endfor %}
         {% endif %}
 
+        {# ----------SUPER ADMIN VIEW-------------- #}
+        {% if request.user.role == "super_admin" %}
+            {% for admin in admin_data %}
+                <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-indigo-500 mb-6">
+                    <p class="text-xs uppercase text-gray-500">Admin</p>
+                    <p class="text-lg font-bold text-gray-900">{{ admin.name }}</p>
+
+                    <hr class="my-4 border-gray-100">
+
+                    <div class="space-y-2 text-sm text-gray-500">
+                        <div class="flex justify-between">
+                            <span>GD Munsi</span>
+                            <span class="font-semibold">{{ admin.gd_munsi_count }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Field Staff</span>
+                            <span class="font-semibold">{{ admin.field_staff_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-sm text-gray-500">No Admins assigned</p>
+            {% endfor %}
+        {% endif %}
 
 
     </div>
