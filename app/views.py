@@ -255,7 +255,7 @@ def police_hierarchy_table(request):
     return render(request, "admin_panel/police_hierarchy_table.html", context)
 
 
-@role_required(["admin", "Admin"])
+@role_required(["admin", "master_admin"])
 def manage_users(request):
     admin_user = request.user
 
@@ -475,7 +475,20 @@ def add_user(request):
         dob = request.POST.get("dob")
         rank = request.POST.get("rank")
         role = request.POST.get("role")
-        password = request.POST.get("password")
+        password = request.POST.get("password")   
+        confirm_password = request.POST.get("confirm_password")
+
+        # 🔴 Password confirmation check
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return render(request, "admin_panel/add_user.html", context)
+        
+        # 🔒 Prevent role tampering
+        if role not in allowed_roles:
+            messages.error(request, "You are not allowed to create this role.")
+            return redirect("manage_users")
+
+
 
         # -----------------------------------------------------
         # ❌ BLOCK MULTIPLE GD CREATION BY SAME ADMIN
@@ -547,6 +560,28 @@ def edit_user(request, user_id):
     context = {
         'police_rank':police_rank,
     }
+
+    # -----------------------------------------------------
+    # Permission Guard (KEEP THIS)
+    # -----------------------------------------------------
+    if user.role != "developer":
+
+        if user.role == "master_admin" and officer.created_by != user:
+            messages.error(request, "Permission denied.")
+            return redirect("manage_users")
+
+        if user.role == "super_admin" and officer.created_by != user:
+            messages.error(request, "Permission denied.")
+            return redirect("manage_users")
+
+        if user.role == "admin" and officer.admin != user:
+            messages.error(request, "Permission denied.")
+            return redirect("manage_users")
+
+        if user.role == "gd_munsi" and officer.gd_munsi != user:
+            messages.error(request, "Permission denied.")
+            return redirect("manage_users")
+
 
     # -----------------------------------------------------
     # Determine allowed roles based on logged-in user
@@ -663,8 +698,9 @@ def edit_user(request, user_id):
         elif officer.role == "gd_munsi":
             messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
             return redirect("manage_users")
-        # messages.success(request, "User updated successfully!")
-        # return redirect("manage_users")
+        elif user.role == "master_admin":
+            messages.success(request, f"{officer.first_name} as {officer.role} has been updated successfully!")
+            return redirect("manage_users")
 
     return render(request, "admin_panel/edit_user.html", context)
 
