@@ -91,6 +91,7 @@ def get_admin_dashboard_data(super_admin):
         staff_counts = staff.aggregate(
             gd_munsi=Count("id", filter=Q(role="gd_munsi")),
             field_staff=Count("id", filter=Q(role="field_staff")),
+            vvip=Count("id", filter=Q(role="vvip")),
         )
 
         data.append({
@@ -98,6 +99,7 @@ def get_admin_dashboard_data(super_admin):
             "name": admin.get_full_name() or admin.username,
             "gd_munsi_count": staff_counts["gd_munsi"] or 0,
             "field_staff_count": staff_counts["field_staff"] or 0,
+            "vvip_count": staff_counts["vvip"] or 0,
             "staff": list(
                 staff.values(
                     "id",
