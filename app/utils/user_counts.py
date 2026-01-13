@@ -20,6 +20,13 @@ def get_admin_staff_counts(admin_user):
 
 
 def get_super_admin_dashboard_data(master_admin):
+    """
+    Returns data for master admin dashboard:
+    - Each super admin
+    - Total admins under them
+    - GD Munsi & Field Staff counts
+    - Admins details for overlay
+    """
     super_admins = User.objects.filter(
         role="super_admin",
         created_by=master_admin
@@ -44,12 +51,28 @@ def get_super_admin_dashboard_data(master_admin):
             field_staff=Count("id", filter=Q(role="field_staff")),
         )
 
+        # ✅ Individual admin details for overlay
+        admins_data = []
+        for admin in admins:
+            sub_staff_counts = User.objects.filter(admin=admin).aggregate(
+                gd_munsi=Count("id", filter=Q(role="gd_munsi")),
+                field_staff=Count("id", filter=Q(role="field_staff")),
+            )
+            admins_data.append({
+                "id": admin.id,
+                "name": admin.get_full_name() or admin.username,
+                "email": admin.email,
+                "gd_munsi_count": sub_staff_counts["gd_munsi"] or 0,
+                "field_staff_count": sub_staff_counts["field_staff"] or 0,
+            })
+
         data.append({
             "id": sa.id,
             "name": sa.get_full_name() or sa.username,
             "admin_count": admins.count(),
             "gd_munsi_count": staff_counts["gd_munsi"] or 0,
             "field_staff_count": staff_counts["field_staff"] or 0,
+            "admins": admins_data,  # ✅ Added this for overlay
         })
 
     return data
