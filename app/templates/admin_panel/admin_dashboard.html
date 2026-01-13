@@ -141,6 +141,11 @@
                             <span class="font-semibold">{{ admin.field_staff_count }}</span>
                         </div>
                     </div>
+                    <button onclick="openAdminOverlay({{ forloop.counter0 }})"
+                            class="mt-4 text-xs font-semibold text-indigo-600 hover:underline">
+                        View Details
+                    </button>
+
                 </div>
             {% empty %}
                 <p class="text-sm text-gray-500">No Admins assigned</p>
@@ -151,7 +156,7 @@
     </div>
 </div>
 <!-- Overlay for Super Admin Details -->
-<div id="overlay" class="fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+<div id="overlay" class="hidden fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white rounded-2xl p-6 w-11/12 max-w-3xl shadow-xl relative">
         <button onclick="closeOverlay()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 font-bold text-xl">&times;</button>
         <h2 id="overlayTitle" class="text-xl font-bold text-gray-900 mb-4">Super Admin Details</h2>
@@ -195,5 +200,38 @@
         document.getElementById("overlay").classList.add("hidden");
     }
 </script>
+{% if request.user.role == "super_admin" %}
+<script>
+    const adminOverlayData = {{ admin_data|safe }};
+
+    function openAdminOverlay(index) {
+        const admin = adminOverlayData[index];
+
+        document.getElementById("overlayTitle").innerText =
+            "Admin: " + admin.name;
+
+        let html = "";
+
+        if (!admin.staff || admin.staff.length === 0) {
+            html = `<p class="text-gray-500">No staff assigned</p>`;
+        } else {
+            admin.staff.forEach(user => {
+                html += `
+                    <div class="border rounded-xl p-4 bg-gray-50">
+                        <p class="font-semibold text-gray-800">${user.username}</p>
+                        <p class="text-xs text-gray-500">${user.email}</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            Role: <b>${user.role.replace("_", " ")}</b>
+                        </p>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById("overlayContent").innerHTML = html;
+        document.getElementById("overlay").classList.remove("hidden");
+    }
+</script>
+{% endif %}
 
 {% endblock %}
