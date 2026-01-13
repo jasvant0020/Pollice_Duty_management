@@ -49,6 +49,7 @@ def get_super_admin_dashboard_data(master_admin):
         ).aggregate(
             gd_munsi=Count("id", filter=Q(role="gd_munsi")),
             field_staff=Count("id", filter=Q(role="field_staff")),
+            vvip=Count("id", filter=Q(role="vvip")),
         )
 
         # ✅ Individual admin details for overlay
@@ -57,6 +58,7 @@ def get_super_admin_dashboard_data(master_admin):
             sub_staff_counts = User.objects.filter(admin=admin).aggregate(
                 gd_munsi=Count("id", filter=Q(role="gd_munsi")),
                 field_staff=Count("id", filter=Q(role="field_staff")),
+                vvip=Count("id", filter=Q(role="vvip")),
             )
             admins_data.append({
                 "id": admin.id,
@@ -64,6 +66,7 @@ def get_super_admin_dashboard_data(master_admin):
                 "email": admin.email,
                 "gd_munsi_count": sub_staff_counts["gd_munsi"] or 0,
                 "field_staff_count": sub_staff_counts["field_staff"] or 0,
+                "vvip_count": sub_staff_counts["vvip"] or 0,
             })
 
         data.append({
@@ -72,6 +75,7 @@ def get_super_admin_dashboard_data(master_admin):
             "admin_count": admins.count(),
             "gd_munsi_count": staff_counts["gd_munsi"] or 0,
             "field_staff_count": staff_counts["field_staff"] or 0,
+            "vvip_count": staff_counts["vvip"] or 0,
             "admins": admins_data,  # ✅ Added this for overlay
         })
 
