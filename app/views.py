@@ -203,7 +203,9 @@ def admin_dashboard(request):
 
     return render(request, "admin_panel/admin_dashboard.html", context)
 
-
+@role_required(["admin","master_admin","super_admin"])
+def profile(request):
+    return render(request, "admin_panel/profile.html")
 
 @role_required(["admin","master_admin","super_admin"])
 def manage(request):

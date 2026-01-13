@@ -37,9 +37,14 @@
             <a href="{%url 'manage' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
                 🛠️ Manage
             </a>
+            {% if request.user.role == "admin" %}
             <a href="{%url 'police_hierarchy_table' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
                 📋 List Overview
-            </a>           
+            </a> 
+            {% endif %}
+            <a href="{%url 'profile' %}" class="w-full pb-2 pt-2 px-4 transition-all duration-300 ease-in-out rounded-xl  hover:translate-x-2 hover:bg-white/20 hover:backdrop-blur-sm">
+                🧑🏻 Profile
+            </a>
         </nav>
     </aside>
 
