@@ -549,6 +549,9 @@ def add_user(request):
         elif role == "gd_munsi":
             messages.success(request, f"{name} has been added as a GD Munsi successfully!")
             return redirect("manage_users")
+        elif role == "super_admin":
+            messages.success(request, f"{name} has been added as a GD Munsi successfully!")
+            return redirect("manage_users")
 
         # return redirect("admin_panel/user_list")
 
