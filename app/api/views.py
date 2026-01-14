@@ -5,6 +5,14 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from app.models import User
 from .serializers import LoginSerializer, UserSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+import logging
+
+
+
+logger = logging.getLogger("api")
+
 
 
 @api_view(["POST"])
@@ -35,9 +43,38 @@ def login_api(request):
 
     refresh = RefreshToken.for_user(user)
 
+    logger.info(
+        f"LOGIN API | User={user.email} | Role={user.role} | IP={request.META.get('REMOTE_ADDR')}"
+    )
+
+
     return Response({
         "success": True,
         "access": str(refresh.access_token),
         "refresh": str(refresh),
         "user": UserSerializer(user).data
     })
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def logout_api(request):
+    try:
+        refresh_token = request.data.get("refresh")
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        logger.info(
+            f"LOGOUT API | User={request.user.email} | Role={request.user.role}"
+        )
+
+        return Response(
+            {"success": True, "message": "Logged out successfully"},
+            status=status.HTTP_200_OK
+        )
+
+    except Exception:
+        return Response(
+            {"success": False, "message": "Invalid token"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'theme',
     'django_browser_reload',
     'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
@@ -147,4 +148,20 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=2),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "api": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
 }

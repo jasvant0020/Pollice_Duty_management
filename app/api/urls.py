@@ -4,4 +4,5 @@ from app.api import views
 
 urlpatterns = [
     path("login/", views.login_api, name="api_login"),
+    path("logout/", views.logout_api),
 ]
