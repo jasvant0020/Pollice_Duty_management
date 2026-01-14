@@ -21,14 +21,14 @@
                 {% endif %}
 
                 <!-- Upload Button -->
-                <form method="POST" enctype="multipart/form-data"
+                {% comment %} <form method="POST" enctype="multipart/form-data"
                       class="absolute bottom-0 right-0">
                     {% csrf_token %}
                     <label class="cursor-pointer bg-white text-teal-600 p-2 rounded-full shadow hover:bg-gray-100 transition">
                         <input type="file" name="profile_photo" class="hidden" onchange="this.form.submit()">
                         ✎
                     </label>
-                </form>
+                </form> {% endcomment %}
             </div>
 
             <!-- Name -->

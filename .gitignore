@@ -19,7 +19,7 @@ env/
 # db.sqlite3
 
 # Media & Static (if using local dev folders)
-media/
+media
 staticfiles/
 # Ignore compiled static files (Tailwind output)
 static/css/dist/

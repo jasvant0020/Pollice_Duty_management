@@ -33,6 +33,12 @@ class User(AbstractUser):
     rank = models.CharField(max_length=150, null=True, blank=True)
     dob = models.DateField(null=True, blank=True)
 
+    profile_photo = models.ImageField(
+        upload_to="profile_photos/",
+        null=True,
+        blank=True
+    )
+
     created_by = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
