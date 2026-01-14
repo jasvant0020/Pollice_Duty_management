@@ -50,14 +50,17 @@
             <label class="text-sm text-gray-700">Profile Photo</label>
 
             <div class="flex items-center gap-4 mt-2">
-                {% if user.profile_photo %}
-                    <img src="{{ user.profile_photo.url }}"
-                         class="w-16 h-16 rounded-full object-cover border">
-                {% endif %}
+                <img id="preview"
+                    src="{% if user.profile_photo %}{{ user.profile_photo.url }}{% endif %}"
+                    class="w-16 h-16 rounded-full object-cover border">
 
                 <label class="cursor-pointer bg-teal-50 text-teal-700 px-4 py-2 rounded-lg border border-teal-200 hover:bg-teal-100 transition">
                     Change Photo
-                    <input type="file" name="profile_photo" class="hidden">
+                    <input type="file"
+                        name="profile_photo"
+                        class="hidden"
+                        accept="image/*"
+                        onchange="previewImage(this)">
                 </label>
             </div>
         </div>
@@ -101,4 +104,15 @@
 
     </form>
 </div>
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            document.getElementById("preview").src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 {% endblock %}
