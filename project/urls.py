@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from app import views
+from django.urls import path, include
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -52,6 +54,17 @@ urlpatterns = [
     path("Notifications/", views.Notifications, name="Notifications"),
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
     
+
+
+
+
+
+
+
+
     # Firebase push notification 
     path('firebase-messaging-sw.js', views.showFirebaseJS, name="show_firebase_js"),
+
+    #API urls
+    path("api/", include("app.api.urls")),
 ]
