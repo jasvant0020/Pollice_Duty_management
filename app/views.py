@@ -208,6 +208,45 @@ def profile(request):
     return render(request, "admin_panel/profile.html")
 
 @role_required(["admin","master_admin","super_admin"])
+def edit_profile(request):
+    user = request.user
+
+    if request.method == "POST":
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        user.phone = request.POST.get("phone")
+
+        # EMAIL (check duplicate)
+        new_email = request.POST.get("email")
+        if new_email and new_email != user.email:
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "Email already in use.")
+                return redirect("edit_profile")
+            user.email = new_email
+            user.username = new_email  # if email-based login
+
+        # PROFILE PHOTO
+        if request.FILES.get("profile_photo"):
+            user.profile_photo = request.FILES["profile_photo"]
+
+        # PASSWORD CHANGE
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if password or confirm_password:
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("edit_profile")
+            user.set_password(password)
+
+        user.save()
+        messages.success(request, "Profile updated successfully.")
+
+        return redirect("profile")
+
+    return render(request, "admin_panel/edit_profile.html", {"user": user})
+
+@role_required(["admin","master_admin","super_admin"])
 def manage(request):
     return render(request, "admin_panel/manage.html")
 
