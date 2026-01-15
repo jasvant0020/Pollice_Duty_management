@@ -17,6 +17,8 @@ from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashboard_data, get_admin_dashboard_data
 from django.db.models import Count
 from app.models import SecurityCategory
+from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY
+
 
 
 
@@ -69,48 +71,60 @@ category = [
     {'category':'other'}
 ]
 
-
 def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
 
-        # Get user by email
         try:
             user_obj = User.objects.get(email=email)
-            username = user_obj.username
         except User.DoesNotExist:
             messages.error(request, "Email not found!")
             return redirect("login")
 
-        # Authenticate using username + password
-        user = authenticate(request, username=username, password=password)
+        # 1️⃣ Block if user himself is suspended
+        if not user_obj.is_active:
+            messages.error(
+                request,
+                "Your account has been suspended. Please contact your administrator."
+            )
+            return redirect("login")
+
+        # 2️⃣ Block if any parent in hierarchy is suspended
+        if has_suspended_parent(user_obj):
+            messages.error(
+                request,
+                "Your administrator account is suspended. Access is temporarily disabled."
+            )
+            return redirect("login")
+
+        # 3️⃣ Authenticate
+        user = authenticate(
+            request,
+            username=user_obj.username,
+            password=password
+        )
 
         if user is not None:
             login(request, user)
 
-            # ROLE BASED REDIRECTION
             if user.role == "developer":
                 return redirect("admin:index")
-
             elif user.role in ["master_admin", "super_admin", "admin"]:
                 return redirect("admin_dashboard")
-
             elif user.role == "gd_munsi":
                 return redirect("dashboard")
-
             elif user.role == "field_staff":
                 return redirect("user_profile")
 
-            else:
-                messages.error(request, "Unknown role assigned!")
-                return redirect("login")
-
-        else:
-            messages.error(request, "Invalid credentials")
+            messages.error(request, "Unknown role assigned!")
             return redirect("login")
 
+        messages.error(request, "Invalid credentials")
+        return redirect("login")
+
     return render(request, "login_panel/login.html")
+
 
 def logout_view(request):
     if request.method == 'POST':
@@ -751,9 +765,42 @@ def edit_user(request, user_id):
     return render(request, "admin_panel/edit_user.html", context)
 
 
-@role_required(["admin"])
-def delete_user(request, user_id):
+@role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
+def toggle_user_status(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    acting_user = request.user
+
+    # 🚫 Cannot suspend yourself
+    if target_user.id == acting_user.id:
+        messages.error(request, "You cannot suspend your own account.")
+        return redirect("manage_users")
+
+    # 🚫 Role hierarchy enforcement
+    if ROLE_HIERARCHY[acting_user.role] <= ROLE_HIERARCHY[target_user.role]:
+        messages.error(request, "You are not allowed to suspend this user.")
+        return redirect("manage_users")
+
+    # 🔐 Scope enforcement
+    if acting_user.role == "admin" and target_user.admin != acting_user:
+        messages.error(request, "You cannot manage users outside your admin scope.")
+        return redirect("manage_users")
+
+    if acting_user.role == "gd_munsi" and target_user.gd_munsi != acting_user:
+        messages.error(request, "You cannot manage users outside your GD scope.")
+        return redirect("manage_users")
+
+    # ✅ Toggle status
+    if request.method == "POST":
+        target_user.is_active = not target_user.is_active
+        target_user.save()
+
+        msg = "activated" if target_user.is_active else "suspended"
+        messages.success(request, f"{target_user.username} has been {msg}.")
+        return redirect("manage_users")
+
+    messages.error(request, "Invalid request.")
     return redirect("manage_users")
+
 
 
 #-------- CRUD opration by admin to Manage Police Categories ---------

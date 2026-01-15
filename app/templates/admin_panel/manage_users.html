@@ -167,10 +167,28 @@
                                 <td class="p-3 text-gray-800">{{ officer.role }}</td>
                                 <td class="p-3 text-right">
                                     <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                                    {% if officer.role == "field_staff" %}
-                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
-                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
+                                    {% if officer.id != request.user.id %}
+                                    <form method="POST"
+                                        action="{% url 'toggle_user_status' officer.id %}"
+                                        class="inline">
+                                        {% csrf_token %}
+
+                                        {% if officer.is_active %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    onclick="return confirm('Suspend {{ officer.username }}?')">
+                                                Suspend
+                                            </button>
+                                        {% else %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    onclick="return confirm('Activate {{ officer.username }}?')">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
                                     {% endif %}
+
                                 </td>
                             </tr>
                             {% empty %}
