@@ -241,7 +241,6 @@ def edit_profile(request):
 
         user.save()
         messages.success(request, "Profile updated successfully.")
-
         return redirect("profile")
 
     return render(request, "admin_panel/edit_profile.html", {"user": user})
