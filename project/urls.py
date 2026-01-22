@@ -31,7 +31,7 @@ urlpatterns = [
     path('manage_vvip/', views.manage_vvip, name='manage_vvip'),
     path('add_vvip/', views.add_vvip, name='add_vvip'),
     path('edit_vvip/<int:vvip_id>/', views.edit_vvip, name='edit_vvip'),
-    path('vvip_delete/<int:vvip_id>/', views.delete_vvip, name='delete_vvip'),
+    # path('vvip_delete/<int:vvip_id>/', views.delete_vvip, name='delete_vvip'),
 
 
     # -------------------------------------------------------

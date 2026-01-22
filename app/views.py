@@ -323,10 +323,17 @@ def manage_users(request):
      .distinct() \
      .order_by("role", "username")
 
+    suspended_officers = officers.filter(is_active=False)
+    active_officers = officers.filter(is_active=True)
+
     return render(
         request,
         "admin_panel/manage_users.html",
-        {"officers": officers}
+        {
+            "officers": officers,
+            "active_officers": active_officers,
+            "suspended_officers": suspended_officers,
+        }
     )
 
 
@@ -440,9 +447,9 @@ def edit_vvip(request, vvip_id):
 
     return render(request, "admin_panel/edit_vvip.html", context)
 
-@role_required(["admin"])
-def delete_vvip(request, vvip_id):
-    return redirect('manage_vvip')
+# @role_required(["admin"])
+# def delete_vvip(request, vvip_id):
+#     return redirect('manage_vvip')
 
 
 #----- Custom user Panel Views -----

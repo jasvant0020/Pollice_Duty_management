@@ -42,6 +42,13 @@
                         All Staff
                     </button>
 
+                    <button @click="activeTab = 'suspended'"
+                        :class="activeTab === 'suspended' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
+                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        Suspended
+                    </button>
+
+
                 </nav>
             </div>
 
@@ -76,8 +83,28 @@
                                 <td class="p-3 text-gray-800">{{ officer.role }}</td>
                                 <td class="p-3 text-right">
                                     <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                                    <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
-                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a>
+                                    {% if officer.id != request.user.id %}
+                                    <form method="POST"
+                                        action="{% url 'toggle_user_status' officer.id %}"
+                                        class="inline">
+                                        {% csrf_token %}
+
+                                        {% if officer.is_active %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    onclick="return confirm('Suspend {{ officer.username }}?')">
+                                                Suspend
+                                            </button>
+                                        {% else %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    onclick="return confirm('Activate {{ officer.username }}?')">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    {% endif %}
+
                                 </td>
                             </tr>
                             {% endif %}
@@ -122,8 +149,28 @@
                                 <td class="p-3 text-gray-800">{{ officer.role }}</td>
                                 <td class="p-3 text-right">
                                     <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
-                                    {% comment %} <a href="{% url 'delete_user' officer.id %}" class="px-3 py-1 bg-red-600 text-white rounded"
-                                       onclick="return confirm('Are you sure you want to delete &quot;{{officer.name}} - {{officer.role}}&quot;?')">Delete</a> {% endcomment %}
+                                    {% if officer.id != request.user.id %}
+                                    <form method="POST"
+                                        action="{% url 'toggle_user_status' officer.id %}"
+                                        class="inline">
+                                        {% csrf_token %}
+
+                                        {% if officer.is_active %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    onclick="return confirm('Suspend {{ officer.username }}?')">
+                                                Suspend
+                                            </button>
+                                        {% else %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    onclick="return confirm('Activate {{ officer.username }}?')">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    {% endif %}
+
                                 </td>
                             </tr>
                             {% endif %}
@@ -157,8 +204,14 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
+                            {% if officer.is_active %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}{% if officer.is_active %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                                        A
+                                    </span>
+                                {% endif %}
+                                </td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
@@ -179,18 +232,12 @@
                                                     onclick="return confirm('Suspend {{ officer.username }}?')">
                                                 Suspend
                                             </button>
-                                        {% else %}
-                                            <button type="submit"
-                                                    class="px-3 py-1 bg-green-600 text-white rounded"
-                                                    onclick="return confirm('Activate {{ officer.username }}?')">
-                                                Activate
-                                            </button>
                                         {% endif %}
                                     </form>
                                     {% endif %}
-
                                 </td>
-                            </tr>
+                            </tr>                            
+                            {% endif %}
                             {% empty %}
                             <tr>
                                 <td colspan="7" class="p-4 text-center text-gray-500">
@@ -201,6 +248,69 @@
                     </tbody>
                 </table>
             </div>
+            <div x-show="activeTab === 'suspended'" style="display:none">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Suspended Staff</h3>
+
+                <table class="w-full border-collapse text-left">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="p-3">Name</th>
+                            <th class="p-3">Email</th>
+                            <th class="p-3">Phone</th>
+                            <th class="p-3">Gender</th>
+                            <th class="p-3">DOB</th>
+                            <th class="p-3">Rank</th>
+                            <th class="p-3">Role</th>
+                            <th class="p-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for officer in suspended_officers %}
+                            {% if not officer.is_active %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}{% if not officer.is_active %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">
+                                        S
+                                    </span>
+                                {% endif %}
+                                </td>
+                                <td class="p-3 text-gray-800">{{ officer.email }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.phone }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.gender }}</td>
+                                <td class="p-3 text-gray-800">{% if officer.dob %}{{ officer.dob|date:"d-m-Y" }}{% else %}-{% endif %}</td>
+                                <td class="p-3 text-gray-800">{{ officer.rank }}</td>
+                                <td class="p-3 text-gray-800">{{ officer.role }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{% url 'edit_user' officer.id %}" class="px-3 py-1 bg-yellow-500 text-white rounded">Edit</a>
+                                    {% if officer.id != request.user.id %}
+                                    <form method="POST"
+                                        action="{% url 'toggle_user_status' officer.id %}"
+                                        class="inline">
+                                        {% csrf_token %}
+
+                                        {% if not officer.is_active %}
+                                            <button type="submit"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    onclick="return confirm('Activate {{ officer.username }}?')">
+                                                Activate
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>                            
+                            {% endif %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-gray-500">
+                                    No suspended staff found.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
 
         </div>
     </div>
