@@ -206,12 +206,7 @@
                         {% for officer in officers %}
                             {% if officer.is_active %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.first_name }}{% if officer.is_active %}
-                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                                        A
-                                    </span>
-                                {% endif %}
-                                </td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}<div class="inline-flex w-2 h-2 bg-green-500 rounded-full animate-pulse"></div></td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
