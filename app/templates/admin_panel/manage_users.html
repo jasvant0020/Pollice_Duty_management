@@ -72,6 +72,7 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
+                            {% if officer.is_active %}
                             {% if officer.role == "field_staff" %}
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
@@ -108,6 +109,7 @@
                                 </td>
                             </tr>
                             {% endif %}
+                            {% endif %}
                             {% empty %}
                             <tr>
                                 <td colspan="7" class="p-4 text-center text-gray-500">
@@ -138,6 +140,7 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
+                            {% if officer.is_active %}
                             {% if officer.role == "gd_munsi" %}
                             <tr class="border-b hover:bg-gray-100">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
@@ -174,6 +177,13 @@
                                 </td>
                             </tr>
                             {% endif %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-gray-500">
+                                    No active gd_munsi found.
+                                </td>
+                            </tr>
+                            {% endif %}
                             {% empty %}
                             <tr>
                                 <td colspan="7" class="p-4 text-center text-gray-500">
@@ -206,7 +216,8 @@
                         {% for officer in officers %}
                             {% if officer.is_active %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.first_name }}<div class="inline-flex w-2 h-2 bg-green-500 rounded-full animate-pulse"></div></td>
+                                {% comment %} <td class="p-3 text-gray-800">{{ officer.first_name }}<div class="inline-flex w-2 h-2 bg-green-500 rounded-full animate-pulse"></div></td> {% endcomment %}
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
@@ -263,12 +274,7 @@
                         {% for officer in suspended_officers %}
                             {% if not officer.is_active %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-3 text-gray-800">{{ officer.first_name }}{% if not officer.is_active %}
-                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">
-                                        S
-                                    </span>
-                                {% endif %}
-                                </td>
+                                <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.phone }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.gender }}</td>
