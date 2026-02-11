@@ -195,6 +195,16 @@ def assign_duty(request):
     }
     return render(request, 'GD_munsi_panel/assign_duty.html', context)
 
+@role_required(["gd_munsi"])
+def munsi_profile(request):
+    
+    return render(request, 'GD_munsi_panel/munsi_profile.html')
+
+@role_required(["gd_munsi"])
+def edit_munsi_profile(request):
+    
+    return render(request, 'GD_munsi_panel/edit_munsi_profile.html')
+
 #------ Custom Admin Panel Views ------
 @role_required(["admin", "master_admin", "super_admin"])
 def admin_dashboard(request):

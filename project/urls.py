@@ -19,6 +19,8 @@ urlpatterns = [
     path('police/', views.police_list, name='police_list'),
     path('vvip/', views.vvip_list, name='vvip_list'),
     path('assign_duty/', views.assign_duty, name='assign_duty'),
+    path('munsi_profile/', views.munsi_profile, name='munsi_profile'),
+    path('edit_munsi_profile/', views.edit_munsi_profile, name='edit_munsi_profile'),
 
      # Custom Admin Panel Pages
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
