@@ -21,13 +21,6 @@ def has_suspended_parent(user):
             break
         visited.add(current.id)
 
-        # Management hierarchy (created_by)
-        if current.created_by:
-            if not current.created_by.is_active:
-                return True
-            current = current.created_by
-            continue
-
         # Operational hierarchy
         if current.role == "field_staff" and current.gd_munsi:
             if not current.gd_munsi.is_active:
@@ -39,6 +32,13 @@ def has_suspended_parent(user):
             if not current.admin.is_active:
                 return True
             current = current.admin
+            continue
+        
+        # Management hierarchy (created_by)
+        if current.created_by:
+            if not current.created_by.is_active:
+                return True
+            current = current.created_by
             continue
 
         break

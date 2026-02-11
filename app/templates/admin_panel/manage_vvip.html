@@ -110,7 +110,8 @@
                            Edit
                         </a>
 
-                        <a href="{% url 'delete_vvip' vvip.id %}"
+                        {% comment %} <a href="{% url 'delete_vvip' vvip.id %}" {% endcomment %}
+                        <a href="#"
                            class="px-3 py-1 bg-red-600 text-white rounded"
                            onclick="return confirm('Are you sure you want to delete {{ vvip.first_name }}?')">
                            Delete

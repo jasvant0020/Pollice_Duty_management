@@ -82,19 +82,19 @@ def login_view(request):
             messages.error(request, "Email not found!")
             return redirect("login")
 
-        # 1️⃣ Block if user himself is suspended
-        if not user_obj.is_active:
-            messages.error(
-                request,
-                "Your account has been suspended. Please contact your administrator."
-            )
-            return redirect("login")
-
-        # 2️⃣ Block if any parent in hierarchy is suspended
+        # 1️⃣ Block if any parent in hierarchy is suspended
         if has_suspended_parent(user_obj):
             messages.error(
                 request,
                 "Your administrator account is suspended. Access is temporarily disabled."
+            )
+            return redirect("login")
+
+        # 2️⃣ Block if user himself is suspended
+        if not user_obj.is_active:
+            messages.error(
+                request,
+                "Your account has been suspended. Please contact your administrator."
             )
             return redirect("login")
 
