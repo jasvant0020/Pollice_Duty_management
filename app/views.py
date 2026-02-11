@@ -325,6 +325,7 @@ def manage_users(request):
 
     suspended_officers = officers.filter(is_active=False)
     active_officers = officers.filter(is_active=True)
+    gd_munsi = officers.filter(role="gd_munsi")
 
     return render(
         request,
@@ -333,6 +334,7 @@ def manage_users(request):
             "officers": officers,
             "active_officers": active_officers,
             "suspended_officers": suspended_officers,
+            "gd_munsi" : gd_munsi,
         }
     )
 

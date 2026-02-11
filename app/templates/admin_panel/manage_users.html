@@ -72,8 +72,8 @@
                     </thead>
                     <tbody>
                         {% for officer in officers %}
-                            {% if officer.is_active %}
-                            {% if officer.role == "field_staff" %}
+                            {% if officer.is_active and officer.role == "field_staff" %}
+                            {% comment %} {% if officer.role == "field_staff" %} {% endcomment %}
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
@@ -108,7 +108,7 @@
 
                                 </td>
                             </tr>
-                            {% endif %}
+                            {% comment %} {% endif %} {% endcomment %}
                             {% endif %}
                             {% empty %}
                             <tr>
@@ -139,9 +139,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for officer in officers %}
-                            {% if officer.is_active %}
-                            {% if officer.role == "gd_munsi" %}
+                        {% for officer in gd_munsi %}
+                            {% if officer.is_active and officer.role == "gd_munsi" %}
                             <tr class="border-b hover:bg-gray-100">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }}</td>
                                 <td class="p-3 text-gray-800">{{ officer.email }}</td>
@@ -176,7 +175,6 @@
 
                                 </td>
                             </tr>
-                            {% endif %}
                             {% else %}
                             <tr>
                                 <td colspan="7" class="p-4 text-center text-gray-500">
@@ -254,6 +252,7 @@
                     </tbody>
                 </table>
             </div>
+            <!-- All Suspended STAFF TAB -->
             <div x-show="activeTab === 'suspended'" style="display:none">
                 <h3 class="text-xl font-semibold text-gray-700 mb-4">Suspended Staff</h3>
 
