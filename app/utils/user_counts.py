@@ -3,7 +3,7 @@ from app.models import User,SecurityCategory
 
 
 def get_admin_staff_counts(admin_user):
-    counts = User.objects.filter(admin=admin_user).aggregate(
+    counts = User.objects.filter(admin=admin_user,is_active=True).aggregate(
         total_staff=Count("id", filter=Q(role__in=["field_staff", "gd_munsi"])),
         field_staff=Count("id", filter=Q(role="field_staff")),
         gd_munsi=Count("id", filter=Q(role="gd_munsi")),
@@ -29,7 +29,8 @@ def get_super_admin_dashboard_data(master_admin):
     """
     super_admins = User.objects.filter(
         role="super_admin",
-        created_by=master_admin
+        created_by=master_admin,
+        is_active=True
     )
 
     data = []
@@ -38,14 +39,16 @@ def get_super_admin_dashboard_data(master_admin):
         # Admins created by this Super Admin
         admins = User.objects.filter(
             role="admin",
-            created_by=sa
+            created_by=sa,
+            is_active=True
         )
 
         admin_ids = admins.values_list("id", flat=True)
 
         # Staff under those admins
         staff_counts = User.objects.filter(
-            admin_id__in=admin_ids
+            admin_id__in=admin_ids,
+            is_active=True
         ).aggregate(
             gd_munsi=Count("id", filter=Q(role="gd_munsi")),
             field_staff=Count("id", filter=Q(role="field_staff")),
@@ -55,7 +58,7 @@ def get_super_admin_dashboard_data(master_admin):
         # ✅ Individual admin details for overlay
         admins_data = []
         for admin in admins:
-            sub_staff_counts = User.objects.filter(admin=admin).aggregate(
+            sub_staff_counts = User.objects.filter(admin=admin,is_active=True).aggregate(
                 gd_munsi=Count("id", filter=Q(role="gd_munsi")),
                 field_staff=Count("id", filter=Q(role="field_staff")),
                 vvip=Count("id", filter=Q(role="vvip")),
@@ -84,13 +87,14 @@ def get_super_admin_dashboard_data(master_admin):
 def get_admin_dashboard_data(super_admin):
     admins = User.objects.filter(
         role="admin",
-        created_by=super_admin
+        created_by=super_admin,
+        is_active=True
     )
 
     data = []
 
     for admin in admins:
-        staff = User.objects.filter(admin=admin)
+        staff = User.objects.filter(admin=admin,is_active=True)
 
         staff_counts = staff.aggregate(
             gd_munsi=Count("id", filter=Q(role="gd_munsi")),
