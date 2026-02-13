@@ -18,7 +18,9 @@ from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashbo
 from django.db.models import Count
 from app.models import SecurityCategory
 from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY
-
+from django.contrib.auth import update_session_auth_hash
+from .models import User, VVIPDuty
+from collections import defaultdict
 
 
 
@@ -196,14 +198,207 @@ def assign_duty(request):
     return render(request, 'GD_munsi_panel/assign_duty.html', context)
 
 @role_required(["gd_munsi"])
+def munsi_assign_duty(request):
+
+    gd = request.user
+
+    vvips = User.objects.filter(
+        role="vvip",
+        admin=gd.admin
+    )
+
+    categories = SecurityCategory.objects.filter(
+        admin=gd.admin
+    )
+
+    if request.method == "POST":
+        vvip_id = request.POST.get("vvip")
+        category_id = request.POST.get("category")
+        confirm_partial = request.POST.get("confirm_partial")
+
+        vvip = User.objects.get(id=vvip_id, role="vvip")
+        category = SecurityCategory.objects.get(id=category_id)
+
+        # Field staff under this GD
+        field_staffs = User.objects.filter(
+            role="field_staff",
+            gd_munsi=gd
+        )
+
+        # Match by rank
+        allowed_ranks = category.personnel_by_rank.keys()
+        field_staffs = field_staffs.filter(rank__in=allowed_ranks)
+
+        # Exclude already active assigned staff
+        already_assigned = VVIPDuty.objects.filter(
+            vvip=vvip,
+            is_active=True
+        ).values_list("field_staff_id", flat=True)
+
+        available_staff = field_staffs.exclude(id__in=already_assigned)
+
+        required_count = category.total_personnel
+        available_count = available_staff.count()
+
+        # 🚨 Case 1: No staff at all
+        if available_count == 0:
+            messages.error(
+                request,
+                f"No available staff for category '{category.name}'."
+            )
+            return redirect("munsi_assign_duty")
+
+        # 🚨 Case 2: Not enough staff and not confirmed yet
+        if available_count < required_count and not confirm_partial:
+            messages.warning(
+                request,
+                f"Only {available_count} out of {required_count} required personnel are available. "
+                "Do you want to assign duty with currently available staff?"
+            )
+
+            return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
+                "vvips": vvips,
+                "categories": categories,
+                "confirm_partial": True,
+                "selected_vvip": vvip.id,
+                "selected_category": category.id,
+            })
+
+        # ✅ Assign (Full or Partial)
+        assign_count = min(required_count, available_count)
+        selected_staff = available_staff[:assign_count]
+
+        for staff in selected_staff:
+            VVIPDuty.objects.create(
+                vvip=vvip,
+                category=category,
+                field_staff=staff,
+                assigned_by=gd
+            )
+
+        if available_count < required_count:
+            messages.success(
+                request,
+                f"Partial duty assigned ({assign_count}/{required_count} personnel deployed)."
+            )
+        else:
+            messages.success(request, "Duty assigned successfully!")
+
+        return redirect("munsi_active_duty")
+
+
+    return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
+        "vvips": vvips,
+        "categories": categories
+    })
+
+@role_required(["gd_munsi"])
+def munsi_active_duty(request):
+
+    gd = request.user
+
+    duties = VVIPDuty.objects.filter(
+        assigned_by=gd,
+        is_active=True
+    ).select_related("vvip", "field_staff", "category")
+
+    grouped_duties = defaultdict(list)
+
+    for duty in duties:
+        grouped_duties[duty.vvip].append(duty)
+
+    return render(request, "GD_munsi_panel/munsi_active_duty.html", {
+        "grouped_duties": dict(grouped_duties)
+    })
+
+@role_required(["gd_munsi"])
+def munsi_deactivate_duty(request, duty_id):
+
+    gd = request.user
+
+    try:
+        duty = VVIPDuty.objects.get(
+            id=duty_id,
+            assigned_by=gd,
+            is_active=True
+        )
+        duty.is_active = False
+        duty.save()
+        messages.success(request, "Duty ended successfully!")
+
+    except VVIPDuty.DoesNotExist:
+        messages.error(request, "Duty not found or already inactive.")
+
+    return redirect("munsi_active_duty")
+
+@role_required(["gd_munsi"])
+def munsi_end_vvip_duty(request, vvip_id):
+
+    gd = request.user
+
+    if request.method == "POST":
+
+        duties = VVIPDuty.objects.filter(
+            vvip_id=vvip_id,
+            assigned_by=gd,
+            is_active=True
+        )
+
+        if duties.exists():
+            duties.update(is_active=False)
+            messages.success(request, "All duties for this VVIP ended successfully.")
+        else:
+            messages.warning(request, "No active duties found for this VVIP.")
+
+    return redirect("munsi_active_duty")
+
+
+@role_required(["gd_munsi"])
 def munsi_profile(request):
     
     return render(request, 'GD_munsi_panel/munsi_profile.html')
 
 @role_required(["gd_munsi"])
 def edit_munsi_profile(request):
-    
-    return render(request, 'GD_munsi_panel/edit_munsi_profile.html')
+
+    user = request.user   # Logged-in munshi
+
+    if request.method == "POST":
+        # Get form data
+        first_name = request.POST.get("first_name")
+        last_name = request.POST.get("last_name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+
+        # Update basic fields
+        user.first_name = first_name
+        user.last_name = last_name
+        user.email = email
+        user.phone = phone
+
+        # Profile photo update
+        if request.FILES.get("profile_photo"):
+            user.profile_photo = request.FILES.get("profile_photo")
+
+        # Password change (only if provided)
+        if password:
+            if password == confirm_password:
+                user.set_password(password)
+                update_session_auth_hash(request, user)  # Keep user logged in
+            else:
+                messages.error(request, "Passwords do not match!")
+                return redirect("edit_munsi_profile")
+
+        user.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect("munsi_profile")  # change if your profile url name is different
+
+    return render(request, "GD_munsi_panel/edit_munsi_profile.html", {
+        "user": user
+    })
+
 
 #------ Custom Admin Panel Views ------
 @role_required(["admin", "master_admin", "super_admin"])

@@ -111,3 +111,52 @@ class SecurityCategory(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.admin})"
+
+
+class VVIPDuty(models.Model):
+    vvip = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "vvip"},
+        related_name="duties"
+    )
+
+    category = models.ForeignKey(
+        SecurityCategory,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="duties"
+    )
+
+
+    field_staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "field_staff"},
+        related_name="assigned_duties"
+    )
+
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="gd_assigned_duties",
+        limit_choices_to={"role": "gd_munsi"}
+    )
+
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['vvip', 'field_staff'],
+                condition=Q(is_active=True),
+                name='unique_active_vvip_fieldstaff'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.vvip} → {self.field_staff} ({self.category})"

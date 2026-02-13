@@ -1,0 +1,88 @@
+{% extends 'GD_munsi_panel/base.html' %}
+{% block page_title %}Assign Duty{% endblock %}
+
+{% block content %}
+{% include "error_message/error_message.html" %}
+
+<div class="max-w-3xl text-gray-800 mx-auto bg-white p-6 rounded-xl shadow">
+
+    <h2 class="text-xl font-bold mb-6">Assign Duty to VVIP</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <!-- Select VVIP -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Select VVIP</label>
+            <select name="vvip"
+                    class="w-full border rounded p-2"
+                    {% if confirm_partial %}disabled{% endif %}
+                    required>
+
+                <option value="">-- Select VVIP --</option>
+                {% for vvip in vvips %}
+                    <option value="{{ vvip.id }}"
+                        {% if selected_vvip == vvip.id %}selected{% endif %}>
+                        {{ vvip.get_full_name|default:vvip.username|title }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Select Category -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Select Security Category</label>
+            <select name="category"
+                    class="w-full border rounded p-2"
+                    {% if confirm_partial %}disabled{% endif %}
+                    required>
+
+                <option value="">-- Select Category --</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}"
+                        {% if selected_category == cat.id %}selected{% endif %}>
+                        {{ cat.name }} ({{ cat.total_personnel }} Personnel)
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if confirm_partial %}
+            <!-- Preserve values -->
+            <input type="hidden" name="confirm_partial" value="1">
+            <input type="hidden" name="vvip" value="{{ selected_vvip }}">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+
+            <div class="bg-yellow-100 border border-yellow-300 p-4 rounded-lg mb-4">
+                <p class="text-yellow-800 font-semibold mb-3">
+                    Required personnel not fully available.
+                    Do you want to assign with currently available staff?
+                </p>
+
+                <div class="flex gap-3">
+                    <button type="submit"
+                            class="bg-yellow-600 text-white px-5 py-2 rounded-lg hover:bg-yellow-700">
+                        Confirm Partial Assignment
+                    </button>
+
+                    <a href="{% url 'munsi_assign_duty' %}"
+                       class="bg-gray-300 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-400">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+
+        {% else %}
+
+            <button type="submit"
+                    class="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">
+                Assign Automatically
+            </button>
+
+        {% endif %}
+
+    </form>
+
+</div>
+
+{% endblock %}
