@@ -21,7 +21,7 @@ from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY
 from django.contrib.auth import update_session_auth_hash
 from .models import User, VVIPDuty
 from collections import defaultdict
-
+from django.db import transaction   
 
 
 
@@ -202,90 +202,146 @@ def munsi_assign_duty(request):
 
     gd = request.user
 
+    active_vvip_ids = VVIPDuty.objects.filter(
+        is_active=True
+    ).values_list("vvip_id", flat=True)
+
     vvips = User.objects.filter(
         role="vvip",
         admin=gd.admin
-    )
+    ).exclude(id__in=active_vvip_ids)
 
-    categories = SecurityCategory.objects.filter(
-        admin=gd.admin
-    )
+    categories = SecurityCategory.objects.filter(admin=gd.admin)
 
     if request.method == "POST":
+
         vvip_id = request.POST.get("vvip")
         category_id = request.POST.get("category")
         confirm_partial = request.POST.get("confirm_partial")
 
-        vvip = User.objects.get(id=vvip_id, role="vvip")
-        category = SecurityCategory.objects.get(id=category_id)
+        if not vvip_id or not category_id:
+            messages.error(request, "Please select VVIP and Category.")
+            return redirect("munsi_assign_duty")
 
-        # Field staff under this GD
-        field_staffs = User.objects.filter(
-            role="field_staff",
-            gd_munsi=gd
-        )
+        vvip = get_object_or_404(User, id=vvip_id, role="vvip")
+        category = get_object_or_404(SecurityCategory, id=category_id)
 
-        # Match by rank
-        allowed_ranks = category.personnel_by_rank.keys()
-        field_staffs = field_staffs.filter(rank__in=allowed_ranks)
+        required_rank_data = category.personnel_by_rank or {}
 
-        # Exclude already active assigned staff
-        already_assigned = VVIPDuty.objects.filter(
-            vvip=vvip,
+        if not required_rank_data:
+            messages.error(request, "No rank structure defined in this category.")
+            return redirect("munsi_assign_duty")
+
+        # 🔥 Exclude staff already on ACTIVE duty (any VVIP)
+        already_active_staff = VVIPDuty.objects.filter(
             is_active=True
         ).values_list("field_staff_id", flat=True)
 
-        available_staff = field_staffs.exclude(id__in=already_assigned)
+        field_staffs = User.objects.filter(
+            role="field_staff",
+            gd_munsi=gd
+        ).exclude(id__in=already_active_staff)
 
-        required_count = category.total_personnel
-        available_count = available_staff.count()
+        assignment_plan = {}
+        shortage_messages = []
+        total_required = 0
+        total_assignable = 0
 
-        # 🚨 Case 1: No staff at all
-        if available_count == 0:
-            messages.error(
-                request,
-                f"No available staff for category '{category.name}'."
+        # 🔎 RANK-WISE CHECKING
+        for rank, required_count in required_rank_data.items():
+
+            required_count = int(required_count)  # safety
+            total_required += required_count
+
+            available_rank_staff = field_staffs.filter(rank=rank)
+            available_count = available_rank_staff.count()
+
+            assignable = min(required_count, available_count)
+            total_assignable += assignable
+
+            assignment_plan[rank] = {
+                "required": required_count,
+                "available": available_count,
+                "queryset": available_rank_staff
+            }
+
+            shortage_messages.append(
+                f"{rank}: Required {required_count}, Available {available_count}"
             )
-            return redirect("munsi_assign_duty")
 
-        # 🚨 Case 2: Not enough staff and not confirmed yet
-        if available_count < required_count and not confirm_partial:
-            messages.warning(
-                request,
-                f"Only {available_count} out of {required_count} required personnel are available. "
-                "Do you want to assign duty with currently available staff?"
-            )
-
+        # 🚨 Shortage detected
+        # 🚨 CASE 1 — Nothing can be assigned at all
+        if total_assignable == 0:
             return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
                 "vvips": vvips,
                 "categories": categories,
                 "confirm_partial": True,
-                "selected_vvip": vvip.id,
-                "selected_category": category.id,
+                "selected_vvip": int(vvip_id),
+                "selected_category": int(category_id),
+                "shortage_messages": shortage_messages,
+                "total_required": total_required,
+                "total_assignable": total_assignable,
+                "assignment_blocked": True,   # special flag
             })
 
-        # ✅ Assign (Full or Partial)
-        assign_count = min(required_count, available_count)
-        selected_staff = available_staff[:assign_count]
 
-        for staff in selected_staff:
-            VVIPDuty.objects.create(
-                vvip=vvip,
-                category=category,
-                field_staff=staff,
-                assigned_by=gd
-            )
+        # 🚨 CASE 2 — Partial shortage
+        if shortage_messages and not confirm_partial:
+            return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
+                "vvips": vvips,
+                "categories": categories,
+                "confirm_partial": True,
+                "selected_vvip": int(vvip_id),
+                "selected_category": int(category_id),
+                "shortage_messages": shortage_messages,
+                "total_required": total_required,
+                "total_assignable": total_assignable,
+            })
 
-        if available_count < required_count:
+
+
+        # ✅ FINAL ASSIGNMENT (Atomic Safe)
+        assigned_count = 0
+
+        with transaction.atomic():
+
+            for rank, data in assignment_plan.items():
+
+                required = data["required"]
+                staff_queryset = data["queryset"][:required]
+
+                for staff in staff_queryset:
+
+                    # Double safety check (avoid UNIQUE error)
+                    exists = VVIPDuty.objects.filter(
+                        vvip=vvip,
+                        field_staff=staff,
+                        is_active=True
+                    ).exists()
+
+                    if not exists:
+                        VVIPDuty.objects.create(
+                            vvip=vvip,
+                            category=category,
+                            field_staff=staff,
+                            assigned_by=gd,
+                            is_active=True
+                        )
+                        assigned_count += 1
+
+        # ✅ SUCCESS MESSAGE
+        if shortage_messages:
             messages.success(
                 request,
-                f"Partial duty assigned ({assign_count}/{required_count} personnel deployed)."
+                f"Partial assignment completed ({assigned_count}/{total_required})."
             )
         else:
-            messages.success(request, "Duty assigned successfully!")
+            messages.success(
+                request,
+                f"Duty assigned successfully ({assigned_count} personnel deployed)."
+            )
 
         return redirect("munsi_active_duty")
-
 
     return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
         "vvips": vvips,

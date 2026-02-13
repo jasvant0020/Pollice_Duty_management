@@ -25,6 +25,8 @@
                         {% if selected_vvip == vvip.id %}selected{% endif %}>
                         {{ vvip.get_full_name|default:vvip.username|title }}
                     </option>
+                {% empty %}
+                <option value="">No VVIP Available</option>
                 {% endfor %}
             </select>
         </div>
@@ -54,25 +56,58 @@
             <input type="hidden" name="category" value="{{ selected_category }}">
 
             <div class="bg-yellow-100 border border-yellow-300 p-4 rounded-lg mb-4">
+
                 <p class="text-yellow-800 font-semibold mb-3">
                     Required personnel not fully available.
+                </p>
+
+                <!-- Rank wise breakdown -->
+                {% if shortage_messages %}
+                    <ul class="text-sm text-yellow-900 mb-4 list-disc pl-5">
+                        {% for msg in shortage_messages %}
+                            <li>{{ msg }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <p class="text-sm mb-4">
+                    Total Required: {{ total_required }} <br>
+                    Can Be Assigned: {{ total_assignable }}
+                </p>
+
+                <p class="font-medium mb-3">
                     Do you want to assign with currently available staff?
                 </p>
 
                 <div class="flex gap-3">
-                    <button type="submit"
-                            class="bg-yellow-600 text-white px-5 py-2 rounded-lg hover:bg-yellow-700">
-                        Confirm Partial Assignment
-                    </button>
+                    {% if total_assignable == 0 %}
+                        <div class="bg-red-100 border border-red-300 p-3 rounded mb-3">
+                            <p class="text-red-700 font-semibold">
+                                No staff available. Assignment cannot proceed.
+                            </p>
+                        </div>
+
+                        <button type="button"
+                                disabled
+                                class="bg-gray-400 text-white px-5 py-2 rounded-lg cursor-not-allowed">
+                            Cannot Assign
+                        </button>
+                    {% else %}
+                        <button type="submit"
+                                class="bg-yellow-600 text-white px-5 py-2 rounded-lg hover:bg-yellow-700">
+                            Confirm Partial Assignment
+                        </button>
+                    {% endif %}
+
 
                     <a href="{% url 'munsi_assign_duty' %}"
-                       class="bg-gray-300 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-400">
+                    class="bg-gray-300 text-gray-800 px-5 py-2 rounded-lg hover:bg-gray-400">
                         Cancel
                     </a>
                 </div>
             </div>
-
         {% else %}
+
 
             <button type="submit"
                     class="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">
