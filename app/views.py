@@ -215,9 +215,24 @@ def munsi_assign_duty(request):
 
     if request.method == "POST":
 
+        from django.utils.dateparse import parse_datetime
+
+
         vvip_id = request.POST.get("vvip")
         category_id = request.POST.get("category")
+        duty_place = request.POST.get("duty_place")
+        start_datetime = parse_datetime(request.POST.get("start_datetime"))
+        end_datetime = parse_datetime(request.POST.get("end_datetime"))
+        vehicle = request.POST.get("vehicle") or None
+        duty_type = request.POST.get("duty_type") or "static"
+        special_instructions = request.POST.get("special_instructions")
+
         confirm_partial = request.POST.get("confirm_partial")
+
+        if end_datetime <= start_datetime:
+            messages.error(request, "End time must be after start time.")
+            return redirect("munsi_assign_duty")
+
 
         if not vvip_id or not category_id:
             messages.error(request, "Please select VVIP and Category.")
@@ -321,12 +336,19 @@ def munsi_assign_duty(request):
 
                     if not exists:
                         VVIPDuty.objects.create(
-                            vvip=vvip,
-                            category=category,
-                            field_staff=staff,
-                            assigned_by=gd,
-                            is_active=True
-                        )
+                        vvip=vvip,
+                        category=category,
+                        field_staff=staff,
+                        assigned_by=gd,
+                        duty_place=duty_place,
+                        start_datetime=start_datetime,
+                        end_datetime=end_datetime,
+                        vehicle=vehicle,
+                        duty_type=duty_type,
+                        special_instructions=special_instructions,
+                        is_active=True
+                    )
+
                         assigned_count += 1
 
         # ✅ SUCCESS MESSAGE

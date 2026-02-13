@@ -49,6 +49,73 @@
             </select>
         </div>
 
+        <!-- Duty Place -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Duty Place</label>
+            <input type="text"
+                name="duty_place"
+                class="w-full border rounded p-2"
+                value="{{ request.POST.duty_place }}"
+                {% if confirm_partial %}readonly{% endif %}
+                required>
+        </div>
+
+        <!-- Start Date & Time -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Start Date & Time</label>
+            <input type="datetime-local"
+                name="start_datetime"
+                class="w-full border rounded p-2"
+                value="{{ request.POST.start_datetime }}"
+                {% if confirm_partial %}readonly{% endif %}
+                required>
+        </div>
+
+        <!-- End Date & Time -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">End Date & Time</label>
+            <input type="datetime-local"
+                name="end_datetime"
+                class="w-full border rounded p-2"
+                value="{{ request.POST.end_datetime }}"
+                {% if confirm_partial %}readonly{% endif %}
+                required>
+        </div>
+
+        <!-- Duty Type -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Duty Type</label>
+            <select name="duty_type"
+                    class="w-full border rounded p-2"
+                    {% if confirm_partial %}disabled{% endif %}
+                    required>
+                <option value="static">Static</option>
+                <option value="escort">Escort</option>
+                <option value="event">Event</option>
+            </select>
+        </div>
+
+        <!-- Vehicle -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Vehicle (Optional)</label>
+            <input type="text"
+                name="vehicle"
+                placeholder="Enter vehicle number or leave blank"
+                class="w-full border rounded p-2"
+                value="{{ request.POST.vehicle }}"
+                {% if confirm_partial %}readonly{% endif %}>
+        </div>
+
+        <!-- Special Instructions -->
+        <div class="mb-4">
+            <label class="block font-semibold mb-2">Special Instructions (Optional)</label>
+            <textarea name="special_instructions"
+                    class="w-full border rounded p-2"
+                    rows="3"
+                    {% if confirm_partial %}readonly{% endif %}>{{ request.POST.special_instructions }}</textarea>
+        </div>
+
+
         {% if confirm_partial %}
             <!-- Preserve values -->
             <input type="hidden" name="confirm_partial" value="1">

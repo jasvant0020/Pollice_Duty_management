@@ -114,6 +114,7 @@ class SecurityCategory(models.Model):
 
 
 class VVIPDuty(models.Model):
+
     vvip = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -128,7 +129,6 @@ class VVIPDuty(models.Model):
         blank=True,
         related_name="duties"
     )
-
 
     field_staff = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -146,6 +146,37 @@ class VVIPDuty(models.Model):
     )
 
     assigned_at = models.DateTimeField(auto_now_add=True)
+
+    # 🔥 NEW FIELDS (SAFE ADDITION)
+
+    duty_place = models.CharField(max_length=255, null=True, blank=True)
+
+    start_datetime = models.DateTimeField(null=True, blank=True)
+
+    end_datetime = models.DateTimeField(null=True, blank=True)
+
+    vehicle = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    DUTY_TYPE_CHOICES = [
+        ("static", "Static"),
+        ("escort", "Escort"),
+        ("event", "Event"),
+    ]
+
+    duty_type = models.CharField(
+        max_length=20,
+        choices=DUTY_TYPE_CHOICES,
+        default="static"
+    )
+
+    special_instructions = models.TextField(
+        null=True,
+        blank=True
+    )
 
     is_active = models.BooleanField(default=True)
 
