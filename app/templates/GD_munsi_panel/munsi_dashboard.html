@@ -71,19 +71,20 @@
         </a> {% endcomment %}
         
 
-        
+        <a href="{% url 'munsi_active_duty' %}">
         <div class="bg-white p-6 rounded-2xl shadow-xl border-t-4 border-purple-600 transform hover:scale-[1.02] transition duration-300 ease-in-out">
             <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold uppercase text-purple-600">Active Duties</span>
                 <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6a2 2 0 00-2-2H5a2 2 0 00-2 2v13c0 1.104.896 2 2 2h4zm9 0V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v13c0 1.104.896 2 2 2h4z"></path></svg>
             </div>
-            {% if active_duty > 0 %}
-            <p class="text-4xl font-extrabold text-gray-900 mt-4">{{ active_duty }}</p>
+            {% if active_duty_count > 0 %}
+            <p class="text-4xl font-extrabold text-gray-900 mt-4">{{ active_duty_count|default:"0" }}</p>
             {% else %}
             <p class="text-sm text-gray-500 mt-4">No active_duty yet</p>
             {% endif %}
         </div>
-        
+        </a>
+
         {% comment %} {# ----------MASTER ADMIN VIEW-------------- #}
         {% if request.user.role == "master_admin" %}
         {% for sa in super_admin_data %}

@@ -15,7 +15,7 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
 
     # GD Munsi Panel Pages
-    path('munsi_dashboard/', views.dashboard, name='dashboard'),
+    path('munsi_dashboard/', views.munsi_dashboard, name='munsi_dashboard'),
     path('police/', views.police_list, name='police_list'),
     path('vvip/', views.vvip_list, name='vvip_list'),
     path('assign_duty/', views.assign_duty, name='assign_duty'),

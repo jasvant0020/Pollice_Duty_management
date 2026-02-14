@@ -147,47 +147,47 @@ def logout_view(request):
 
 
 #------ Custom GD Munsi Panel Views ------
-@login_required
-def dashboard(request):
-    role = request.user.role
+# @login_required
+# def dashboard(request):
+#     role = request.user.role
 
-    # # Developer Dashboard
-    # if role == "developer":
-    #     return render(request, "developer/dashboard.html", {
-    #         "total_users": User.objects.count(),
-    #         "master_admin_count": User.objects.filter(role="master_admin").count()
-    #     })
+#     # # Developer Dashboard
+#     # if role == "developer":
+#     #     return render(request, "developer/dashboard.html", {
+#     #         "total_users": User.objects.count(),
+#     #         "master_admin_count": User.objects.filter(role="master_admin").count()
+#     #     })
 
-    # # Master Admin Dashboard
-    # if role == "master_admin":
-    #     return render(request, "master_admin/dashboard.html", {
-    #         "super_admin_count": User.objects.filter(role="super_admin").count(),
-    #     })
+#     # # Master Admin Dashboard
+#     # if role == "master_admin":
+#     #     return render(request, "master_admin/dashboard.html", {
+#     #         "super_admin_count": User.objects.filter(role="super_admin").count(),
+#     #     })
 
-    # # Super Admin Dashboard
-    # if role == "super_admin":
-    #     return render(request, "super_admin/dashboard.html", {
-    #         "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
-    #     })
+#     # # Super Admin Dashboard
+#     # if role == "super_admin":
+#     #     return render(request, "super_admin/dashboard.html", {
+#     #         "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
+#     #     })
 
-    # Admin Dashboard
-    if role == "admin":
-        return render(request, "admin_panel/admin_dashboard.html", {
-            "gd_munsi_count": User.objects.filter(role="gd_munsi", admin=request.user).count(),
-            "field_staff_count": User.objects.filter(role="field_staff", admin=request.user).count(),
-        })
+#     # # Admin Dashboard
+#     # if role == "admin":
+#     #     return render(request, "admin_panel/admin_dashboard.html", {
+#     #         "gd_munsi_count": User.objects.filter(role="gd_munsi", admin=request.user).count(),
+#     #         "field_staff_count": User.objects.filter(role="field_staff", admin=request.user).count(),
+#     #     })
 
-    # GD Munsi Dashboard
-    if role == "gd_munsi":
-        return render(request, "GD_munsi_panel/dashboard.html", {
-            "field_staff_count": User.objects.filter(gd_munsi=request.user).count(),
-        })
+#     # # GD Munsi Dashboard
+#     # if role == "gd_munsi":
+#     #     return render(request, "GD_munsi_panel/dashboard.html", {
+#     #         "field_staff_count": User.objects.filter(gd_munsi=request.user).count(),
+#     #     })
 
-    # Field Staff Dashboard
-    if role == "field_staff":
-        return render(request, "user_panel/user_profile.html", {
-            "user_data": request.user
-        })
+#     # # Field Staff Dashboard
+#     # if role == "field_staff":
+#     #     return render(request, "user_panel/user_profile.html", {
+#     #         "user_data": request.user
+#     #     })
 
 
 @role_required(["gd_munsi"])
@@ -382,6 +382,22 @@ def munsi_assign_duty(request):
     })
 
 @role_required(["gd_munsi"])
+def munsi_dashboard(request):
+
+    gd = request.user
+
+    duties = VVIPDuty.objects.filter(
+        assigned_by=gd,
+        is_active=True
+    ).select_related("vvip", "field_staff", "category")
+    # ✅ Count UNIQUE VVIP only
+    active_vvip_count = duties.values("vvip").distinct().count()
+
+    return render(request, "GD_munsi_panel/munsi_dashboard.html", {
+        "active_duty_count": active_vvip_count,
+    })
+
+@role_required(["gd_munsi"])
 def munsi_active_duty(request):
 
     gd = request.user
@@ -391,14 +407,19 @@ def munsi_active_duty(request):
         is_active=True
     ).select_related("vvip", "field_staff", "category")
 
+    # ✅ Count UNIQUE VVIP only
+    active_vvip_count = duties.values("vvip").distinct().count()
+
     grouped_duties = defaultdict(list)
 
     for duty in duties:
         grouped_duties[duty.vvip].append(duty)
 
     return render(request, "GD_munsi_panel/munsi_active_duty.html", {
-        "grouped_duties": dict(grouped_duties)
+        "grouped_duties": dict(grouped_duties),
+        "active_duty_count": active_vvip_count,
     })
+
 
 @role_required(["gd_munsi"])
 def munsi_deactivate_duty(request, duty_id):
