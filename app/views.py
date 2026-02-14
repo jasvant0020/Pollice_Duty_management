@@ -22,6 +22,17 @@ from django.contrib.auth import update_session_auth_hash
 from .models import User, VVIPDuty
 from collections import defaultdict
 from django.db import transaction   
+from django.template.loader import render_to_string
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.lib import fonts
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from .models import VVIPDuty
+from django.contrib.auth import get_user_model
 
 
 
@@ -408,6 +419,18 @@ def munsi_deactivate_duty(request, duty_id):
         messages.error(request, "Duty not found or already inactive.")
 
     return redirect("munsi_active_duty")
+
+def munsi_vvip_duty_print(request, vvip_id):
+    vvip = User.objects.get(id=vvip_id, role="vvip")
+    duties = VVIPDuty.objects.filter(vvip=vvip, is_active=True)
+
+    return render(request, "GD_munsi_panel/vvip_duty_print.html", {
+        "vvip": vvip,
+        "duties": duties,
+        "duty": duties.first(),
+        "total_staff": duties.count()
+    })
+
 
 @role_required(["gd_munsi"])
 def munsi_end_vvip_duty(request, vvip_id):

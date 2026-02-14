@@ -25,6 +25,9 @@ urlpatterns = [
     path('munsi_active_duty/', views.munsi_active_duty, name='munsi_active_duty'),
     path('munsi_deactivate_duty/<int:duty_id>/', views.munsi_deactivate_duty, name='munsi_deactivate_duty'),
     path("end-vvip-duty/<int:vvip_id>/",views.munsi_end_vvip_duty,name="munsi_end_vvip_duty"),
+    path("vvip-duty-print/<int:vvip_id>/",views.munsi_vvip_duty_print,name="munsi_vvip_duty_print"),
+
+
 
 
      # Custom Admin Panel Pages
