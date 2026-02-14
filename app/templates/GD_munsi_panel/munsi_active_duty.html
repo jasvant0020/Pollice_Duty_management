@@ -22,7 +22,7 @@
     <div class="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
 
         <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gradient-to-r from-teal-600 to-teal-500">
+            <thead class="bg-linear-to-r from-teal-600 to-teal-500">
                 <tr>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-white">VVIP</th>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-white">Category</th>
@@ -147,7 +147,7 @@
                             <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border">
 
                                 <div class="flex items-center">
-                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3">
+                                    <div class="h-10 w-10 rounded-full bg-linear-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3">
                                         {{ duty.field_staff.get_full_name|default:duty.field_staff.username|first|upper }}
                                     </div>
                                     <div>
