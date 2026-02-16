@@ -241,6 +241,70 @@
 
             </div>
 
+            {% if confirm_reassign %}
+                <!-- Reassign Confirmation Section -->
+                <input type="hidden" name="confirm_reassign" value="1">
+                <input type="hidden" name="vvip" value="{{ selected_vvip }}">
+                <input type="hidden" name="category" value="{{ selected_category }}">
+
+                <div class="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-6 mb-6">
+
+                    <div class="flex items-start gap-3 mb-4">
+                        <svg class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4c-.77-1.33-2.69-1.33-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z">
+                            </path>
+                        </svg>
+
+                        <div class="flex-1">
+                            <h3 class="font-bold text-amber-900 text-lg mb-1">
+                                Previously Assigned Personnel Detected
+                            </h3>
+                            <p class="text-sm text-amber-800">
+                                Some personnel were already assigned to this VVIP in previous duties.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Previous Assignment List -->
+                    {% if previous_assignments %}
+                        <div class="bg-white rounded-lg p-4 mb-4 border border-amber-200">
+                            <p class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
+                                Assignment History
+                            </p>
+
+                            <ul class="space-y-2">
+                                {% for staff in previous_assignments %}
+                                    <li class="flex items-start gap-2 text-sm text-slate-700">
+                                        <svg class="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5"
+                                            fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2a1 1 0 101.414-1.414L11 9.586V7z"
+                                                clip-rule="evenodd">
+                                            </path>
+                                        </svg>
+
+                                        {{ staff.field_staff__rank }} -
+                                        {{ staff.field_staff__first_name }}
+                                        {{ staff.field_staff__last_name }}
+                                        <span class="text-xs text-slate-500">
+                                            (Assigned {{ staff.assign_count }} times)
+                                        </span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <p class="text-sm text-amber-900 font-medium">
+                        Do you want to proceed with reassignment?
+                    </p>
+
+                </div>
+            {% endif %}
+
+
+
             <!-- Form Actions -->
             <div class="bg-slate-50 px-8 py-4 border-t border-slate-200 rounded-b-lg flex items-center justify-between">
                 
@@ -280,7 +344,6 @@
                         Assign Automatically
                     </button>
                 {% endif %}
-
             </div>
 
         </form>

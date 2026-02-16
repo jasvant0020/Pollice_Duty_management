@@ -232,6 +232,23 @@ def munsi_assign_duty(request):
 
 
         vvip_id = request.POST.get("vvip")
+
+        # 🔍 Get previous assignment count per staff for this VVIP
+        previous_assignments = (
+            VVIPDuty.objects
+            .filter(vvip_id=vvip_id)
+            .values(
+                "field_staff__id",
+                "field_staff__first_name",
+                "field_staff__last_name",
+                "field_staff__rank"
+            )
+            .annotate(assign_count=Count("id"))
+            .order_by("-assign_count")
+        )
+
+
+
         category_id = request.POST.get("category")
         duty_place = request.POST.get("duty_place")
         start_datetime = parse_datetime(request.POST.get("start_datetime"))
@@ -241,6 +258,8 @@ def munsi_assign_duty(request):
         special_instructions = request.POST.get("special_instructions")
 
         confirm_partial = request.POST.get("confirm_partial")
+        confirm_reassign = request.POST.get("confirm_reassign")
+
 
         if end_datetime <= start_datetime:
             messages.error(request, "End time must be after start time.")
@@ -282,16 +301,30 @@ def munsi_assign_duty(request):
             total_required += required_count
 
             available_rank_staff = field_staffs.filter(rank=rank)
+
+            # 🔹 Staff who NEVER served this VVIP before
+            never_assigned_staff = available_rank_staff.exclude(
+                id__in=VVIPDuty.objects.filter(
+                    vvip_id=vvip_id
+                ).values_list("field_staff_id", flat=True)
+            )
+
+            never_count = never_assigned_staff.count()
             available_count = available_rank_staff.count()
 
+            # Prefer new staff first
             assignable = min(required_count, available_count)
+
             total_assignable += assignable
 
             assignment_plan[rank] = {
                 "required": required_count,
                 "available": available_count,
-                "queryset": available_rank_staff
+                "never_queryset": never_assigned_staff,
+                "full_queryset": available_rank_staff,
+                "never_count": never_count,
             }
+
 
             shortage_messages.append(
                 f"{rank}: Required {required_count}, Available {available_count}"
@@ -315,6 +348,29 @@ def munsi_assign_duty(request):
 
         # 🚨 CASE 2 — Partial shortage
         if shortage_messages and not confirm_partial:
+
+            # 🚨 CASE 3 — Unique staff not enough, ask before reassigning
+            reassign_needed = False
+
+            for rank, data in assignment_plan.items():
+                if data["required"] > data["never_count"]:
+                    reassign_needed = True
+                    break
+
+            if reassign_needed and not confirm_reassign:
+                return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
+                    "vvips": vvips,
+                    "categories": categories,
+                    "confirm_reassign": True,
+                    "previous_assignments": previous_assignments,
+                    "selected_vvip": int(vvip_id),
+                    "selected_category": int(category_id),
+                    "shortage_messages": shortage_messages,
+                    "total_required": total_required,
+                    "total_assignable": total_assignable,
+                })
+
+
             return render(request, "GD_munsi_panel/munsi_assign_duty.html", {
                 "vvips": vvips,
                 "categories": categories,
@@ -338,9 +394,25 @@ def munsi_assign_duty(request):
             for rank, data in assignment_plan.items():
 
                 required = data["required"]
-                staff_queryset = data["queryset"][:required]
+                required = data["required"]
 
-                for staff in staff_queryset:
+                # First take never assigned staff
+                never_staff = data["never_queryset"][:required]
+                remaining_needed = required - never_staff.count()
+
+                if remaining_needed > 0:
+                    # Allow reassignment only if confirmed
+                    reassign_staff = data["full_queryset"].exclude(
+                        id__in=never_staff.values_list("id", flat=True)
+                    )[:remaining_needed]
+
+                    final_staff_queryset = list(never_staff) + list(reassign_staff)
+                else:
+                    final_staff_queryset = list(never_staff)
+
+
+                for staff in final_staff_queryset:
+
 
                     exists = VVIPDuty.objects.filter(
                         vvip=vvip,
