@@ -63,6 +63,7 @@ urlpatterns = [
 
     # Custom user Panel Pages
     path("user_profile/", views.user_profile, name="user_profile"),
+    path("edit_user_profile/", views.edit_user_profile, name="edit_user_profile"),
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
     path("duty_history/", views.duty_history, name="duty_history"),
     path("request_application_box/", views.request_application_box, name="request_application_box"),  

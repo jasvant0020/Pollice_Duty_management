@@ -920,7 +920,17 @@ def edit_vvip(request, vvip_id):
 #----- Custom user Panel Views -----
 @role_required(["field_staff"])
 def user_assign_duty(request):
-    return render(request, "user_panel/user_assign_duty.html")
+
+    user = request.user
+
+    duties = VVIPDuty.objects.filter(
+        field_staff=user,
+        is_active=True
+    ).select_related("vvip", "category", "assigned_by")
+
+    return render(request, "user_panel/user_assign_duty.html", {
+        "duties": duties
+    })
 
 @role_required(["field_staff"])
 def request_application_box(request):
@@ -941,6 +951,46 @@ def attendance_panel(request):
 @role_required(["field_staff"])
 def user_profile(request):
     return render(request, "user_panel/user_profile.html")
+
+@role_required(["field_staff"])
+def edit_user_profile(request):
+
+    user = request.user
+
+    if request.method == "POST":
+
+        # -------- BASIC INFO --------
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        user.email = request.POST.get("email")
+        user.phone = request.POST.get("phone")
+
+        # -------- PROFILE PHOTO --------
+        if request.FILES.get("profile_photo"):
+            user.profile_photo = request.FILES.get("profile_photo")
+
+        # -------- PASSWORD CHANGE --------
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if password or confirm_password:
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("edit_user_profile")
+
+            if len(password) < 6:
+                messages.error(request, "Password must be at least 6 characters.")
+                return redirect("edit_user_profile")
+
+            user.set_password(password)
+            update_session_auth_hash(request, user)  # Prevent logout
+
+        user.save()
+
+        messages.success(request, "Profile updated successfully.")
+        return redirect("user_profile")
+
+    return render(request, "user_panel/edit_user_profile.html")
 
 
 #-------- CRUD opration by admin to manage user ---------
