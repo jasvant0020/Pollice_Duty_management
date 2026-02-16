@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.conf import settings
 import uuid
+from django.utils import timezone
 
 class User(AbstractUser):
 
@@ -185,6 +186,18 @@ class VVIPDuty(models.Model):
     )
 
     is_active = models.BooleanField(default=True)
+
+    end_reason = models.TextField(null=True, blank=True)
+
+    ended_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="ended_duties"
+    )
+
+    ended_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         constraints = [

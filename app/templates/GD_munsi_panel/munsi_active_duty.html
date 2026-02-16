@@ -144,9 +144,14 @@
                             </h4>
 
                             <form method="POST"
-                                action="{% url 'munsi_end_vvip_duty' batch_id %}"
-                                onsubmit="return confirm('End ALL duties for this VVIP?');">
+                                action="{% url 'munsi_end_vvip_duty' batch_id %}">
                                 {% csrf_token %}
+
+                                <textarea name="end_reason"
+                                        required
+                                        placeholder="Enter reason for ending batch duty..."
+                                        class="w-full text-gray-700 mb-3 p-2 border rounded-lg text-sm"></textarea>
+
                                 <button type="submit"
                                         class="px-5 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 shadow-md transition">
                                     End All Duties
@@ -182,9 +187,15 @@
                                 </div>
 
                                 <form method="POST"
-                                    action="{% url 'munsi_deactivate_duty' duty.id %}"
-                                    onsubmit="return confirm('End this duty?');">
+                                    action="{% url 'munsi_deactivate_duty' duty.id %}">
                                     {% csrf_token %}
+
+                                    <textarea name="end_reason"
+                                            required
+                                            placeholder="Enter reason for ending individual duty..."
+                                            class="w-full text-gray-700 mb-2 p-2 border rounded-lg text-sm"></textarea>
+
+
                                     <button type="submit"
                                             class="px-4 py-2 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white text-sm font-medium transition">
                                         End

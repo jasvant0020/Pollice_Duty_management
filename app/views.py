@@ -34,6 +34,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from .models import VVIPDuty
 from django.contrib.auth import get_user_model
 import uuid
+from django.utils import timezone
 
 
 
@@ -520,23 +521,38 @@ def munsi_deactivate_duty(request, duty_id):
 
     gd = request.user
 
-    try:
-        duty = VVIPDuty.objects.get(
-            id=duty_id,
-            assigned_by=gd,
-            is_active=True
-        )
+    if request.method == "POST":
 
-        VVIPDuty.objects.filter(
-            batch_id=duty.batch_id,
-            assigned_by=gd,
-            is_active=True
-        ).update(is_active=False)
+        reason = request.POST.get("end_reason")
 
-        messages.success(request, "Duty batch ended successfully!")
+        if not reason:
+            messages.error(request, "Please provide a reason for ending duty.")
+            return redirect("munsi_active_duty")
 
-    except VVIPDuty.DoesNotExist:
-        messages.error(request, "Duty not found or already inactive.")
+        try:
+            duty = VVIPDuty.objects.get(
+                id=duty_id,
+                assigned_by=gd,
+                is_active=True
+            )
+
+            VVIPDuty.objects.filter(
+                batch_id=duty.batch_id,
+                assigned_by=gd,
+                is_active=True
+            ).update(
+                is_active=False,
+                end_reason=reason,
+                ended_by=gd,
+                ended_at=timezone.now(),
+                end_datetime=timezone.now()
+            )
+
+            messages.success(request, "Duty batch ended successfully!")
+
+        except VVIPDuty.DoesNotExist:
+            messages.error(request, "Duty not found or already inactive.")
+
 
     return redirect("munsi_active_duty")
 
@@ -566,6 +582,12 @@ def munsi_end_vvip_duty(request, batch_id):
 
     if request.method == "POST":
 
+        reason = request.POST.get("end_reason")
+
+        if not reason:
+            messages.error(request, "Please provide a reason for ending duty.")
+            return redirect("munsi_active_duty")
+
         duties = VVIPDuty.objects.filter(
             batch_id=batch_id,
             assigned_by=gd,
@@ -573,10 +595,17 @@ def munsi_end_vvip_duty(request, batch_id):
         )
 
         if duties.exists():
-            duties.update(is_active=False)
+            duties.update(
+                is_active=False,
+                end_reason=reason,
+                ended_by=gd,
+                ended_at=timezone.now(),
+                end_datetime=timezone.now()
+            )
             messages.success(request, "Duty batch ended successfully.")
         else:
             messages.warning(request, "No active duties found.")
+
 
     return redirect("munsi_active_duty")
 

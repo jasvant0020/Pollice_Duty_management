@@ -111,6 +111,36 @@
                                 {{ duty.special_instructions }}
                             </div>
                             {% endif %}
+
+                            <!-- 🔴 ADD THIS SECTION HERE -->
+                            <div class="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-gray-800">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                                    <div>
+                                        <span class="font-semibold text-gray-600">End Reason:</span><br>
+                                        {{ duty.end_reason|default:"Not Provided" }}
+                                    </div>
+
+                                    <div>
+                                        <span class="font-semibold text-gray-600">Ended By:</span><br>
+                                        {% if duty.ended_by %}
+                                            {{ duty.ended_by.get_full_name|default:duty.ended_by.username|title }}
+                                        {% else %}
+                                            System / Not Recorded
+                                        {% endif %}
+
+                                    </div>
+
+                                    <div>
+                                        <span class="font-semibold text-gray-600">Ended At:</span><br>
+                                        {{ duty.ended_at|date:"d M Y, h:i A"|default:"—" }}
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- 🔴 END HERE -->
+
+
                             {% endwith %}
 
                         </div>
