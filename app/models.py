@@ -210,3 +210,19 @@ class VVIPDuty(models.Model):
 
     def __str__(self):
         return f"{self.vvip} → {self.field_staff} ({self.category})"
+    
+class FieldStaffRequest(models.Model):
+        STATUS_CHOICES = (
+            ('pending', 'Pending'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected'),
+        )
+
+        staff = models.ForeignKey(User, on_delete=models.CASCADE, related_name='requests')
+        subject = models.CharField(max_length=255)
+        message = models.TextField()
+        submitted_at = models.DateTimeField(auto_now_add=True)
+        status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+        def __str__(self):
+            return f"{self.subject} ({self.staff.username})"

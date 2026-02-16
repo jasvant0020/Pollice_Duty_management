@@ -1,0 +1,39 @@
+{% extends "GD_munsi_panel/base.html" %}
+{% block page_title %}Field Staff Requests{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-4">Field Staff Requests</h2>
+
+    {% if requests %}
+        <div class="space-y-4">
+            {% for req in requests %}
+                <div class="bg-white p-4 rounded-2xl shadow border border-gray-100 flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">{{ req.submitted_at|date:"d M Y, h:i A" }}</p>
+                        <p class="font-semibold text-gray-900">{{ req.staff.get_full_name|default:req.staff.username|title }}</p>
+                        <p class="text-gray-700">{{ req.subject }}</p>
+                        <p class="text-gray-600 text-sm">{{ req.message }}</p>
+                    </div>
+                    <div class="space-y-2 text-right">
+                        {% if req.status == "pending" %}
+                            <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-sm font-medium">Pending</span>
+                        {% elif req.status == "approved" %}
+                            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm font-medium">Approved</span>
+                        {% else %}
+                            <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-medium">Rejected</span>
+                        {% endif %}
+
+                        <div class="flex gap-2 mt-2">
+                            <a href="{% url 'munsi_approve_request' req.id %}" class="px-3 py-1 bg-green-600 text-white rounded-xl text-sm hover:bg-green-700">Approve</a>
+                            <a href="{% url 'munsi_reject_request' req.id %}" class="px-3 py-1 bg-red-600 text-white rounded-xl text-sm hover:bg-red-700">Reject</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-600 text-center mt-10">No requests submitted yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

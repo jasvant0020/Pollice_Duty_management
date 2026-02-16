@@ -35,7 +35,7 @@ from .models import VVIPDuty
 from django.contrib.auth import get_user_model
 import uuid
 from django.utils import timezone
-
+from .models import FieldStaffRequest
 
 
 
@@ -657,6 +657,30 @@ def edit_munsi_profile(request):
         "user": user
     })
 
+@role_required(["gd_munsi"])
+def munsi_field_staff_requests(request):
+    requests = FieldStaffRequest.objects.all().order_by('-submitted_at')
+    return render(request, "GD_munsi_panel/munsi_field_staff_requests.html", {"requests": requests})
+
+@role_required(["gd_munsi"])
+def munsi_approve_request(request, req_id):
+    req = get_object_or_404(FieldStaffRequest, id=req_id)
+    req.status = "approved"
+    req.save()
+    messages.success(request, "Request approved.")
+    return redirect("munsi_field_staff_requests")
+    # return redirect('view_field_requests')
+
+@role_required(["gd_munsi"])
+def munsi_reject_request(request, req_id):
+    req = get_object_or_404(FieldStaffRequest, id=req_id)
+    req.status = "rejected"
+    req.save()
+    messages.success(request, "Request rejected.")
+    return redirect("munsi_field_staff_requests")
+    # return redirect('view_field_requests')
+
+
 
 #------ Custom Admin Panel Views ------
 @role_required(["admin", "master_admin", "super_admin"])
@@ -934,6 +958,21 @@ def user_assign_duty(request):
 
 @role_required(["field_staff"])
 def request_application_box(request):
+    if request.method == "POST":
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+
+        if subject and message:
+            FieldStaffRequest.objects.create(
+                staff=request.user,
+                subject=subject,
+                message=message
+            )
+            messages.success(request, "Your request has been submitted to Munsi successfully.")
+            return redirect('request_application_box')
+        else:
+            messages.error(request, "Please fill all fields.")
+
     return render(request, "user_panel/request_application_box.html")
 
 @role_required(["field_staff"])

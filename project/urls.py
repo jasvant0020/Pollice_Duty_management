@@ -27,6 +27,9 @@ urlpatterns = [
     path("end-vvip-duty/<uuid:batch_id>/", views.munsi_end_vvip_duty, name="munsi_end_vvip_duty"),
     path("vvip-duty-print/<uuid:batch_id>/", views.munsi_vvip_duty_print, name="munsi_vvip_duty_print"),
     path("munsi_previous_duties/",views.munsi_previous_duties,name="munsi_previous_duties"),
+    path("munsi_field_staff_requests/",views.munsi_field_staff_requests,name="munsi_field_staff_requests"),
+    path('munsi_approve_request/<int:req_id>/', views.munsi_approve_request, name='munsi_approve_request'),
+    path('munsi_reject_request/<int:req_id>/', views.munsi_reject_request, name='munsi_reject_request'),
 
 
 
