@@ -54,14 +54,14 @@
 
             <tbody class="divide-y divide-gray-100 bg-white">
 
-                {% for vvip, duties in grouped_duties.items %}
+                {% for batch_id, duties in grouped_duties.items %}
                 
                 <!-- Main Row -->
                 <tr onclick="toggleRow('{{ forloop.counter }}')" 
                     class="cursor-pointer hover:bg-gray-50 transition">
 
                     <td class="px-6 py-5 font-semibold text-gray-900">
-                        {{ vvip.get_full_name|default:vvip.username|title }}
+                        {{ duties.0.vvip.get_full_name|default:duties.0.vvip.username|title }}
                     </td>
 
                     <td class="px-6 py-5">
@@ -144,14 +144,14 @@
                             </h4>
 
                             <form method="POST"
-                                action="{% url 'munsi_end_vvip_duty' vvip.id %}"
+                                action="{% url 'munsi_end_vvip_duty' batch_id %}"
                                 onsubmit="return confirm('End ALL duties for this VVIP?');">
                                 {% csrf_token %}
                                 <button type="submit"
                                         class="px-5 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 shadow-md transition">
                                     End All Duties
                                 </button>
-                                <a href="{% url 'munsi_vvip_duty_print' vvip.id %}" 
+                                <a href="{% url 'munsi_vvip_duty_print' batch_id %}" 
                                 target="_blank"
                                 class="px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 shadow-md transition">
                                 🖨 Download Report

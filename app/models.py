@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.conf import settings
-
+import uuid
 
 class User(AbstractUser):
 
@@ -114,6 +114,12 @@ class SecurityCategory(models.Model):
 
 
 class VVIPDuty(models.Model):
+
+    batch_id = models.UUIDField(
+        default=uuid.uuid4,
+        editable=False,
+        db_index=True
+    )
 
     vvip = models.ForeignKey(
         settings.AUTH_USER_MODEL,

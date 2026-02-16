@@ -33,6 +33,8 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
 from .models import VVIPDuty
 from django.contrib.auth import get_user_model
+import uuid
+
 
 
 
@@ -331,6 +333,8 @@ def munsi_assign_duty(request):
 
         with transaction.atomic():
 
+            batch_id = uuid.uuid4()   # 🔥 ONE batch for this full assignment
+
             for rank, data in assignment_plan.items():
 
                 required = data["required"]
@@ -338,7 +342,6 @@ def munsi_assign_duty(request):
 
                 for staff in staff_queryset:
 
-                    # Double safety check (avoid UNIQUE error)
                     exists = VVIPDuty.objects.filter(
                         vvip=vvip,
                         field_staff=staff,
@@ -347,18 +350,19 @@ def munsi_assign_duty(request):
 
                     if not exists:
                         VVIPDuty.objects.create(
-                        vvip=vvip,
-                        category=category,
-                        field_staff=staff,
-                        assigned_by=gd,
-                        duty_place=duty_place,
-                        start_datetime=start_datetime,
-                        end_datetime=end_datetime,
-                        vehicle=vehicle,
-                        duty_type=duty_type,
-                        special_instructions=special_instructions,
-                        is_active=True
-                    )
+                            vvip=vvip,
+                            category=category,
+                            field_staff=staff,
+                            assigned_by=gd,
+                            duty_place=duty_place,
+                            start_datetime=start_datetime,
+                            end_datetime=end_datetime,
+                            vehicle=vehicle,
+                            duty_type=duty_type,
+                            special_instructions=special_instructions,
+                            is_active=True,
+                            batch_id=batch_id   # 🔥 CRITICAL LINE
+                        )
 
                         assigned_count += 1
 
@@ -407,17 +411,16 @@ def munsi_active_duty(request):
         is_active=True
     ).select_related("vvip", "field_staff", "category")
 
-    # ✅ Count UNIQUE VVIP only
-    active_vvip_count = duties.values("vvip").distinct().count()
-
     grouped_duties = defaultdict(list)
 
     for duty in duties:
-        grouped_duties[duty.vvip].append(duty)
+        grouped_duties[duty.batch_id].append(duty)
+
+    active_batch_count = len(grouped_duties)
 
     return render(request, "GD_munsi_panel/munsi_active_duty.html", {
         "grouped_duties": dict(grouped_duties),
-        "active_duty_count": active_vvip_count,
+        "active_duty_count": active_batch_count,
     })
 
 @role_required(["gd_munsi"])
@@ -433,20 +436,10 @@ def munsi_previous_duties(request):
     grouped_duties = defaultdict(list)
 
     for duty in duties:
-
-        category_id = duty.category.id if duty.category else 0
-        assigned_date = duty.assigned_at.date() if duty.assigned_at else None
-
-        key = (
-            duty.vvip.id,
-            category_id,
-            assigned_date
-        )
-
-        grouped_duties[key].append(duty)
+        grouped_duties[duty.batch_id].append(duty)
 
     return render(request, "GD_munsi_panel/munsi_previous_duties.html", {
-        "grouped_duties": grouped_duties
+        "grouped_duties": dict(grouped_duties)
     })
 
 
@@ -461,47 +454,60 @@ def munsi_deactivate_duty(request, duty_id):
             assigned_by=gd,
             is_active=True
         )
-        duty.is_active = False
-        duty.save()
-        messages.success(request, "Duty ended successfully!")
+
+        VVIPDuty.objects.filter(
+            batch_id=duty.batch_id,
+            assigned_by=gd,
+            is_active=True
+        ).update(is_active=False)
+
+        messages.success(request, "Duty batch ended successfully!")
 
     except VVIPDuty.DoesNotExist:
         messages.error(request, "Duty not found or already inactive.")
 
     return redirect("munsi_active_duty")
 
-def munsi_vvip_duty_print(request, vvip_id):
-    vvip = User.objects.get(id=vvip_id, role="vvip")
-    duties = VVIPDuty.objects.filter(vvip=vvip, is_active=True)
+
+def munsi_vvip_duty_print(request, batch_id):
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        is_active=True
+    ).select_related("vvip", "field_staff", "category")
+
+    duty = duties.first()
 
     return render(request, "GD_munsi_panel/vvip_duty_print.html", {
-        "vvip": vvip,
+        "vvip": duty.vvip if duty else None,
         "duties": duties,
-        "duty": duties.first(),
+        "duty": duty,
         "total_staff": duties.count()
     })
 
 
+
 @role_required(["gd_munsi"])
-def munsi_end_vvip_duty(request, vvip_id):
+def munsi_end_vvip_duty(request, batch_id):
 
     gd = request.user
 
     if request.method == "POST":
 
         duties = VVIPDuty.objects.filter(
-            vvip_id=vvip_id,
+            batch_id=batch_id,
             assigned_by=gd,
             is_active=True
         )
 
         if duties.exists():
             duties.update(is_active=False)
-            messages.success(request, "All duties for this VVIP ended successfully.")
+            messages.success(request, "Duty batch ended successfully.")
         else:
-            messages.warning(request, "No active duties found for this VVIP.")
+            messages.warning(request, "No active duties found.")
 
     return redirect("munsi_active_duty")
+
 
 
 @role_required(["gd_munsi"])
