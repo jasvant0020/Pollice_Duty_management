@@ -126,7 +126,7 @@ def login_view(request):
             elif user.role in ["master_admin", "super_admin", "admin"]:
                 return redirect("admin_dashboard")
             elif user.role == "gd_munsi":
-                return redirect("dashboard")
+                return redirect("munsi_dashboard")
             elif user.role == "field_staff":
                 return redirect("user_profile")
 
@@ -418,6 +418,35 @@ def munsi_active_duty(request):
     return render(request, "GD_munsi_panel/munsi_active_duty.html", {
         "grouped_duties": dict(grouped_duties),
         "active_duty_count": active_vvip_count,
+    })
+
+@role_required(["gd_munsi"])
+def munsi_previous_duties(request):
+
+    gd = request.user
+
+    duties = VVIPDuty.objects.filter(
+        assigned_by=gd,
+        is_active=False
+    ).select_related("vvip", "field_staff", "category")
+
+    grouped_duties = defaultdict(list)
+
+    for duty in duties:
+
+        category_id = duty.category.id if duty.category else 0
+        assigned_date = duty.assigned_at.date() if duty.assigned_at else None
+
+        key = (
+            duty.vvip.id,
+            category_id,
+            assigned_date
+        )
+
+        grouped_duties[key].append(duty)
+
+    return render(request, "GD_munsi_panel/munsi_previous_duties.html", {
+        "grouped_duties": grouped_duties
     })
 
 
