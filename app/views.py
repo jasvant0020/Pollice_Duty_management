@@ -353,7 +353,7 @@ def munsi_assign_duty(request):
             reassign_needed = False
 
             for rank, data in assignment_plan.items():
-                if data["required"] > data["never_count"]:
+                if data["available"] > 0 and data["never_count"] < data["available"]:
                     reassign_needed = True
                     break
 
