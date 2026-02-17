@@ -4,188 +4,191 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 
-<div 
-    x-data="{ tab: 'pending' }" 
-    class="max-w-7xl mx-auto px-6 py-8"
->
+<div x-data="requestManager()" class="max-w-7xl mx-auto px-6 py-8">
 
-    <!-- Header -->
     <h2 class="text-3xl font-bold text-gray-800 mb-8">
         Field Staff Requests
     </h2>
 
     <!-- Tabs -->
     <div class="flex space-x-4 mb-8">
-        <button 
-            @click="tab='pending'" 
-            :class="tab === 'pending' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700'"
-            class="px-5 py-2 rounded-lg font-medium transition"
-        >
+        <button @click="tab='pending'"
+                :class="tab==='pending' ? activeTab : inactiveTab"
+                class="px-5 py-2 rounded-lg font-medium transition">
             Pending ({{ pending_requests.paginator.count }})
         </button>
 
-        <button 
-            @click="tab='approved'" 
-            :class="tab === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'"
-            class="px-5 py-2 rounded-lg font-medium transition"
-        >
+        <button @click="tab='approved'"
+                :class="tab==='approved' ? activeTab : inactiveTab"
+                class="px-5 py-2 rounded-lg font-medium transition">
             Approved ({{ approved_requests.paginator.count }})
         </button>
 
-        <button 
-            @click="tab='rejected'" 
-            :class="tab === 'rejected' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'"
-            class="px-5 py-2 rounded-lg font-medium transition"
-        >
+        <button @click="tab='rejected'"
+                :class="tab==='rejected' ? activeTab : inactiveTab"
+                class="px-5 py-2 rounded-lg font-medium transition">
             Rejected ({{ rejected_requests.paginator.count }})
         </button>
     </div>
 
 
-    <!-- ======================= -->
-    <!-- PENDING TAB -->
-    <!-- ======================= -->
-
-    <div x-show="tab === 'pending'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+    <!-- GRID -->
+    <div x-show="tab==='pending'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
         {% for req in pending_requests %}
-        <div x-data="{ open: false }" class="relative">
+        <div 
+            @click="openModal({
+                id: '{{ req.id }}',
+                name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
+                image: '{{ req.staff.profile_photo.url }}',
+                subject: `{{ req.subject|escapejs }}`,
+                message: `{{ req.message|escapejs }}`,
+                date: '{{ req.submitted_at }}'
+            })"
+            class="cursor-pointer bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center"
+        >
+            <img src="{{ req.staff.profile_photo.url }}"
+                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
 
-            <!-- DP Card -->
-            <div 
-                @click="open = !open"
-                class="cursor-pointer bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center"
-            >
-                <img 
-                    src="{{ req.staff.profile_photo.url }}" 
-                    class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500"
-                >
-                <h3 class="mt-2 text-sm font-semibold text-gray-800">
-                    {{ req.staff.first_name }}
-                </h3>
-                <p class="text-xs text-gray-500">
-                    {{ req.submitted_at|date:"d M Y" }}
-                </p>
-            </div>
-
-            <!-- Expand Popup -->
-            <div 
-                x-show="open"
-                @click.outside="open = false"
-                x-transition
-                class="absolute z-20 mt-3 w-72 bg-white shadow-xl rounded-xl p-4 border"
-            >
-                <h4 class="font-bold text-gray-800 mb-2">
-                    {{ req.staff.first_name }} {{ req.staff.last_name }}
-                </h4>
-
-                <p class="text-sm text-gray-600 mb-2">
-                    <strong>Reason:</strong> {{ req.reason }}
-                </p>
-
-                <p class="text-xs text-gray-500 mb-3">
-                    Submitted: {{ req.submitted_at }}
-                </p>
-
-                <div class="flex justify-between">
-                    <a href="{% url 'munsi_approve_request' req.id %}"
-                       class="bg-green-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-green-600">
-                        Approve
-                    </a>
-
-                    <a href="{% url 'munsi_reject_request' req.id %}"
-                       class="bg-red-500 text-white px-3 py-1 rounded-lg text-xs hover:bg-red-600">
-                        Reject
-                    </a>
-                </div>
-            </div>
-
+            <h3 class="mt-2 text-sm font-semibold text-gray-800">
+                {{ req.staff.first_name }} {{ req.staff.last_name }}
+            </h3>
         </div>
-        {% empty %}
-        <p class="text-gray-500 col-span-full">No pending requests.</p>
         {% endfor %}
     </div>
 
-
-    <!-- ======================= -->
-    <!-- APPROVED TAB -->
-    <!-- ======================= -->
-
-    <div x-show="tab === 'approved'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+    <div x-show="tab==='approved'" 
+        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
         {% for req in approved_requests %}
-        <div x-data="{ open: false }" class="relative">
+        <div 
+            @click="openModal({
+                id: '{{ req.id }}',
+                name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
+                image: '{{ req.staff.profile_photo.url }}',
+                subject: `{{ req.subject|escapejs }}`,
+                message: `{{ req.message|escapejs }}`,
+                date: '{{ req.submitted_at }}',
+                status: 'approved'
+            })"
+            class="cursor-pointer bg-green-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center">
+            <img src="{{ req.staff.profile_photo.url }}"
+                class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-green-500">
 
-            <div 
-                @click="open = !open"
-                class="cursor-pointer bg-green-50 p-4 rounded-xl shadow text-center hover:shadow-lg"
-            >
-                <img 
-                    src="{{ req.staff.profile_photo.url }}" 
-                    class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-green-500"
-                >
-                <h3 class="mt-2 text-sm font-semibold text-gray-800">
-                    {{ req.staff.first_name }}
-                </h3>
-            </div>
-
-            <div 
-                x-show="open"
-                @click.outside="open = false"
-                x-transition
-                class="absolute z-20 mt-3 w-72 bg-white shadow-xl rounded-xl p-4 border"
-            >
-                <p class="text-sm text-gray-600">
-                    Approved on {{ req.submitted_at|date:"d M Y" }}
-                </p>
-            </div>
-
+            <h3 class="mt-2 text-sm font-semibold text-gray-800">
+                {{ req.staff.first_name }} {{ req.staff.last_name }}
+            </h3>
         </div>
         {% empty %}
-        <p class="text-gray-500 col-span-full">No approved requests.</p>
+        <p class="col-span-full text-gray-500">No approved requests.</p>
+        {% endfor %}
+    </div>
+
+    <div x-show="tab==='rejected'" 
+        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+
+        {% for req in rejected_requests %}
+        <div 
+            @click="openModal({
+                id: '{{ req.id }}',
+                name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
+                image: '{{ req.staff.profile_photo.url }}',
+                subject: `{{ req.subject|escapejs }}`,
+                message: `{{ req.message|escapejs }}`,
+                date: '{{ req.submitted_at }}',
+                status: 'rejected'
+            })"
+            class="cursor-pointer bg-red-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center"
+        >
+            <img src="{{ req.staff.profile_photo.url }}"
+                class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-red-500">
+
+            <h3 class="mt-2 text-sm font-semibold text-gray-800">
+                {{ req.staff.first_name }} {{ req.staff.last_name }}
+            </h3>
+        </div>
+        {% empty %}
+        <p class="col-span-full text-gray-500">No rejected requests.</p>
         {% endfor %}
     </div>
 
 
-    <!-- ======================= -->
-    <!-- REJECTED TAB -->
-    <!-- ======================= -->
 
-    <div x-show="tab === 'rejected'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
-        {% for req in rejected_requests %}
-        <div x-data="{ open: false }" class="relative">
+    <!-- ================= MODAL OVERLAY ================= -->
 
-            <div 
-                @click="open = !open"
-                class="cursor-pointer bg-red-50 p-4 rounded-xl shadow text-center hover:shadow-lg"
-            >
-                <img 
-                    src="{{ req.staff.profile_photo.url }}" 
-                    class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-red-500"
-                >
-                <h3 class="mt-2 text-sm font-semibold text-gray-800">
-                    {{ req.staff.first_name }}
-                </h3>
+    <div x-show="showModal"
+         x-transition
+         class="fixed inset-0 bg-black/40 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50">
+
+        <div @click.outside="closeModal()"
+             class="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+
+            <!-- Close Button -->
+            <button @click="closeModal()"
+                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
+                ✕
+            </button>
+
+            <!-- Staff Image -->
+            <div class="text-center">
+                <img :src="modalData.image"
+                     class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-indigo-500">
+                <h3 class="mt-4 text-xl font-bold text-gray-800"
+                    x-text="modalData.name"></h3>
             </div>
 
-            <div 
-                x-show="open"
-                @click.outside="open = false"
-                x-transition
-                class="absolute z-20 mt-3 w-72 bg-white shadow-xl rounded-xl p-4 border"
-            >
-                <p class="text-sm text-gray-600">
-                    Rejected on {{ req.submitted_at|date:"d M Y" }}
-                </p>
+            <!-- Details -->
+            <div class="mt-6 space-y-3 text-sm text-gray-700">
+
+                <p><strong>subject:</strong></p>
+                <p x-text="modalData.subject" class="bg-gray-100 p-3 rounded-lg"></p>
+
+                <p><strong>message:</strong></p>
+                <p x-text="modalData.message" class="bg-gray-100 p-3 rounded-lg"></p>
+
+                <p><strong>Submitted On:</strong></p>
+                <p x-text="modalData.date"></p>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-between mt-6">
+                <a :href="'{% url 'munsi_approve_request' 0 %}'.replace('0', modalData.id)"
+                   class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                    Approve
+                </a>
+
+                <a :href="'{% url 'munsi_reject_request' 0 %}'.replace('0', modalData.id)"
+                   class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
+                    Reject
+                </a>
             </div>
 
         </div>
-        {% empty %}
-        <p class="text-gray-500 col-span-full">No rejected requests.</p>
-        {% endfor %}
     </div>
 
 </div>
+
+
+<script>
+function requestManager() {
+    return {
+        tab: 'pending',
+        showModal: false,
+        modalData: {},
+        activeTab: 'bg-indigo-600 text-white',
+        inactiveTab: 'bg-gray-100 text-gray-700',
+
+        openModal(data) {
+            this.modalData = data
+            this.showModal = true
+        },
+
+        closeModal() {
+            this.showModal = false
+        }
+    }
+}
+</script>
 
 {% endblock %}

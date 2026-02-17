@@ -224,5 +224,8 @@ class FieldStaffRequest(models.Model):
         submitted_at = models.DateTimeField(auto_now_add=True)
         status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
 
+        is_notified = models.BooleanField(default=False)
+        notified_at = models.DateTimeField(null=True, blank=True)
+
         def __str__(self):
             return f"{self.subject} ({self.staff.username})"

@@ -700,7 +700,10 @@ def munsi_field_staff_requests(request):
 def munsi_approve_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
     req.status = "approved"
+    req.is_notified = False   # mark as new notification
+    req.notified_at = timezone.now()
     req.save()
+
     messages.success(request, "Request approved successfully.")
     return redirect("munsi_field_staff_requests")
 
@@ -709,9 +712,13 @@ def munsi_approve_request(request, req_id):
 def munsi_reject_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
     req.status = "rejected"
+    req.is_notified = False
+    req.notified_at = timezone.now()
     req.save()
+
     messages.success(request, "Request rejected successfully.")
     return redirect("munsi_field_staff_requests")
+
 
 
 
@@ -1013,8 +1020,20 @@ def duty_history(request):
     return render(request, "user_panel/duty_history.html")
 
 @role_required(["field_staff"])
-def Notifications(request):
-    return render(request, "user_panel/Notifications.html")
+def user_Notifications(request):
+
+    notifications = FieldStaffRequest.objects.filter(
+        staff=request.user,
+        status__in=["approved", "rejected"]
+    ).order_by('-notified_at')
+
+    # Mark as seen
+    notifications.update(is_notified=True)
+
+    return render(request, "user_panel/user_Notifications.html", {
+        "notifications": notifications
+    })
+
 
 @role_required(["field_staff"])
 def attendance_panel(request):

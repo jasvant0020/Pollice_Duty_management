@@ -70,7 +70,7 @@ urlpatterns = [
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
     path("duty_history/", views.duty_history, name="duty_history"),
     path("request_application_box/", views.request_application_box, name="request_application_box"),  
-    path("Notifications/", views.Notifications, name="Notifications"),
+    path("user_Notifications/", views.user_Notifications, name="user_Notifications"),
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
     
 
