@@ -657,28 +657,61 @@ def edit_munsi_profile(request):
         "user": user
     })
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.core.paginator import Paginator
+from .models import FieldStaffRequest
+
+
 @role_required(["gd_munsi"])
 def munsi_field_staff_requests(request):
-    requests = FieldStaffRequest.objects.all().order_by('-submitted_at')
-    return render(request, "GD_munsi_panel/munsi_field_staff_requests.html", {"requests": requests})
+
+    pending_list = FieldStaffRequest.objects.filter(
+        status="pending"
+    ).order_by('-submitted_at')
+
+    approved_list = FieldStaffRequest.objects.filter(
+        status="approved"
+    ).order_by('-submitted_at')
+
+    rejected_list = FieldStaffRequest.objects.filter(
+        status="rejected"
+    ).order_by('-submitted_at')
+
+    # Pagination (important for large data)
+    pending_paginator = Paginator(pending_list, 10)
+    approved_paginator = Paginator(approved_list, 10)
+    rejected_paginator = Paginator(rejected_list, 10)
+
+    pending_page = request.GET.get('pending_page')
+    approved_page = request.GET.get('approved_page')
+    rejected_page = request.GET.get('rejected_page')
+
+    context = {
+        "pending_requests": pending_paginator.get_page(pending_page),
+        "approved_requests": approved_paginator.get_page(approved_page),
+        "rejected_requests": rejected_paginator.get_page(rejected_page),
+    }
+
+    return render(request, "GD_munsi_panel/munsi_field_staff_requests.html", context)
+
 
 @role_required(["gd_munsi"])
 def munsi_approve_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
     req.status = "approved"
     req.save()
-    messages.success(request, "Request approved.")
+    messages.success(request, "Request approved successfully.")
     return redirect("munsi_field_staff_requests")
-    # return redirect('view_field_requests')
+
 
 @role_required(["gd_munsi"])
 def munsi_reject_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
     req.status = "rejected"
     req.save()
-    messages.success(request, "Request rejected.")
+    messages.success(request, "Request rejected successfully.")
     return redirect("munsi_field_staff_requests")
-    # return redirect('view_field_requests')
 
 
 
