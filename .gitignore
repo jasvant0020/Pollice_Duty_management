@@ -65,3 +65,5 @@ dist/
 
 # Node / Tailwind
 theme/static_src/node_modules/
+
+firebase-admin.json
