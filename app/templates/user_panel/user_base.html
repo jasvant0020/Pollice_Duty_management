@@ -174,6 +174,25 @@
             {% endblock %}
         </div>
     </main>
+    <script>
+        const socket = new WebSocket(
+            "ws://" + window.location.host + "/ws/notifications/"
+        );
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+
+            alert(data.message);  // simple test
+
+            console.log("Notification:", data);
+        };
+
+        socket.onclose = function(e) {
+            console.error("WebSocket closed unexpectedly");
+        };
+    </script>
+
+
 </body>
 </html>
 

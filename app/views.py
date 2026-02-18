@@ -36,6 +36,9 @@ from django.contrib.auth import get_user_model
 import uuid
 from django.utils import timezone
 from .models import FieldStaffRequest
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.utils import timezone
 
 
 
@@ -699,24 +702,56 @@ def munsi_field_staff_requests(request):
 @role_required(["gd_munsi"])
 def munsi_approve_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
+
     req.status = "approved"
-    req.is_notified = False   # mark as new notification
     req.notified_at = timezone.now()
     req.save()
 
-    messages.success(request, "Request approved successfully.")
+    channel_layer = get_channel_layer()
+
+    async_to_sync(channel_layer.group_send)(
+        f"user_{req.staff.id}",
+        {
+            "type": "send_notification",
+            "id": req.id,
+            "subject": req.subject,
+            "message": req.message,
+            "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
+            "status": req.status,
+            "time": req.notified_at.strftime("%d %b %Y %H:%M"),
+            "photo": req.staff.profile_photo.url,
+        }
+    )
+
+
     return redirect("munsi_field_staff_requests")
 
 
 @role_required(["gd_munsi"])
 def munsi_reject_request(request, req_id):
     req = get_object_or_404(FieldStaffRequest, id=req_id)
+
     req.status = "rejected"
-    req.is_notified = False
     req.notified_at = timezone.now()
     req.save()
 
-    messages.success(request, "Request rejected successfully.")
+    channel_layer = get_channel_layer()
+
+    async_to_sync(channel_layer.group_send)(
+        f"user_{req.staff.id}",
+        {
+            "type": "send_notification",
+            "id": req.id,
+            "subject": req.subject,
+            "message": req.message,
+            "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
+            "status": req.status,
+            "time": req.notified_at.strftime("%d %b %Y %H:%M"),
+            "photo": req.staff.profile_photo.url,
+        }
+    )
+
+
     return redirect("munsi_field_staff_requests")
 
 
