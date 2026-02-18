@@ -2,6 +2,12 @@
 {% block page_title %}Notifications{% endblock %}
 
 {% block content %}
+{% load static %}
+<button id="enableSoundBtn"
+        class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 
+               text-white px-4 py-2 rounded-lg shadow-lg transition">
+    🔔 Enable Notification Sound
+</button>
 
 <div class="max-w-6xl mx-auto px-6 py-8">
 
@@ -103,13 +109,65 @@
     </div>
 
 </div>
+<audio id="notificationSound" src="{% static 'sounds/notification.mp3' %}"></audio>
+
 <script>
+    // ==============================
+    // WebSocket Connection
+    // ==============================
     const socket = new WebSocket(
         "ws://" + window.location.host + "/ws/notifications/"
     );
 
+    // ==============================
+    // Sound System
+    // ==============================
+    let soundAllowed = false;
+    const enableBtn = document.getElementById("enableSoundBtn");
+    const baseSound = new Audio("{% static 'sounds/notification.mp3' %}");
+    baseSound.preload = "auto";
+
+    // Restore preference
+    if (localStorage.getItem("soundEnabled") === "true") {
+        soundAllowed = true;
+        if (enableBtn) enableBtn.style.display = "none";
+    }
+
+    // Proper unlock on click
+    if (enableBtn) {
+        enableBtn.addEventListener("click", function () {
+
+            baseSound.play()
+                .then(() => {
+                    baseSound.pause();
+                    baseSound.currentTime = 0;
+
+                    soundAllowed = true;
+                    localStorage.setItem("soundEnabled", "true");
+                    enableBtn.style.display = "none";
+
+                    console.log("🔔 Sound Enabled Successfully");
+                })
+                .catch(err => {
+                    console.log("Sound still blocked:", err);
+                });
+
+        });
+    }
+
+
+    // ==============================
+    // WebSocket Message Handler
+    // ==============================
     socket.onmessage = function(e) {
         const data = JSON.parse(e.data);
+
+        // 🔔 Play Sound
+        if (soundAllowed) {
+            baseSound.currentTime = 0;
+            baseSound.play().catch(() => {});
+        }
+
 
         const container = document.querySelector("#liveNotifications .space-y-4");
 
@@ -127,9 +185,8 @@
 
         const newNotification = `
         <div x-data="{ open: false }"
-             class="bg-white rounded-xl shadow border-l-4 ${borderColor}">
+             class="bg-white rounded-xl shadow border-l-4 ${borderColor} animate-pulse">
 
-            <!-- HEADER -->
             <div @click="open = !open"
                  class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
 
@@ -157,7 +214,6 @@
                 </svg>
             </div>
 
-            <!-- EXPANDABLE -->
             <div x-show="open"
                  x-transition
                  class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
@@ -199,11 +255,21 @@
 
         container.insertAdjacentHTML("afterbegin", newNotification);
 
-        // Reinitialize Alpine for new dynamic content
+        // Reinitialize Alpine
         if (window.Alpine) {
             Alpine.initTree(container);
         }
+
+        // Remove pulse animation after 3 sec
+        setTimeout(() => {
+            const firstCard = container.firstElementChild;
+            if (firstCard) {
+                firstCard.classList.remove("animate-pulse");
+            }
+        }, 3000);
     };
 </script>
+
+
 
 {% endblock %}
