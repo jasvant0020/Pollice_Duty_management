@@ -191,12 +191,77 @@
             console.error("WebSocket closed unexpectedly");
         };
     </script>
+    <script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/firebase-messaging-sw.js")
+        .then(function(registration) {
+            console.log("Service Worker registered:", registration);
+        })
+        .catch(function(err) {
+            console.error("Service Worker registration failed:", err);
+        });
+    }
+    </script>
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
 
+    const firebaseConfig = {
+        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",
+        authDomain: "push-notification-cc870.firebaseapp.com",
+        projectId: "push-notification-cc870",
+        storageBucket: "push-notification-cc870.firebasestorage.app",
+        messagingSenderId: "595457578638",
+        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",
+
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const messaging = getMessaging(app);
+
+    async function initPush() {
+
+        const permission = await Notification.requestPermission();
+
+        if (permission !== "granted") {
+            console.log("Notification permission denied");
+            return;
+        }
+
+        const currentToken = await getToken(messaging, {
+            vapidKey: "BLADm57-WPqRZgII0oHxLM53m4lmpvSHG1OaoLcPR-wgg22T-7YzmjTXQpniArC8u5XymiwhEYIhpMScne8AcKc",
+            serviceWorkerRegistration: await navigator.serviceWorker.getRegistration()
+        });
+
+        if (currentToken) {
+            console.log("FCM Token:", currentToken);
+
+            // TODO: send to Django backend
+        } else {
+            console.log("No token available");
+        }
+
+        await fetch("/save-fcm-token/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                token: currentToken
+            })
+        });
+
+    }
+
+    initPush();
+    </script>
 
 </body>
 </html>
 
-<script type="module">
+
+{% comment %} <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js";
 
@@ -236,7 +301,7 @@
     }).catch((err) => {
         console.error('An error occurred while retrieving token. ', err);
     });
-</script>
+</script> {% endcomment %}
 
 </body>
 </html>

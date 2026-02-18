@@ -80,7 +80,8 @@ urlpatterns = [
 
 
 
-
+    path("save-fcm-token/", views.save_fcm_token, name="save_fcm_token"),
+    
     # Firebase push notification 
     path('firebase-messaging-sw.js', views.showFirebaseJS, name="show_firebase_js"),
 

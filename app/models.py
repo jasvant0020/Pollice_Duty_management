@@ -229,3 +229,12 @@ class FieldStaffRequest(models.Model):
 
         def __str__(self):
             return f"{self.subject} ({self.staff.username})"
+        
+
+class FCMToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.TextField(unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - FCM"

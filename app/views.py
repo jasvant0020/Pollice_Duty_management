@@ -39,6 +39,13 @@ from .models import FieldStaffRequest
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.utils import timezone
+from .models import FCMToken
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+from app.firebase_service import send_push_notification
+
+
 
 
 
@@ -723,6 +730,16 @@ def munsi_approve_request(request, req_id):
         }
     )
 
+    tokens = FCMToken.objects.filter(user=req.staff)
+
+    for t in tokens:
+        send_push_notification(
+            t.token,
+            "Request Approved",
+            "Your request has been approved"
+        )
+
+
 
     return redirect("munsi_field_staff_requests")
 
@@ -750,6 +767,16 @@ def munsi_reject_request(request, req_id):
             "photo": req.staff.profile_photo.url,
         }
     )
+
+    tokens = FCMToken.objects.filter(user=req.staff)
+
+    for t in tokens:
+        send_push_notification(
+            t.token,
+            "Request reject",
+            "Your request has been rejected"
+        )
+
 
 
     return redirect("munsi_field_staff_requests")
@@ -1624,3 +1651,20 @@ def showFirebaseJS(request):
          '});'
 
     return HttpResponse(data,content_type="text/javascript")
+
+
+@csrf_exempt
+@login_required
+def save_fcm_token(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        token = data.get("token")
+
+        FCMToken.objects.update_or_create(
+            token=token,
+            defaults={"user": request.user}
+        )
+
+        return JsonResponse({"status": "saved"})
+    
+    return JsonResponse({"error": "Invalid request"}, status=400)
