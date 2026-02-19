@@ -730,14 +730,13 @@ def munsi_approve_request(request, req_id):
         }
     )
 
-    tokens = FCMToken.objects.filter(user=req.staff)
+    # ✅ Clean multi-device push
+    send_push_notification(
+        req.staff,  # pass USER object
+        "Request Approved",
+        "Your request has been approved"
+    )
 
-    for t in tokens:
-        send_push_notification(
-            t.token,
-            "Request Approved",
-            "Your request has been approved"
-        )
 
 
 
@@ -768,14 +767,12 @@ def munsi_reject_request(request, req_id):
         }
     )
 
-    tokens = FCMToken.objects.filter(user=req.staff)
+    send_push_notification(
+        req.staff,
+        "Request Rejected",
+        "Your request has been rejected"
+    )
 
-    for t in tokens:
-        send_push_notification(
-            t.token,
-            "Request reject",
-            "Your request has been rejected"
-        )
 
 
 
