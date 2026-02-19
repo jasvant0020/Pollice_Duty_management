@@ -1065,7 +1065,7 @@ def request_application_box(request):
                 message=message
             )
             messages.success(request, "Your request has been submitted to Munsi successfully.")
-            return redirect('request_application_box')
+            return redirect('user_Notifications')
         else:
             messages.error(request, "Please fill all fields.")
 
@@ -1079,16 +1079,15 @@ def duty_history(request):
 def user_Notifications(request):
 
     notifications = FieldStaffRequest.objects.filter(
-        staff=request.user,
-        status__in=["approved", "rejected"]
-    ).order_by('-notified_at')
+        staff=request.user
+    ).order_by('-submitted_at')
 
-    # Mark as seen
     notifications.update(is_notified=True)
 
     return render(request, "user_panel/user_Notifications.html", {
         "notifications": notifications
     })
+
 
 
 @role_required(["field_staff"])

@@ -2,6 +2,7 @@
 {% block page_title %}Notifications{% endblock %}
 
 {% block content %}
+{% include "error_message/error_message.html" %}
 {% load static %}
 <button id="enableSoundBtn"
         class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 
@@ -12,7 +13,7 @@
 <div class="max-w-6xl mx-auto px-6 py-8">
 
     <h2 class="text-2xl font-bold text-gray-800 mb-6">
-        My Notifications
+        My Notifications new
     </h2>
 
     <div id="liveNotifications">
@@ -22,7 +23,13 @@
         {% for note in notifications %}
         <div x-data="{ open: false }"
              class="bg-white rounded-xl shadow border-l-4 
-             {% if note.status == 'approved' %}border-green-500{% else %}border-red-500{% endif %}">
+             {% if note.status == 'approved' %}
+                border-green-500
+            {% elif note.status == 'rejected' %}
+                border-red-500
+            {% else %}
+                border-yellow-500
+            {% endif %}">
 
             <!-- HEADER ROW -->
             <div @click="open = !open"
@@ -37,9 +44,12 @@
                             Your request has been 
                             {% if note.status == 'approved' %}
                                 <span class="text-green-600">APPROVED</span>
-                            {% else %}
+                            {% elif note.status == 'rejected' %}
                                 <span class="text-red-600">REJECTED</span>
+                            {% else %}
+                                <span class="text-yellow-600">PENDING</span>
                             {% endif %}
+
                         </p>
 
                         <p class="text-xs text-gray-500">
@@ -93,9 +103,12 @@
                     <strong>Status:</strong>
                     {% if note.status == 'approved' %}
                         <span class="text-green-600 font-semibold">Approved</span>
-                    {% else %}
+                    {% elif note.status == 'rejected' %}
                         <span class="text-red-600 font-semibold">Rejected</span>
+                    {% else %}
+                        <span class="text-yellow-600 font-semibold">Pending</span>
                     {% endif %}
+
                 </div>
 
             </div>
