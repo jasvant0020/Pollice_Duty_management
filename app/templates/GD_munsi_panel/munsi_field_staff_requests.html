@@ -11,24 +11,46 @@
     </h2>
 
     <!-- Tabs -->
-    <div class="flex space-x-4 mb-8">
-        <button @click="tab='pending'"
-                :class="tab==='pending' ? activeTab : inactiveTab"
-                class="px-5 py-2 rounded-lg font-medium transition">
-            Pending ({{ pending_requests.paginator.count }})
-        </button>
+    <div class="mb-10">
+        <div class="inline-flex p-1 bg-gray-100 rounded-xl shadow-sm">
 
-        <button @click="tab='approved'"
-                :class="tab==='approved' ? activeTab : inactiveTab"
-                class="px-5 py-2 rounded-lg font-medium transition">
-            Approved ({{ approved_requests.paginator.count }})
-        </button>
+            <!-- Pending -->
+            <button @click="tab='pending'"
+                :class="tab==='pending' 
+                    ? 'bg-white text-indigo-600 shadow-md' 
+                    : 'text-gray-600 hover:text-indigo-600'"
+                class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
+                <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    Pending
+                </span>
+            </button>
 
-        <button @click="tab='rejected'"
-                :class="tab==='rejected' ? activeTab : inactiveTab"
-                class="px-5 py-2 rounded-lg font-medium transition">
-            Rejected ({{ rejected_requests.paginator.count }})
-        </button>
+            <!-- Approved -->
+            <button @click="tab='approved'"
+                :class="tab==='approved' 
+                    ? 'bg-white text-green-600 shadow-md' 
+                    : 'text-gray-600 hover:text-green-600'"
+                class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
+                <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    Approved
+                </span>
+            </button>
+
+            <!-- Rejected -->
+            <button @click="tab='rejected'"
+                :class="tab==='rejected' 
+                    ? 'bg-white text-red-600 shadow-md' 
+                    : 'text-gray-600 hover:text-red-600'"
+                class="px-6 py-2 rounded-lg text-sm font-semibold transition-all duration-200">
+                <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    Rejected
+                </span>
+            </button>
+
+        </div>
     </div>
 
 
