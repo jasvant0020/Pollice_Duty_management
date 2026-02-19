@@ -730,14 +730,12 @@ def munsi_approve_request(request, req_id):
         }
     )
 
-    # ✅ Clean multi-device push
     send_push_notification(
-        req.staff,  # pass USER object
+        req.staff,
         "Request Approved",
-        "Your request has been approved"
+        req.message,   # exact message from sender
+        url=f"/staff/request/{req.id}/"
     )
-
-
 
 
     return redirect("munsi_field_staff_requests")
@@ -770,10 +768,9 @@ def munsi_reject_request(request, req_id):
     send_push_notification(
         req.staff,
         "Request Rejected",
-        "Your request has been rejected"
+        req.message,
+        url=f"/staff/request/{req.id}/"
     )
-
-
 
 
     return redirect("munsi_field_staff_requests")

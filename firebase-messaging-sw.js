@@ -24,23 +24,14 @@ messaging.onBackgroundMessage(function(payload) {
 });
 
 
+self.addEventListener("notificationclick", function(event) {
+    event.notification.close();
+
+    const url = event.notification.data.click_url;
+
+    event.waitUntil(
+        clients.openWindow(url)
+    );
+});
 
 
-
-// importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js");
-// importScripts("https://www.gstatic.com/firebasejs/12.6.0/firebase-messaging.js");
-
-// firebase.initializeApp({
-//     apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",
-//     authDomain: "push-notification-cc870.firebaseapp.com",
-//     projectId: "push-notification-cc870",
-//     messagingSenderId: "595457578638",
-// });
-
-// const messaging = firebase.messaging();
-
-// messaging.onBackgroundMessage(function(payload) {
-//     const title = payload.notification.title;
-//     const options = { body: payload.notification.body };
-//     self.registration.showNotification(title, options);
-// });
