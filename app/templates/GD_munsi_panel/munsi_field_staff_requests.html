@@ -33,7 +33,7 @@
 
 
     <!-- GRID -->
-    <div x-show="tab==='pending'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+    <div id="pendingGrid" x-show="tab==='pending'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
         {% for req in pending_requests %}
         <div 
@@ -190,5 +190,53 @@ function requestManager() {
     }
 }
 </script>
+<script>
+const munsiSocket = new WebSocket(
+    "ws://" + window.location.host + "/ws/munsi-requests/"
+);
+
+munsiSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    const container = document.getElementById("pendingGrid");
+
+    const newCard = `
+        <div 
+            @click="openModal({
+                id: '${data.id}',
+                name: '${data.name}',
+                image: '${data.photo}',
+                subject: \`${data.subject}\`,
+                message: \`${data.message}\`,
+                date: '${data.submitted_at}'
+            })"
+            class="cursor-pointer bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center animate-pulse"
+        >
+            <img src="${data.photo}"
+                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
+
+            <h3 class="mt-2 text-sm font-semibold text-gray-800">
+                ${data.name}
+            </h3>
+        </div>
+    `;
+
+    container.insertAdjacentHTML("afterbegin", newCard);
+
+    // Reinitialize Alpine
+    if (window.Alpine) {
+        Alpine.initTree(container);
+    }
+
+    // Remove pulse after 3 sec
+    setTimeout(() => {
+        const firstCard = container.firstElementChild;
+        if (firstCard) {
+            firstCard.classList.remove("animate-pulse");
+        }
+    }, 3000);
+};
+</script>
+
 
 {% endblock %}

@@ -1052,6 +1052,10 @@ def user_assign_duty(request):
         "duties": duties
     })
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.contrib import messages
+
 @role_required(["field_staff"])
 def request_application_box(request):
     if request.method == "POST":
@@ -1059,17 +1063,40 @@ def request_application_box(request):
         message = request.POST.get("message")
 
         if subject and message:
-            FieldStaffRequest.objects.create(
+            
+            # ✅ 1️⃣ Save Request and store object in variable
+            request_obj = FieldStaffRequest.objects.create(
                 staff=request.user,
                 subject=subject,
                 message=message
             )
+
+            # ✅ 2️⃣ SEND WEBSOCKET EVENT TO MUNSI GROUP
+            channel_layer = get_channel_layer()
+
+            async_to_sync(channel_layer.group_send)(
+                "munsi_requests",
+                {
+                    "type": "send_new_request",
+                    "data": {
+                        "id": request_obj.id,
+                        "name": request.user.get_full_name(),
+                        "photo": request.user.profile_photo.url,
+                        "subject": request_obj.subject,
+                        "message": request_obj.message,
+                        "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
+                    }
+                }
+            )
+
             messages.success(request, "Your request has been submitted to Munsi successfully.")
             return redirect('user_Notifications')
+
         else:
             messages.error(request, "Please fill all fields.")
 
     return render(request, "user_panel/request_application_box.html")
+
 
 @role_required(["field_staff"])
 def duty_history(request):
