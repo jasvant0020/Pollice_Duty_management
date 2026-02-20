@@ -243,6 +243,7 @@
 
         await fetch("/save-fcm-token/", {
             method: "POST",
+            credentials: "same-origin",   // 🔥 ADD THIS
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": "{{ csrf_token }}"

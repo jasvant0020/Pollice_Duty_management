@@ -1071,23 +1071,35 @@ def request_application_box(request):
                 message=message
             )
 
-            # ✅ 2️⃣ SEND WEBSOCKET EVENT TO MUNSI GROUP
-            channel_layer = get_channel_layer()
+            # ✅ Get dedicated GD Munsi
+            munsi_user = request.user.gd_munsi
 
-            async_to_sync(channel_layer.group_send)(
-                "munsi_requests",
-                {
-                    "type": "send_new_request",
-                    "data": {
-                        "id": request_obj.id,
-                        "name": request.user.get_full_name(),
-                        "photo": request.user.profile_photo.url,
-                        "subject": request_obj.subject,
-                        "message": request_obj.message,
-                        "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
+            if munsi_user:
+
+                channel_layer = get_channel_layer()
+
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{munsi_user.id}",   # 🔥 send to specific user group
+                    {
+                        "type": "send_new_request",
+                        "data": {
+                            "id": request_obj.id,
+                            "name": request.user.get_full_name(),
+                            "photo": request.user.profile_photo.url,
+                            "subject": request_obj.subject,
+                            "message": request_obj.message,
+                            "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
+                        }
                     }
-                }
-            )
+                )
+
+                # 🔥 SEND PUSH NOTIFICATION ALSO
+                send_push_notification(
+                    user=munsi_user,
+                    title="New Field Staff Request",
+                    body=request_obj.subject,
+                    url=f"/munsi/request/{request_obj.id}/"
+                )
 
             messages.success(request, "Your request has been submitted to Munsi successfully.")
             return redirect('user_Notifications')
@@ -1644,33 +1656,33 @@ def delete_security_category(request, category_id):
 
 
 
-#----- firebase push notification -----
-def showFirebaseJS(request):
-    data='importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js");' \
-         'importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"); ' \
-         'var firebaseConfig = {' \
-         '        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",' \
-         '        authDomain: "push-notification-cc870.firebaseapp.com",' \
-         '        databaseURL: "",' \
-         '        projectId: "push-notification-cc870",' \
-         '        storageBucket: "push-notification-cc870.firebasestorage.app",' \
-         '        messagingSenderId: "595457578638",' \
-         '        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",' \
-         '        measurementId: "G-E476M6ETBE"' \
-         ' };' \
-         'firebase.initializeApp(firebaseConfig);' \
-         'const messaging=firebase.messaging();' \
-         'messaging.setBackgroundMessageHandler(function (payload) {' \
-         '    console.log(payload);' \
-         '    const notification=JSON.parse(payload);' \
-         '    const notificationOption={' \
-         '        body:notification.body,' \
-         '        icon:notification.icon' \
-         '    };' \
-         '    return self.registration.showNotification(payload.notification.title,notificationOption);' \
-         '});'
+# #----- firebase push notification -----
+# def showFirebaseJS(request):
+#     data='importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-app.js");' \
+#          'importScripts("https://www.gstatic.com/firebasejs/8.2.0/firebase-messaging.js"); ' \
+#          'var firebaseConfig = {' \
+#          '        apiKey: "AIzaSyCEVCeD8QbdOFG1MMk0LKi6FNAoGY3cL9E",' \
+#          '        authDomain: "push-notification-cc870.firebaseapp.com",' \
+#          '        databaseURL: "",' \
+#          '        projectId: "push-notification-cc870",' \
+#          '        storageBucket: "push-notification-cc870.firebasestorage.app",' \
+#          '        messagingSenderId: "595457578638",' \
+#          '        appId: "1:595457578638:web:42a5525e4f017186e4dbdf",' \
+#          '        measurementId: "G-E476M6ETBE"' \
+#          ' };' \
+#          'firebase.initializeApp(firebaseConfig);' \
+#          'const messaging=firebase.messaging();' \
+#          'messaging.setBackgroundMessageHandler(function (payload) {' \
+#          '    console.log(payload);' \
+#          '    const notification=JSON.parse(payload);' \
+#          '    const notificationOption={' \
+#          '        body:notification.body,' \
+#          '        icon:notification.icon' \
+#          '    };' \
+#          '    return self.registration.showNotification(payload.notification.title,notificationOption);' \
+#          '});'
 
-    return HttpResponse(data,content_type="text/javascript")
+#     return HttpResponse(data,content_type="text/javascript")
 
 
 @csrf_exempt

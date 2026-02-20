@@ -79,11 +79,11 @@ urlpatterns = [
 
 
 
-
+    # Firebase push notification
     path("save-fcm-token/", views.save_fcm_token, name="save_fcm_token"),
     
-    # Firebase push notification 
-    path('firebase-messaging-sw.js', views.showFirebaseJS, name="show_firebase_js"),
+    # # Firebase push notification 
+    # path('firebase-messaging-sw.js', views.showFirebaseJS, name="show_firebase_js"),
 
     #API urls
     path("api/", include("app.api.urls")),
