@@ -676,19 +676,24 @@ from .models import FieldStaffRequest
 @role_required(["gd_munsi"])
 def munsi_field_staff_requests(request):
 
-    pending_list = FieldStaffRequest.objects.filter(
+    # 🔐 Only show requests of staff assigned to THIS GD Munsi
+    base_queryset = FieldStaffRequest.objects.filter(
+        staff__gd_munsi=request.user
+    )
+
+    pending_list = base_queryset.filter(
         status="pending"
     ).order_by('-submitted_at')
 
-    approved_list = FieldStaffRequest.objects.filter(
+    approved_list = base_queryset.filter(
         status="approved"
     ).order_by('-submitted_at')
 
-    rejected_list = FieldStaffRequest.objects.filter(
+    rejected_list = base_queryset.filter(
         status="rejected"
     ).order_by('-submitted_at')
 
-    # Pagination (important for large data)
+    # Pagination
     pending_paginator = Paginator(pending_list, 10)
     approved_paginator = Paginator(approved_list, 10)
     rejected_paginator = Paginator(rejected_list, 10)
@@ -705,10 +710,9 @@ def munsi_field_staff_requests(request):
 
     return render(request, "GD_munsi_panel/munsi_field_staff_requests.html", context)
 
-
 @role_required(["gd_munsi"])
 def munsi_approve_request(request, req_id):
-    req = get_object_or_404(FieldStaffRequest, id=req_id)
+    req = get_object_or_404(FieldStaffRequest, id=req_id, staff__gd_munsi=request.user)
 
     req.status = "approved"
     req.notified_at = timezone.now()
@@ -716,6 +720,7 @@ def munsi_approve_request(request, req_id):
 
     channel_layer = get_channel_layer()
 
+    # Send real-time notification to only that staff user
     async_to_sync(channel_layer.group_send)(
         f"user_{req.staff.id}",
         {
@@ -726,24 +731,23 @@ def munsi_approve_request(request, req_id):
             "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
             "status": req.status,
             "time": req.notified_at.strftime("%d %b %Y %H:%M"),
-            "photo": req.staff.profile_photo.url,
+            "photo": req.staff.profile_photo.url if req.staff.profile_photo else "",
         }
     )
 
+    # Send Firebase push notification
     send_push_notification(
-        req.staff,
-        "Request Approved",
-        req.message,   # exact message from sender
+        user=req.staff,
+        title="Request Approved",
+        body=req.message,
         url=f"/staff/request/{req.id}/"
     )
 
-
     return redirect("munsi_field_staff_requests")
-
 
 @role_required(["gd_munsi"])
 def munsi_reject_request(request, req_id):
-    req = get_object_or_404(FieldStaffRequest, id=req_id)
+    req = get_object_or_404(FieldStaffRequest, id=req_id, staff__gd_munsi=request.user)
 
     req.status = "rejected"
     req.notified_at = timezone.now()
@@ -761,20 +765,18 @@ def munsi_reject_request(request, req_id):
             "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
             "status": req.status,
             "time": req.notified_at.strftime("%d %b %Y %H:%M"),
-            "photo": req.staff.profile_photo.url,
+            "photo": req.staff.profile_photo.url if req.staff.profile_photo else "",
         }
     )
 
     send_push_notification(
-        req.staff,
-        "Request Rejected",
-        req.message,
+        user=req.staff,
+        title="Request Rejected",
+        body=req.message,
         url=f"/staff/request/{req.id}/"
     )
 
-
     return redirect("munsi_field_staff_requests")
-
 
 
 
@@ -1058,13 +1060,14 @@ from django.contrib import messages
 
 @role_required(["field_staff"])
 def request_application_box(request):
+
     if request.method == "POST":
         subject = request.POST.get("subject")
         message = request.POST.get("message")
 
         if subject and message:
-            
-            # ✅ 1️⃣ Save Request and store object in variable
+
+            # ✅ Save request
             request_obj = FieldStaffRequest.objects.create(
                 staff=request.user,
                 subject=subject,
@@ -1074,41 +1077,44 @@ def request_application_box(request):
             # ✅ Get dedicated GD Munsi
             munsi_user = request.user.gd_munsi
 
-            if munsi_user:
+            if not munsi_user:
+                messages.error(request, "No GD Munsi assigned to you.")
+                return redirect("user_Notifications")
 
-                channel_layer = get_channel_layer()
+            channel_layer = get_channel_layer()
 
-                async_to_sync(channel_layer.group_send)(
-                    f"user_{munsi_user.id}",   # 🔥 send to specific user group
-                    {
-                        "type": "send_new_request",
-                        "data": {
-                            "id": request_obj.id,
-                            "name": request.user.get_full_name(),
-                            "photo": request.user.profile_photo.url,
-                            "subject": request_obj.subject,
-                            "message": request_obj.message,
-                            "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
-                        }
+            # ✅ Send WebSocket to specific Munsi only
+            async_to_sync(channel_layer.group_send)(
+                f"user_{munsi_user.id}",
+                {
+                    "type": "send_new_request",
+                    "data": {
+                        "id": request_obj.id,
+                        "name": request.user.get_full_name(),
+                        "photo": request.user.profile_photo.url if request.user.profile_photo else "",
+                        "subject": request_obj.subject,
+                        "message": request_obj.message,
+                        "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
+                        "status": request_obj.status,
                     }
-                )
+                }
+            )
 
-                # 🔥 SEND PUSH NOTIFICATION ALSO
-                send_push_notification(
-                    user=munsi_user,
-                    title="New Field Staff Request",
-                    body=request_obj.subject,
-                    url=f"/munsi/request/{request_obj.id}/"
-                )
+            # ✅ Send Push Notification
+            send_push_notification(
+                user=munsi_user,
+                title="New Field Staff Request",
+                body=request_obj.subject,
+                url=f"/munsi/request/{request_obj.id}/"
+            )
 
-            messages.success(request, "Your request has been submitted to Munsi successfully.")
-            return redirect('user_Notifications')
+            messages.success(request, "Your request has been submitted successfully.")
+            return redirect("user_Notifications")
 
         else:
             messages.error(request, "Please fill all fields.")
 
     return render(request, "user_panel/request_application_box.html")
-
 
 @role_required(["field_staff"])
 def duty_history(request):

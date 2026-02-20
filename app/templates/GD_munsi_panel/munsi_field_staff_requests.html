@@ -76,6 +76,8 @@
                 {{ req.staff.first_name }} {{ req.staff.last_name }}
             </h3>
         </div>
+        {% empty %}
+        <p class="col-span-full text-gray-500">No pending requests.</p>
         {% endfor %}
     </div>
 
