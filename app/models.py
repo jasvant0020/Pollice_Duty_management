@@ -233,8 +233,19 @@ class FieldStaffRequest(models.Model):
 
 class FCMToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fcm_tokens")
-    token = models.TextField(unique=True)
+
+    device_name = models.CharField(max_length=255, blank=True, null=True)
+    browser = models.CharField(max_length=100, blank=True, null=True)
+    os = models.CharField(max_length=100, blank=True, null=True)
+
+    token = models.TextField()
+    user_agent = models.TextField(blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ("user", "device_name")
+
     def __str__(self):
-        return f"{self.user.username} - FCM"
+        return f"{self.user.username} - {self.device_name}"

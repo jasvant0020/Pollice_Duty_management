@@ -248,7 +248,9 @@
                 "X-CSRFToken": "{{ csrf_token }}"
             },
             body: JSON.stringify({
-                token: currentToken
+                token: currentToken,
+                user_agent: navigator.userAgent,
+                device_name: navigator.platform
             })
         });
 

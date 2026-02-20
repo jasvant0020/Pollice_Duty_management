@@ -1690,19 +1690,51 @@ def delete_security_category(request, category_id):
 
 #     return HttpResponse(data,content_type="text/javascript")
 
-
+from user_agents import parse
 @csrf_exempt
 @login_required
 def save_fcm_token(request):
     if request.method == "POST":
-        data = json.loads(request.body)
-        token = data.get("token")
+        try:
+            data = json.loads(request.body)
 
-        FCMToken.objects.update_or_create(
-            token=token,
-            defaults={"user": request.user}
-        )
+            token = data.get("token")
+            user_agent = data.get("user_agent") or request.META.get("HTTP_USER_AGENT", "")
+            device_name = data.get("device_name") or "Unknown Device"
 
-        return JsonResponse({"status": "saved"})
-    
+            if not token:
+                return JsonResponse({"error": "Token missing"}, status=400)
+
+            ip = request.META.get("REMOTE_ADDR")
+
+            # Safe parsing (even if user_agents not installed)
+            browser = "Unknown"
+            os = "Unknown"
+
+            try:
+                from user_agents import parse
+                ua = parse(user_agent)
+                browser = ua.browser.family
+                os = ua.os.family
+            except Exception:
+                pass  # Never crash if library missing
+
+            FCMToken.objects.update_or_create(
+                user=request.user,
+                device_name=device_name,
+                defaults={
+                    "token": token,
+                    "browser": browser,
+                    "os": os,
+                    "user_agent": user_agent,
+                    "ip_address": ip
+                }
+            )
+
+            return JsonResponse({"status": "saved"})
+
+        except Exception as e:
+            print("FCM SAVE ERROR:", str(e))
+            return JsonResponse({"error": "Server error"}, status=500)
+
     return JsonResponse({"error": "Invalid request"}, status=400)
