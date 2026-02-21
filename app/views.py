@@ -1103,8 +1103,8 @@ def request_application_box(request):
             # ✅ Send Push Notification
             send_push_notification(
                 user=munsi_user,
-                title="New Field Staff Request",
-                body=request_obj.subject,
+                title=request_obj.subject,
+                body=request_obj.message,
                 url=f"/munsi/request/{request_obj.id}/"
             )
 
