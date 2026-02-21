@@ -1720,10 +1720,10 @@ def save_fcm_token(request):
                 pass  # Never crash if library missing
 
             FCMToken.objects.update_or_create(
-                user=request.user,
-                device_name=device_name,
+                token=token,
                 defaults={
-                    "token": token,
+                    "user": request.user,
+                    "device_name": device_name,
                     "browser": browser,
                     "os": os,
                     "user_agent": user_agent,

@@ -4,6 +4,8 @@ from app import views
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
+import os
 
 
 urlpatterns = [
@@ -90,3 +92,11 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+def firebase_sw(request):
+    file_path = os.path.join(settings.BASE_DIR, "firebase-messaging-sw.js")
+    return FileResponse(open(file_path, "rb"), content_type="application/javascript")
+
+urlpatterns += [
+    path("firebase-messaging-sw.js", firebase_sw),
+]
