@@ -21,8 +21,13 @@ def send_push_notification(user, title, body, url=None, sender=None):
 
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
-            title=title,
-            body=f"{body}\nFrom: {sender.get_full_name()}" if sender else body,
+            title=f"New Request From:- {sender.get_full_name()}",
+            body=(
+                f"Subject: {title}\n"
+                f"Message: {body}\n"
+                f"Email: {sender.email}\n"
+                f"Rank: {sender.rank}"
+            ),
         ),
         data={
             "click_url": url or "/",
