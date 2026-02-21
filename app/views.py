@@ -739,8 +739,9 @@ def munsi_approve_request(request, req_id):
     send_push_notification(
         user=req.staff,
         title="Request Approved",
-        body=req.message,
-        url=f"/staff/request/{req.id}/"
+        body=req.subject,
+        url=f"/staff/request/{req.id}/",
+        notification_type="status"
     )
 
     return redirect("munsi_field_staff_requests")
@@ -772,8 +773,9 @@ def munsi_reject_request(request, req_id):
     send_push_notification(
         user=req.staff,
         title="Request Rejected",
-        body=req.message,
-        url=f"/staff/request/{req.id}/"
+        body=req.subject,
+        url=f"/staff/request/{req.id}/",
+        notification_type="status"
     )
 
     return redirect("munsi_field_staff_requests")
@@ -1103,10 +1105,11 @@ def request_application_box(request):
             # ✅ Send Push Notification
             send_push_notification(
                 user=munsi_user,
-                title=request_obj.subject,
-                body=request_obj.message,
+                title="New Request From",
+                body=request_obj.subject,
                 sender=request.user,
-                url=f"/munsi/request/{request_obj.id}/"
+                url=f"/munsi/request/{request_obj.id}/",
+                notification_type="request"
             )
 
             messages.success(request, "Your request has been submitted successfully.")
