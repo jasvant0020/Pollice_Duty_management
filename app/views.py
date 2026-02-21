@@ -1105,6 +1105,7 @@ def request_application_box(request):
                 user=munsi_user,
                 title=request_obj.subject,
                 body=request_obj.message,
+                sender=request.user,
                 url=f"/munsi/request/{request_obj.id}/"
             )
 

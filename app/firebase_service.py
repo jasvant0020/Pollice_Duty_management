@@ -13,7 +13,7 @@ def initialize_firebase():
 # Call initialize immediately
 initialize_firebase()
 
-def send_push_notification(user, title, body, url=None):
+def send_push_notification(user, title, body, url=None, sender=None):
     tokens = list(user.fcm_tokens.values_list("token", flat=True))
 
     if not tokens:
@@ -22,18 +22,17 @@ def send_push_notification(user, title, body, url=None):
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
             title=title,
-            body=body,
+            body=f"{body}\nFrom: {sender.get_full_name()}" if sender else body,
         ),
         data={
             "click_url": url or "/",
-            "custom_message": body,
+            "sender_id": str(sender.id) if sender else "",
         },
         tokens=tokens,
     )
 
     response = messaging.send_each_for_multicast(message)
 
-    # Remove invalid tokens
     for idx, resp in enumerate(response.responses):
         if not resp.success:
             FCMToken.objects.filter(token=tokens[idx]).delete()
