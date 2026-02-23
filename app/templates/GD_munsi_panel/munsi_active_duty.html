@@ -7,7 +7,7 @@
 <div class="max-w-7xl mx-auto px-4 py-8">
 
     <!-- Header -->
-    <div class="mb-8 flex items-center justify-between">
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Active Duties</h2>
             <p class="text-gray-600">Monitor and manage all ongoing duty assignments</p>
@@ -40,9 +40,9 @@
     </div>
 
     {% if grouped_duties %}
-    <div class="bg-white shadow-lg rounded-2xl overflow-hidden border border-gray-100">
-
-        <table class="min-w-full divide-y divide-gray-200">
+    <div class="bg-white shadow-lg rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="overflow-x-auto">
+        <table class="min-w-[700px] w-full divide-y divide-gray-200">
             <thead class="bg-linear-to-r from-teal-600 to-teal-500">
                 <tr>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-white">VVIP</th>
@@ -137,14 +137,15 @@
 
 
                         <!-- 🔵 Assigned Staff Section -->
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
 
                             <h4 class="text-lg font-semibold text-gray-800">
                                 Assigned Staff ({{ duties|length }})
                             </h4>
 
                             <form method="POST"
-                                action="{% url 'munsi_end_vvip_duty' batch_id %}">
+                                action="{% url 'munsi_end_vvip_duty' batch_id %}"
+                                class="w-full lg:w-auto">
                                 {% csrf_token %}
 
                                 <textarea name="end_reason"
@@ -153,7 +154,7 @@
                                         class="w-full text-gray-700 mb-3 p-2 border rounded-lg text-sm"></textarea>
 
                                 <button type="submit"
-                                        class="px-5 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 shadow-md transition">
+                                        class="px-5 py-2 sm:flex-row rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 shadow-md transition">
                                     End All Duties
                                 </button>
                                 <a href="{% url 'munsi_vvip_duty_print' batch_id %}" 
@@ -214,7 +215,7 @@
 
             </tbody>
         </table>
-
+        </div>
     </div>
     {% else %}
 

@@ -25,7 +25,7 @@
             </div>
         </div>
 
-        <div class="p-8 space-y-8">
+        <div class="p-4 sm:p-6 md:p-8 space-y-8">
 
             <!-- PROFILE PHOTO SECTION -->
             <div class="bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
@@ -34,7 +34,7 @@
                 </label>
 
                 <div class="flex items-center gap-6">
-                    <div class="relative group">
+                    <div class="relative group shrink-0">
                         <img id="preview"
                             src="{% if user.profile_photo %}{{ user.profile_photo.url }}{% endif %}"
                             class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-teal-200 group-hover:ring-teal-400 transition-all duration-300">
