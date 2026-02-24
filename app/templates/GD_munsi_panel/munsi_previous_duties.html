@@ -14,13 +14,13 @@
         </div>
 
         <a href="{% url 'munsi_active_duty' %}"
-           class="px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 transition">
+           class="w-fit px-4 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-900 transition">
             ← Back to Active
         </a>
     </div>
 
     {% if grouped_duties %}
-    <div class="bg-white shadow-lg rounded-2xl border border-gray-100">
+    <div class="bg-white shadow-lg rounded-2xl border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
 
         <table class="min-w-full divide-y divide-gray-200">
