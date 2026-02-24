@@ -159,6 +159,110 @@ def logout_view(request):
     return redirect('login')
 
 
+
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.utils import timezone
+from .models import PasswordResetOTP
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+def forgot_password_view(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Prevent email enumeration
+            messages.success(request, "If this email exists, OTP has been sent.")
+            return redirect("verify_otp")
+
+        otp_code = PasswordResetOTP.generate_otp()
+
+        PasswordResetOTP.objects.create(
+            user=user,
+            otp=otp_code
+        )
+
+        send_mail(
+            subject="Password Reset OTP",
+            message=f"Your OTP is: {otp_code}\nValid for 5 minutes.",
+            from_email=None,
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        request.session["reset_email"] = email
+        messages.success(request, "OTP sent to your email.")
+        return redirect("verify_otp")
+
+    return render(request, "password_panel/forgot_password.html")
+
+
+
+def verify_otp_view(request):
+    if request.method == "POST":
+        otp = request.POST.get("otp")
+        email = request.session.get("reset_email")
+
+        if not email:
+            return redirect("forgot_password")
+
+        try:
+            user = User.objects.get(email=email)
+            otp_record = PasswordResetOTP.objects.filter(
+                user=user,
+                otp=otp,
+                is_verified=False
+            ).latest("created_at")
+        except:
+            messages.error(request, "Invalid OTP.")
+            return redirect("verify_otp")
+
+        if otp_record.is_expired():
+            messages.error(request, "OTP expired.")
+            return redirect("forgot_password")
+
+        otp_record.is_verified = True
+        otp_record.save()
+
+        request.session["otp_verified"] = True
+        return redirect("reset_password")
+
+    return render(request, "password_panel/verify_otp.html")
+
+from django.contrib.auth.hashers import make_password
+
+
+def reset_password_view(request):
+    if not request.session.get("otp_verified"):
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+        email = request.session.get("reset_email")
+
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect("reset_password")
+
+        user = User.objects.get(email=email)
+        user.password = make_password(password)
+        user.save()
+
+        # Clear session
+        request.session.flush()
+
+        messages.success(request, "Password reset successful.")
+        return redirect("login")
+
+    return render(request, "password_panel/reset_password.html")
+
 #------ Custom GD Munsi Panel Views ------
 # @login_required
 # def dashboard(request):
