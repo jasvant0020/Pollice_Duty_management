@@ -107,9 +107,27 @@
         </div>
         <!-- Footer -->
         <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10 backdrop-blur-sm">
+
+            <!-- Mobile User Info (Only Mobile & Tablet) -->
+            <div class="lg:hidden mb-4">
+                <div class="bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 
+                            rounded-2xl p-4 shadow-lg text-white">
+                    <p class="text-xs font-medium">
+                        Welcome Back!
+                    </p>
+                    <p class="text-sm font-semibold">
+                        {{ request.user.first_name|title }} {{ request.user.last_name|title }}
+                    </p>
+                    <p class="text-xs text-white/80 mb-2">
+                        ({{ request.user.role|capfirst }})
+                    </p>
+                </div>
+            </div>
+
             <div class="flex items-center justify-center gap-2 text-blue-200 text-xs">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
                 <span>Secure System v2.0</span>
             </div>
@@ -149,47 +167,93 @@
                 </div>
 
                 <!-- User Section -->
-                <div class="flex items-center gap-3 sm:gap-4">
-                    <div class="hidden sm:block text-right">
-                        <p class="text-sm font-semibold text-gray-700">
-                            {{ request.user.first_name|title }} {{ request.user.last_name|title }}
-                        </p>
-                        <p class="text-xs text-gray-500">{{ request.user.role|capfirst }}</p>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl px-5 py-2.5 shadow-lg hover:shadow-xl transition-shadow duration-300">
-                        <div class="flex items-center gap-3">
-                            <div class="hidden sm:block">
-                                <p class="text-sm font-semibold text-white">
-                                    Welcome Back!
-                                </p>
-                                <p class="text-xs text-white/80">{{ request.user.get_full_name|title }}</p>
-                            </div>
-                            
-                            <form method="post" action="{% url 'logout' %}">
-                                {% csrf_token %}
-                                <button type="submit"
-                                    class="group relative w-11 h-11 rounded-xl bg-linear-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-blue-900 shadow-lg hover:shadow-2xl hover:from-red-500 hover:to-red-600 hover:text-white transition-all duration-300 transform hover:scale-110 ">
-                                    
-                                    <!-- Tooltip -->
-                                    <span class="absolute -bottom-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-xl">
-                                        Logout
-                                        <span class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></span>
-                                    </span>
+                <div class="flex items-center gap-3 sm:gap-4 shrink-0">
 
-                                    <!-- Power Icon -->
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-6 h-6 group-hover:scale-110 transition-transform duration-300"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 2v10m6.36-7.36a9 9 0 11-12.72 0"/>
-                                    </svg>
-                                </button>
-                            </form>
+                    <!-- FULL USER SECTION (Laptop Only) -->
+                    <div class="hidden lg:flex items-center gap-3 sm:gap-4">
+
+                        <div class="hidden sm:block text-right">
+                            <p class="text-sm font-semibold text-gray-700">
+                                {{ request.user.first_name|title }} {{ request.user.last_name|title }}
+                            </p>
+                            <p class="text-xs text-gray-500">{{ request.user.role|capfirst }}</p>
                         </div>
+                        
+                        <div class="flex items-center gap-3 
+                                    bg-linear-to-r from-blue-500 via-purple-500 to-pink-500 
+                                    rounded-2xl px-3 sm:px-5 py-2 sm:py-2.5 
+                                    shadow-lg hover:shadow-xl transition-shadow duration-300">
+                            
+                            <div class="flex items-center gap-3">
+                                <div class="hidden sm:block">
+                                    <p class="text-sm font-semibold text-white">
+                                        Welcome Back!
+                                    </p>
+                                    <p class="text-xs text-white/80">
+                                        {{ request.user.get_full_name|title }}
+                                    </p>
+                                </div>
+                                
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                        class="group relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl 
+                                               bg-linear-to-br from-yellow-400 to-amber-500 
+                                               flex items-center justify-center text-blue-900 
+                                               shadow-lg hover:shadow-2xl 
+                                               hover:from-red-500 hover:to-red-600 
+                                               hover:text-white transition-all duration-300 
+                                               transform hover:scale-110">
+                                        
+                                        <span class="absolute -bottom-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-xl">
+                                            Logout
+                                            <span class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></span>
+                                        </span>
+
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-6 h-6 group-hover:scale-110 transition-transform duration-300"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 2v10m6.36-7.36a9 9 0 11-12.72 0"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MOBILE / TABLET LOGOUT ONLY -->
+                    <div class="flex lg:hidden">
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit"
+                                class="group relative w-10 h-10 rounded-xl 
+                                       bg-linear-to-br from-yellow-400 to-amber-500 
+                                       flex items-center justify-center text-blue-900 
+                                       shadow-lg hover:shadow-2xl 
+                                       hover:from-red-500 hover:to-red-600 
+                                       hover:text-white transition-all duration-300 
+                                       transform hover:scale-110">
+                                
+                                <span class="absolute -bottom-10 right-0 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap shadow-xl">
+                                    Logout
+                                    <span class="absolute -top-1 right-4 w-2 h-2 bg-gray-900 transform rotate-45"></span>
+                                </span>
+
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="w-6 h-6"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 2v10m6.36-7.36a9 9 0 11-12.72 0"/>
+                                </svg>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
