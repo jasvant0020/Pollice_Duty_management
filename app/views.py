@@ -263,50 +263,6 @@ def reset_password_view(request):
 
     return render(request, "password_panel/reset_password.html")
 
-#------ Custom GD Munsi Panel Views ------
-# @login_required
-# def dashboard(request):
-#     role = request.user.role
-
-#     # # Developer Dashboard
-#     # if role == "developer":
-#     #     return render(request, "developer/dashboard.html", {
-#     #         "total_users": User.objects.count(),
-#     #         "master_admin_count": User.objects.filter(role="master_admin").count()
-#     #     })
-
-#     # # Master Admin Dashboard
-#     # if role == "master_admin":
-#     #     return render(request, "master_admin/dashboard.html", {
-#     #         "super_admin_count": User.objects.filter(role="super_admin").count(),
-#     #     })
-
-#     # # Super Admin Dashboard
-#     # if role == "super_admin":
-#     #     return render(request, "super_admin/dashboard.html", {
-#     #         "admin_count": User.objects.filter(role="admin", created_by=request.user).count(),
-#     #     })
-
-#     # # Admin Dashboard
-#     # if role == "admin":
-#     #     return render(request, "admin_panel/admin_dashboard.html", {
-#     #         "gd_munsi_count": User.objects.filter(role="gd_munsi", admin=request.user).count(),
-#     #         "field_staff_count": User.objects.filter(role="field_staff", admin=request.user).count(),
-#     #     })
-
-#     # # GD Munsi Dashboard
-#     # if role == "gd_munsi":
-#     #     return render(request, "GD_munsi_panel/dashboard.html", {
-#     #         "field_staff_count": User.objects.filter(gd_munsi=request.user).count(),
-#     #     })
-
-#     # # Field Staff Dashboard
-#     # if role == "field_staff":
-#     #     return render(request, "user_panel/user_profile.html", {
-#     #         "user_data": request.user
-#     #     })
-
-
 @role_required(["gd_munsi"])
 def police_list(request):
     context = {'police_personnel': POLICE_PERSONNEL}
