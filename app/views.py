@@ -1128,8 +1128,6 @@ def user_assign_duty(request):
         "duties": duties
     })
 
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
 from django.contrib import messages
 
 @role_required(["field_staff"])
@@ -1149,27 +1147,22 @@ def request_application_box(request):
             )
 
             # ✅ Get dedicated GD Munsi
+            # Get assigned Munsi
             munsi_user = request.user.gd_munsi
-
-            if not munsi_user:
-                messages.error(request, "No GD Munsi assigned to you.")
-                return redirect("user_Notifications")
 
             channel_layer = get_channel_layer()
 
-            # ✅ Send WebSocket to specific Munsi only
             async_to_sync(channel_layer.group_send)(
-                f"user_{munsi_user.id}",
+                f"munsi_{munsi_user.id}",
                 {
-                    "type": "send_new_request",
+                    "type": "new_request",
                     "data": {
                         "id": request_obj.id,
-                        "name": request.user.get_full_name(),
-                        "photo": request.user.profile_photo.url if request.user.profile_photo else "",
+                        "name": f"{request.user.first_name} {request.user.last_name}",
+                        "photo": request.user.profile_photo.url,
                         "subject": request_obj.subject,
                         "message": request_obj.message,
-                        "submitted_at": request_obj.submitted_at.strftime("%d %b %Y %H:%M"),
-                        "status": request_obj.status,
+                        "date": str(request_obj.submitted_at),
                     }
                 }
             )

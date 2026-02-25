@@ -3,7 +3,7 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 
-<div x-data="requestManager()" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+<div x-data="requestManager()" x-init="init()" class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
     <h2 class="text-3xl font-bold text-gray-800 mb-8">
         Field Staff Requests
@@ -54,30 +54,66 @@
 
 
     <!-- GRID -->
-    <div id="pendingGrid" x-show="tab==='pending'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+    <div x-show="tab==='pending'" 
+        class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
 
+        <!-- 🔥 NEW LIVE REQUESTS -->
+        <template x-if="pendingRequests.length > 0">
+            <div class="col-span-full flex items-center gap-4 my-2">
+                <div class="flex-1 h-px bg-indigo-300"></div>
+                <span class="text-xs font-semibold text-indigo-600">
+                    🔔 New Requests
+                </span>
+                <div class="flex-1 h-px bg-indigo-300"></div>
+            </div>
+        </template>
+
+        <template x-for="req in pendingRequests" :key="req.id">
+            <div @click="openModal(req)"
+                class="cursor-pointer bg-indigo-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center animate-pulse">
+
+                <img :src="req.image"
+                    class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
+
+                <h3 class="mt-2 text-sm font-semibold text-gray-800"
+                    x-text="req.name"></h3>
+            </div>
+        </template>
+
+
+        <!-- 📂 OLD REQUESTS DIVIDER -->
+        <template x-if="pendingRequests.length > 0">
+            <div class="col-span-full flex items-center gap-4 my-4">
+                <div class="flex-1 h-px bg-gray-300"></div>
+                <span class="text-xs font-semibold text-gray-500">
+                    Earlier Requests
+                </span>
+                <div class="flex-1 h-px bg-gray-300"></div>
+            </div>
+        </template>
+
+
+        <!-- Existing Django Requests -->
         {% for req in pending_requests %}
-        <div 
-            @click="openModal({
-                id: '{{ req.id }}',
-                name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
-                image: '{{ req.staff.profile_photo.url }}',
-                subject: `{{ req.subject|escapejs }}`,
-                message: `{{ req.message|escapejs }}`,
-                date: '{{ req.submitted_at }}'
-            })"
-            class="cursor-pointer bg-indigo-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center"
-        >
-            <img src="{{ req.staff.profile_photo.url }}"
-                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
+            <div @click="openModal({
+                    id: '{{ req.id }}',
+                    name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
+                    image: '{{ req.staff.profile_photo.url }}',
+                    subject: `{{ req.subject|escapejs }}`,
+                    message: `{{ req.message|escapejs }}`,
+                    date: '{{ req.submitted_at }}'
+                })"
+                class="cursor-pointer bg-indigo-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center">
 
-            <h3 class="mt-2 text-sm font-semibold text-gray-800">
-                {{ req.staff.first_name }} {{ req.staff.last_name }}
-            </h3>
-        </div>
-        {% empty %}
-        <p class="col-span-full text-gray-500">No pending requests.</p>
+                <img src="{{ req.staff.profile_photo.url }}"
+                    class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
+
+                <h3 class="mt-2 text-sm font-semibold text-gray-800">
+                    {{ req.staff.first_name }} {{ req.staff.last_name }}
+                </h3>
+            </div>
         {% endfor %}
+
     </div>
 
     <div x-show="tab==='approved'" 
@@ -203,8 +239,7 @@ function requestManager() {
         tab: 'pending',
         showModal: false,
         modalData: {},
-        activeTab: 'bg-indigo-600 text-white',
-        inactiveTab: 'bg-gray-100 text-gray-700',
+        pendingRequests: [],
 
         openModal(data) {
             this.modalData = data
@@ -213,57 +248,42 @@ function requestManager() {
 
         closeModal() {
             this.showModal = false
+        },
+
+        init() {
+            const socket = new WebSocket(
+                (window.location.protocol === "https:" ? "wss://" : "ws://")
+                + window.location.host
+                + "/ws/munsi-requests/"
+            );
+
+            socket.onmessage = (e) => {
+                const response = JSON.parse(e.data);
+
+                if (response.type === "new_request") {
+
+                    const formatted = {
+                        id: response.data.id,
+                        name: response.data.name,
+                        image: response.data.photo,
+                        subject: response.data.subject,
+                        message: response.data.message,
+                        date: response.data.date
+                    };
+
+                    this.pendingRequests.unshift(formatted);
+                }
+            };
+
+            socket.onclose = () => {
+                console.log("WebSocket closed");
+            };
+
+            socket.onopen = () => {
+                console.log("✅ WebSocket Connected");
+            };
         }
     }
 }
 </script>
-<script>
-const munsiSocket = new WebSocket(
-    "ws://" + window.location.host + "/ws/munsi-requests/"
-);
-
-munsiSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-
-    const container = document.getElementById("pendingGrid");
-
-    const newCard = `
-        <div 
-            @click="openModal({
-                id: '${data.id}',
-                name: '${data.name}',
-                image: '${data.photo}',
-                subject: \`${data.subject}\`,
-                message: \`${data.message}\`,
-                date: '${data.submitted_at}'
-            })"
-            class="cursor-pointer bg-white p-4 rounded-xl shadow hover:shadow-lg transition text-center animate-pulse"
-        >
-            <img src="${data.photo}"
-                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
-
-            <h3 class="mt-2 text-sm font-semibold text-gray-800">
-                ${data.name}
-            </h3>
-        </div>
-    `;
-
-    container.insertAdjacentHTML("afterbegin", newCard);
-
-    // Reinitialize Alpine
-    if (window.Alpine) {
-        Alpine.initTree(container);
-    }
-
-    // Remove pulse after 3 sec
-    setTimeout(() => {
-        const firstCard = container.firstElementChild;
-        if (firstCard) {
-            firstCard.classList.remove("animate-pulse");
-        }
-    }, 3000);
-};
-</script>
-
-
 {% endblock %}
