@@ -778,20 +778,23 @@ def munsi_approve_request(request, req_id):
     req.notified_at = timezone.now()
     req.save()
 
+    # channel_layer = get_channel_layer()
+
     channel_layer = get_channel_layer()
 
-    # Send real-time notification to only that staff user
     async_to_sync(channel_layer.group_send)(
-        f"user_{req.staff.id}",
+        f"user_{req.staff.id}",   # group per user
         {
-            "type": "send_notification",
-            "id": req.id,
-            "subject": req.subject,
-            "message": req.message,
-            "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
-            "status": req.status,
-            "time": req.notified_at.strftime("%d %b %Y %H:%M"),
-            "photo": req.staff.profile_photo.url if req.staff.profile_photo else "",
+            "type": "send_status_update",
+            "data": {
+                "id": req.id,
+                "subject": req.subject,
+                "message": req.message,
+                "status": req.status,
+                "submitted_at": str(req.submitted_at),
+                "notified_at": str(req.notified_at),
+                "photo": req.staff.profile_photo.url,
+            }
         }
     )
 
@@ -815,19 +818,23 @@ def munsi_reject_request(request, req_id):
     req.notified_at = timezone.now()
     req.save()
 
+    # channel_layer = get_channel_layer()
+
     channel_layer = get_channel_layer()
 
     async_to_sync(channel_layer.group_send)(
-        f"user_{req.staff.id}",
+        f"user_{req.staff.id}",   # group per user
         {
-            "type": "send_notification",
-            "id": req.id,
-            "subject": req.subject,
-            "message": req.message,
-            "submitted_at": req.submitted_at.strftime("%d %b %Y %H:%M"),
-            "status": req.status,
-            "time": req.notified_at.strftime("%d %b %Y %H:%M"),
-            "photo": req.staff.profile_photo.url if req.staff.profile_photo else "",
+            "type": "send_status_update",
+            "data": {
+                "id": req.id,
+                "subject": req.subject,
+                "message": req.message,
+                "status": req.status,
+                "submitted_at": str(req.submitted_at),
+                "notified_at": str(req.notified_at),
+                "photo": req.staff.profile_photo.url,
+            }
         }
     )
 

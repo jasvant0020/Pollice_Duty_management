@@ -3,12 +3,8 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 {% load static %}
-{% comment %} <button id="enableSoundBtn"
-        class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 
-               text-white px-4 py-2 rounded-lg shadow-lg transition">
-    🔔 Enable Notification Sound
-</button> {% endcomment %}
 
+<div x-data="notificationManager()" x-init="init()">
 <div class="max-w-6xl mx-auto px-6 py-8">
 
     <h2 class="text-2xl font-bold text-gray-800 mb-6">
@@ -121,167 +117,90 @@
     </div>
 
 </div>
-<audio id="notificationSound" src="{% static 'sounds/notification.mp3' %}"></audio>
-
+</div>
 <script>
-    // ==============================
-    // WebSocket Connection
-    // ==============================
-    const socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/notifications/"
-    );
+function notificationManager() {
+    return {
+        notifications: [],
 
-    // ==============================
-    // Sound System
-    // ==============================
-    let soundAllowed = false;
-    const enableBtn = document.getElementById("enableSoundBtn");
-    const baseSound = new Audio("{% static 'sounds/notification.mp3' %}");
-    baseSound.preload = "auto";
+        init() {
+            const socket = new WebSocket(
+                (window.location.protocol === "https:" ? "wss://" : "ws://")
+                + window.location.host
+                + "/ws/notifications/"
+            );
 
-    // Restore preference
-    if (localStorage.getItem("soundEnabled") === "true") {
-        soundAllowed = true;
-        if (enableBtn) enableBtn.style.display = "none";
-    }
+            socket.onmessage = (e) => {
+                const response = JSON.parse(e.data);
 
-    // Proper unlock on click
-    if (enableBtn) {
-        enableBtn.addEventListener("click", function () {
+                if (response.type === "status_update") {
 
-            baseSound.play()
-                .then(() => {
-                    baseSound.pause();
-                    baseSound.currentTime = 0;
+                    const data = response.data;
 
-                    soundAllowed = true;
-                    localStorage.setItem("soundEnabled", "true");
-                    enableBtn.style.display = "none";
+                    const formatted = {
+                        id: data.id,
+                        subject: data.subject,
+                        message: data.message,
+                        status: data.status,
+                        submitted_at: this.formatDate(data.submitted_at),
+                        notified_at: this.formatDate(data.notified_at),
+                        photo: data.photo
+                    };
 
-                    console.log("🔔 Sound Enabled Successfully");
-                })
-                .catch(err => {
-                    console.log("Sound still blocked:", err);
-                });
+                    this.addNotification(formatted);
+                }
+            };
+        },
 
-        });
-    }
+        addNotification(note) {
 
+            const container = document.querySelector("#liveNotifications .space-y-4");
 
-    // ==============================
-    // WebSocket Message Handler
-    // ==============================
-    socket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
+            const color =
+                note.status === "approved" ? "border-green-500"
+                : note.status === "rejected" ? "border-red-500"
+                : "border-yellow-500";
 
-        // 🔔 Play Sound
-        if (soundAllowed) {
-            baseSound.currentTime = 0;
-            baseSound.play().catch(() => {});
-        }
+            const statusText =
+                note.status === "approved" ? "<span class='text-green-600'>APPROVED</span>"
+                : note.status === "rejected" ? "<span class='text-red-600'>REJECTED</span>"
+                : "<span class='text-yellow-600'>PENDING</span>";
 
-
-        const container = document.querySelector("#liveNotifications .space-y-4");
-
-        const borderColor = data.status === "approved"
-            ? "border-green-500"
-            : "border-red-500";
-
-        const statusText = data.status === "approved"
-            ? "<span class='text-green-600'>APPROVED</span>"
-            : "<span class='text-red-600'>REJECTED</span>";
-
-        const statusLabel = data.status === "approved"
-            ? "<span class='text-green-600 font-semibold'>Approved</span>"
-            : "<span class='text-red-600 font-semibold'>Rejected</span>";
-
-        const newNotification = `
-        <div x-data="{ open: false }"
-             class="bg-white rounded-xl shadow border-l-4 ${borderColor} animate-pulse">
-
-            <div @click="open = !open"
-                 class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
-
-                <div class="flex items-center space-x-4">
-                    <img src="${data.photo}"
-                         class="w-12 h-12 rounded-full object-cover">
-
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800">
-                            Your request has been ${statusText}
-                        </p>
-
-                        <p class="text-xs text-gray-500">
-                            ${data.time}
-                        </p>
+            const html = `
+            <div class="bg-white rounded-xl shadow border-l-4 ${color}">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center space-x-4">
+                        <img src="${note.photo}" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">
+                                Your request has been ${statusText}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                ${note.notified_at}
+                            </p>
+                        </div>
                     </div>
                 </div>
-
-                <svg :class="open ? 'rotate-180' : ''"
-                     class="w-5 h-5 text-gray-500 transition-transform"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 9l-7 7-7-7"/>
-                </svg>
             </div>
+            `;
 
-            <div x-show="open"
-                 x-transition
-                 class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
+            container.insertAdjacentHTML("afterbegin", html);
+        },
 
-                <div>
-                    <strong>Request ID:</strong>
-                    ${data.id}
-                </div>
+        formatDate(dateString) {
+            const date = new Date(dateString);
 
-                <div>
-                    <strong>Subject Submitted:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        ${data.subject}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Reason Submitted:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        ${data.message}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Submitted On:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        ${data.submitted_at}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Status:</strong>
-                    ${statusLabel}
-                </div>
-
-            </div>
-        </div>
-        `;
-
-        container.insertAdjacentHTML("afterbegin", newNotification);
-
-        // Reinitialize Alpine
-        if (window.Alpine) {
-            Alpine.initTree(container);
+            return date.toLocaleString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true
+            });
         }
-
-        // Remove pulse animation after 3 sec
-        setTimeout(() => {
-            const firstCard = container.firstElementChild;
-            if (firstCard) {
-                firstCard.classList.remove("animate-pulse");
-            }
-        }, 3000);
-    };
+    }
+}
 </script>
-
-
 
 {% endblock %}
