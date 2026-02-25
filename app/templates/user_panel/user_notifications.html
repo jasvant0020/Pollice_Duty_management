@@ -15,6 +15,87 @@
 
     <div class="space-y-4">
 
+        <div id="liveNotifications">
+
+    <div class="space-y-4">
+
+        <!-- 🔥 LIVE REALTIME NOTIFICATIONS (INSERT HERE) -->
+        <template x-for="note in notifications" :key="note.id">
+            <div x-data="{ open: false }"
+                 :class="note.status === 'approved' ? 'border-green-500' :
+                         note.status === 'rejected' ? 'border-red-500' :
+                         'border-yellow-500'"
+                 class="bg-white rounded-xl shadow border-l-4">
+
+                <!-- HEADER -->
+                <div @click="open = !open"
+                     class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
+
+                    <div class="flex items-center space-x-4">
+                        <img :src="note.photo"
+                             class="w-12 h-12 rounded-full object-cover">
+
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">
+                                Your request has been
+                                <span x-text="note.status.toUpperCase()"
+                                      :class="note.status === 'approved' ? 'text-green-600' :
+                                              note.status === 'rejected' ? 'text-red-600' :
+                                              'text-yellow-600'">
+                                </span>
+                            </p>
+
+                            <p class="text-xs text-gray-500"
+                               x-text="note.notified_at"></p>
+                        </div>
+                    </div>
+
+                    <svg :class="open ? 'rotate-180' : ''"
+                         class="w-5 h-5 text-gray-500 transition-transform"
+                         fill="none" stroke="currentColor" stroke-width="2"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                              d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+
+                <!-- DETAILS -->
+                <div x-show="open"
+                     x-transition
+                     class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
+
+                    <div><strong>Request ID:</strong> <span x-text="note.id"></span></div>
+
+                    <div>
+                        <strong>Subject Submitted:</strong>
+                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
+                             x-text="note.subject"></div>
+                    </div>
+
+                    <div>
+                        <strong>Reason Submitted:</strong>
+                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
+                             x-text="note.message"></div>
+                    </div>
+
+                    <div>
+                        <strong>Submitted On:</strong>
+                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
+                             x-text="note.submitted_at"></div>
+                    </div>
+
+                    <div>
+                        <strong>Status:</strong>
+                        <span x-text="note.status"
+                              :class="note.status === 'approved' ? 'text-green-600 font-semibold' :
+                                      note.status === 'rejected' ? 'text-red-600 font-semibold' :
+                                      'text-yellow-600 font-semibold'">
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </template>
+
         {% for note in notifications %}
         <div x-data="{ open: false }"
              class="bg-white rounded-xl shadow border-l-4 
@@ -147,45 +228,11 @@ function notificationManager() {
                         photo: data.photo
                     };
 
-                    this.addNotification(formatted);
+                    this.notifications.unshift(formatted);
                 }
             };
         },
 
-        addNotification(note) {
-
-            const container = document.querySelector("#liveNotifications .space-y-4");
-
-            const color =
-                note.status === "approved" ? "border-green-500"
-                : note.status === "rejected" ? "border-red-500"
-                : "border-yellow-500";
-
-            const statusText =
-                note.status === "approved" ? "<span class='text-green-600'>APPROVED</span>"
-                : note.status === "rejected" ? "<span class='text-red-600'>REJECTED</span>"
-                : "<span class='text-yellow-600'>PENDING</span>";
-
-            const html = `
-            <div class="bg-white rounded-xl shadow border-l-4 ${color}">
-                <div class="flex items-center justify-between p-4">
-                    <div class="flex items-center space-x-4">
-                        <img src="${note.photo}" class="w-12 h-12 rounded-full object-cover">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">
-                                Your request has been ${statusText}
-                            </p>
-                            <p class="text-xs text-gray-500">
-                                ${note.notified_at}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            `;
-
-            container.insertAdjacentHTML("afterbegin", html);
-        },
 
         formatDate(dateString) {
             const date = new Date(dateString);
