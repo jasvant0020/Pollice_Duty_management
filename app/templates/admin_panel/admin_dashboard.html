@@ -166,7 +166,14 @@
 <div id="overlay" class="hidden bg-black/40 fixed inset-0  bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
     <div class="bg-white rounded-2xl p-6 w-11/12 max-w-3xl shadow-xl relative">
         <button onclick="closeOverlay()" class="absolute top-5 right-5 flex h-10 w-10 items-center justify-center rounded-full bg-rose-50 text-xl font-bold text-rose-500 transition-all duration-200 hover:bg-rose-500  hover:text-white hover:shadow-lg hover:shadow-rose-500/30">&times;</button>
-        <h2 id="overlayTitle" class="text-xl font-bold text-gray-900 mb-4">Super Admin Details</h2>
+        <h2 id="overlayTitle"
+            class="text-xl font-bold text-gray-900 mb-4">
+
+            <span class="block md:inline">Super Admin:</span>
+            <span id="overlayName"
+                class="block md:inline text-gray-700 md:ml-2"></span>
+
+        </h2>
         <div id="overlayContent" class="space-y-4 max-h-96 overflow-y-auto">
             <!-- JS will populate admins here -->
         </div>
@@ -177,8 +184,7 @@
 
     function openOverlay(index) {
         const sa = superAdminData[index];
-        document.getElementById("overlayTitle").innerHTML =
-                "Super Admin:<br><span class='font-semibold'>" + sa.name + "</span>";
+        document.getElementById("overlayName").innerText = sa.name;
 
         let html = "";
         if (!sa.admins || sa.admins.length === 0) {
