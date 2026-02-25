@@ -77,6 +77,9 @@
 
                 <h3 class="mt-2 text-sm font-semibold text-gray-800"
                     x-text="req.name"></h3>
+                
+                <h3 class="mt-2 text-sm font-semibold text-gray-800"
+                    x-text="req.id"></h3>
             </div>
         </template>
 
@@ -111,6 +114,10 @@
                 <h3 class="mt-2 text-sm font-semibold text-gray-800">
                     {{ req.staff.first_name }} {{ req.staff.last_name }}
                 </h3>
+                <p class="text-xs text-gray-700">
+                    Request id:
+                    {{ req.id }}
+                </p>
             </div>
         {% endfor %}
 
@@ -137,6 +144,11 @@
             <h3 class="mt-2 text-sm font-semibold text-gray-800">
                 {{ req.staff.first_name }} {{ req.staff.last_name }}
             </h3>
+
+            <p class="text-xs text-gray-700">
+                Request id:
+                {{ req.id }}
+            </p>
         </div>
         {% empty %}
         <p class="col-span-full text-gray-500">No approved requests.</p>
@@ -165,6 +177,11 @@
             <h3 class="mt-2 text-sm font-semibold text-gray-800">
                 {{ req.staff.first_name }} {{ req.staff.last_name }}
             </h3>
+
+            <p class="text-xs text-gray-700">
+                Request id:
+                {{ req.id }}
+            </p>
         </div>
         {% empty %}
         <p class="col-span-full text-gray-500">No rejected requests.</p>

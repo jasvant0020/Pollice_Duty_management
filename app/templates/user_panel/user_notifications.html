@@ -129,7 +129,11 @@
                         </p>
 
                         <p class="text-xs text-gray-500">
-                            {{ note.notified_at|date:"d M Y H:i" }}
+                            {{ note.notified_at|date:"d M Y h:i A" }}
+                        </p>
+                        <p class="text-xs text-gray-500">
+                            Request id:
+                            {{ note.id }}
                         </p>
                     </div>
                 </div>
