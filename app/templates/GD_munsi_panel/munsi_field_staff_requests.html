@@ -268,7 +268,14 @@ function requestManager() {
                         image: response.data.photo,
                         subject: response.data.subject,
                         message: response.data.message,
-                        date: response.data.date
+                        date: new Date(response.data.date).toLocaleString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true
+                        })
                     };
 
                     this.pendingRequests.unshift(formatted);
