@@ -177,7 +177,8 @@
 
     function openOverlay(index) {
         const sa = superAdminData[index];
-        document.getElementById("overlayTitle").innerText = "Super Admin: " + sa.name;
+        document.getElementById("overlayTitle").innerHTML =
+                "Super Admin:<br><span class='font-semibold'>" + sa.name + "</span>";
 
         let html = "";
         if (!sa.admins || sa.admins.length === 0) {
