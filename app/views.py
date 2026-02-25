@@ -797,6 +797,7 @@ def munsi_approve_request(request, req_id):
 
     # Send Firebase push notification
     send_push_notification(
+        id=req.id,
         user=req.staff,
         title="Request Approved",
         body=req.subject,
@@ -831,6 +832,7 @@ def munsi_reject_request(request, req_id):
     )
 
     send_push_notification(
+        id=req.id,
         user=req.staff,
         title="Request Rejected",
         body=req.subject,

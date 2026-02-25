@@ -13,7 +13,7 @@ def initialize_firebase():
 # Call initialize immediately
 initialize_firebase()
 
-def send_push_notification(user, title, body, url=None, sender=None, notification_type="request"):
+def send_push_notification(user, title, body,id, url=None, sender=None, notification_type="request"):
     tokens = list(user.fcm_tokens.values_list("token", flat=True))
 
     if not tokens:
@@ -32,6 +32,7 @@ def send_push_notification(user, title, body, url=None, sender=None, notificatio
         # Munsi → Staff (only show status)
         notification_body = (
             # f"📌 {title}\n\n"
+            f"Request id: {id}\n"
             f"Subject: {body}"
         )
 
