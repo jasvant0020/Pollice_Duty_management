@@ -25,6 +25,7 @@ def send_push_notification(user, title, body,id, url=None, sender=None, notifica
         notification_body = (
             f"\nName: {sender.get_full_name()}\n"
             f"Email: {sender.email}\n"
+            f"Request id: {id}\n"
             f"Rank: {sender.rank}"
         )
 
