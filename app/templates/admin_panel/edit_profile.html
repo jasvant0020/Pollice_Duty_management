@@ -1,7 +1,7 @@
 {% extends "admin_panel/admin_base.html" %}
 {% block page_title %}Edit Profile{% endblock %}
-
 {% block content %}
+{% include "error_message/error_message.html" %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <form method="POST" enctype="multipart/form-data"

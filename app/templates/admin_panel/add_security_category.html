@@ -1,12 +1,11 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block page_title %}Add Security Category{% endblock %}
-
 {% block content %}
+{% include "error_message/error_message.html" %}
 <div class='pt-10'>
 <div class="bg-white shadow rounded-2xl p-6 max-w-xl border-t-4 border-indigo-600">
     <form method="POST">
         {% csrf_token %}
-        {% include "error_message/error_message.html" %}
         
         <label class="font-semibold text-gray-700">Categories</label>
         <select id="category-select" name="category_name"

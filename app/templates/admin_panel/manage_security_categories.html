@@ -1,7 +1,7 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block page_title %}Manage Security Categories{% endblock %}
-
 {% block content %}
+{% include "error_message/error_message.html" %}
 
 <div class="flex justify-between items-center mb-10">
     <a href="{% url 'add_security_category' %}" 
@@ -9,8 +9,6 @@
            + Add Category
     </a>
 </div>
-
-{% include "error_message/error_message.html" %}
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 

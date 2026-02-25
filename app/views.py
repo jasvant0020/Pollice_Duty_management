@@ -1024,6 +1024,11 @@ def add_vvip(request):
             admin=request.user
         )
 
+        # 🔴 Email uniqueness check
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "This email is already registered. Please use a different email.")
+            return render(request, "admin_panel/add_vvip.html", context)
+
         User.objects.create(
             username=email,
             email=email,
@@ -1089,6 +1094,11 @@ def edit_vvip(request, vvip_id):
         password = request.POST.get("password")
         if password:
             vvip.set_password(password)
+
+        # 🔴 Email uniqueness check
+        if User.objects.filter(email=request.POST.get("email")).exclude(id=vvip.id).exists():
+            messages.error(request, "This email is already registered. Please use a different email.")
+            return redirect("edit_vvip", vvip_id=vvip.id)
 
         vvip.save()
         messages.success(request, "VVIP profile updated successfully")
@@ -1337,7 +1347,11 @@ def add_user(request):
                 )
                 return redirect("manage_users")
 
-
+        # 🔴 Email uniqueness check
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "This email is already registered. Please use a different email.")
+            return render(request, "admin_panel/add_user.html", context)
+        
         new_user = User(
             username=email,
             email=email,
@@ -1499,6 +1513,11 @@ def edit_user(request, user_id):
             else:
                 messages.error(request, "Passwords do not match!")
                 return redirect("edit_user", user_id=user_id)
+
+        # 🔴 Email uniqueness check
+        if User.objects.filter(email=officer.email).exclude(id=officer.id).exists():
+            messages.error(request, "This email is already registered. Please use a different email.")
+            return redirect("edit_user", user_id=user_id)
 
         # ----------------------------
         # Hierarchy Logic
