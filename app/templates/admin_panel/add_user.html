@@ -20,7 +20,13 @@
     <!-- Phone -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
-        <input type="text" name="phone" class="w-full text-gray-800 border rounded p-2" required>
+        <input name="phone" class="w-full text-gray-800 border rounded p-2" required
+        type="tel"
+        placeholder="Enter 10 digit mobile number"
+        pattern="[6-9][0-9]{9}"
+        maxlength="10"
+        minlength="10"
+        title="Enter valid 10 digit Indian mobile number">
     </div>
 
     <!-- Password -->

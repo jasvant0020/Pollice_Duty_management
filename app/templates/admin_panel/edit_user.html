@@ -30,7 +30,14 @@
     <!-- Phone -->
     <div>
         <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
-        <input type="text" name="phone" id="phone" value="{{ officer.phone }}" class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        <input name="phone" id="phone" value="{{ officer.phone }}" 
+        type="tel"
+        placeholder="Enter 10 digit mobile number"
+        pattern="[6-9][0-9]{9}"
+        maxlength="10"
+        minlength="10"
+        title="Enter valid 10 digit Indian mobile number"
+        class="w-full text-gray-800 border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
     </div>
 
     <!-- Password Field -->
