@@ -762,6 +762,13 @@ def edit_munsi_profile(request):
         first_name = request.POST.get("first_name")
         last_name = request.POST.get("last_name")
         email = request.POST.get("email")
+
+        # 🔴 Email uniqueness check
+        if email and email != user.email:
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                messages.error(request, "Email already in use.")
+                return redirect("edit_munsi_profile")
+            
         phone = request.POST.get("phone")
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
@@ -770,6 +777,7 @@ def edit_munsi_profile(request):
         user.first_name = first_name
         user.last_name = last_name
         user.email = email
+        user.username = email
         user.phone = phone
 
         # Profile photo update
@@ -1296,7 +1304,16 @@ def edit_user_profile(request):
         # -------- BASIC INFO --------
         user.first_name = request.POST.get("first_name")
         user.last_name = request.POST.get("last_name")
-        user.email = request.POST.get("email")
+        new_email = request.POST.get("email")
+
+        # 🔴 Email uniqueness check
+        if new_email and new_email != user.email:
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "Email already in use.")
+                return redirect("edit_user_profile")
+
+        user.email = new_email
+        user.username = new_email
         user.phone = request.POST.get("phone")
 
         # -------- PROFILE PHOTO --------
