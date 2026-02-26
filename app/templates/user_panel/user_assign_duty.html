@@ -150,33 +150,66 @@ function formatTime(days, hours, minutes, seconds) {
 
 function startTimers() {
     document.querySelectorAll("[id^='duty-']").forEach(div => {
+
         const dutyId = div.id.split('-')[1];
-        const start = new Date(parseInt(div.dataset.start) * 1000); // timestamp in ms
-        const end   = new Date(parseInt(div.dataset.end) * 1000);
+        const start = parseInt(div.dataset.start) * 1000;
+        const end   = parseInt(div.dataset.end) * 1000;
+
+        const totalDuration = end - start; // total duty time
 
         setInterval(() => {
-            const now = new Date();
 
-            // Countdown
-            let distance = end - now;
-            if(distance < 0) distance = 0;
-            const days = Math.floor(distance / (1000*60*60*24));
-            const hours = Math.floor((distance % (1000*60*60*24)) / (1000*60*60));
-            const minutes = Math.floor((distance % (1000*60*60)) / (1000*60));
-            const seconds = Math.floor((distance % (1000*60)) / 1000);
+            const now = new Date().getTime();
 
-            document.getElementById(`countdown-${dutyId}`).innerText =
-                distance > 0 ? formatTime(days,hours,minutes,seconds) : "Duty Time Completed";
+            const countdownEl = document.getElementById(`countdown-${dutyId}`);
+            const durationEl  = document.getElementById(`duration-${dutyId}`);
 
-            // Duration
+            // 🔹 BEFORE START
+            if (now < start) {
+                const remainingToStart = start - now;
+
+                const days = Math.floor(remainingToStart / (1000*60*60*24));
+                const hours = Math.floor((remainingToStart % (1000*60*60*24)) / (1000*60*60));
+                const minutes = Math.floor((remainingToStart % (1000*60*60)) / (1000*60));
+                const seconds = Math.floor((remainingToStart % (1000*60)) / 1000);
+
+                countdownEl.innerText = "Starts in: " + formatTime(days,hours,minutes,seconds);
+                durationEl.innerText = "Not started";
+
+                return;
+            }
+
+            // 🔹 AFTER END
+            if (now >= end) {
+                countdownEl.innerText = "Duty Time Completed";
+                durationEl.innerText = formatTime(
+                    Math.floor(totalDuration / (1000*60*60*24)),
+                    Math.floor((totalDuration % (1000*60*60*24)) / (1000*60*60)),
+                    Math.floor((totalDuration % (1000*60*60)) / (1000*60)),
+                    Math.floor((totalDuration % (1000*60)) / 1000)
+                );
+                return;
+            }
+
+            // 🔹 DURING DUTY (This is what you want)
+            const remaining = end - now;
+
+            const days = Math.floor(remaining / (1000*60*60*24));
+            const hours = Math.floor((remaining % (1000*60*60*24)) / (1000*60*60));
+            const minutes = Math.floor((remaining % (1000*60*60)) / (1000*60));
+            const seconds = Math.floor((remaining % (1000*60)) / 1000);
+
+            countdownEl.innerText = formatTime(days,hours,minutes,seconds);
+
+            // elapsed duration
             const elapsed = now - start;
+
             const edays = Math.floor(elapsed / (1000*60*60*24));
             const ehours = Math.floor((elapsed % (1000*60*60*24)) / (1000*60*60));
             const eminutes = Math.floor((elapsed % (1000*60*60)) / (1000*60));
             const eseconds = Math.floor((elapsed % (1000*60)) / 1000);
 
-            document.getElementById(`duration-${dutyId}`).innerText =
-                formatTime(edays, ehours, eminutes, eseconds);
+            durationEl.innerText = formatTime(edays, ehours, eminutes, eseconds);
 
         }, 1000);
     });
@@ -184,5 +217,4 @@ function startTimers() {
 
 document.addEventListener("DOMContentLoaded", startTimers);
 </script>
-
 {% endblock %}
