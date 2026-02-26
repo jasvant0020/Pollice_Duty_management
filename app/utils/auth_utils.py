@@ -44,3 +44,15 @@ def has_suspended_parent(user):
         break
 
     return False
+
+
+from django.shortcuts import redirect
+from django.contrib import messages
+
+def require_reset_session(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get("reset_email"):
+            messages.error(request, "Unauthorized access.")
+            return redirect("forgot_password")
+        return view_func(request, *args, **kwargs)
+    return wrapper

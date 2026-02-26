@@ -23,9 +23,18 @@
                     rounded-3xl shadow-2xl 
                     p-8">
 
-            <h2 class="text-2xl font-bold text-center mb-6">
+            <h2 class="text-2xl font-bold text-center mb-4">
                 Verify OTP
             </h2>
+
+            <!-- ✅ Countdown Timer -->
+            <div class="text-center mb-6">
+                <p class="text-sm text-gray-600">OTP expires in</p>
+                <p id="countdown"
+                   class="text-xl font-bold text-red-600">
+                   05:00
+                </p>
+            </div>
 
             <form method="POST" class="space-y-5">
                 {% csrf_token %}
@@ -54,6 +63,34 @@
 
         </div>
     </div>
+
+<script>
+    const expiryTime = "{{ expiry_time }}";
+
+    if (expiryTime) {
+        const expiry = new Date(expiryTime).getTime();
+
+        const timer = setInterval(function () {
+            const now = new Date().getTime();
+            const distance = expiry - now;
+
+            if (distance <= 0) {
+                clearInterval(timer);
+                document.getElementById("countdown").innerHTML = "Expired";
+                window.location.href = "{% url 'forgot_password' %}";
+                return;
+            }
+
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById("countdown").innerHTML =
+                String(minutes).padStart(2, '0') + ":" +
+                String(seconds).padStart(2, '0');
+
+        }, 1000);
+    }
+</script>
 
 </body>
 </html>

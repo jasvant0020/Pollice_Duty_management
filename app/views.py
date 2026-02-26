@@ -17,7 +17,7 @@ from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashboard_data, get_admin_dashboard_data
 from django.db.models import Count
 from app.models import SecurityCategory
-from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY
+from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY,require_reset_session
 from django.contrib.auth import update_session_auth_hash
 from .models import User, VVIPDuty
 from collections import defaultdict
@@ -170,6 +170,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 
+from django.utils import timezone
+from datetime import timedelta
+
 def forgot_password_view(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -177,8 +180,7 @@ def forgot_password_view(request):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # Prevent email enumeration
-            messages.error(request, "this email is not registered! Please enter registered email only")
+            messages.error(request, "This email is not registered!")
             return redirect("forgot_password")
 
         otp_code = PasswordResetOTP.generate_otp()
@@ -188,6 +190,14 @@ def forgot_password_view(request):
             otp=otp_code
         )
 
+        expiry_time = timezone.now() + timedelta(minutes=5)
+
+        # 🔐 Set strict step control
+        request.session.flush()  # clear old sessions first
+        request.session["reset_email"] = email
+        request.session["otp_expiry"] = expiry_time.isoformat()
+        request.session["otp_step"] = "verify"
+
         send_mail(
             subject="Password Reset OTP",
             message=f"Your OTP is: {otp_code}\nValid for 5 minutes.",
@@ -196,21 +206,21 @@ def forgot_password_view(request):
             fail_silently=False,
         )
 
-        request.session["reset_email"] = email
-        messages.success(request, "OTP sent to your email.")
         return redirect("verify_otp")
 
     return render(request, "password_panel/forgot_password.html")
 
-
-
 def verify_otp_view(request):
+
+    # 🚫 Block direct access
+    if request.session.get("otp_step") != "verify":
+        return redirect("forgot_password")
+
+    email = request.session.get("reset_email")
+    expiry_time = request.session.get("otp_expiry")
+
     if request.method == "POST":
         otp = request.POST.get("otp")
-        email = request.session.get("reset_email")
-
-        if not email:
-            return redirect("forgot_password")
 
         try:
             user = User.objects.get(email=email)
@@ -224,38 +234,43 @@ def verify_otp_view(request):
             return redirect("verify_otp")
 
         if otp_record.is_expired():
+            request.session.flush()
             messages.error(request, "OTP expired.")
             return redirect("forgot_password")
 
         otp_record.is_verified = True
         otp_record.save()
 
-        request.session["otp_verified"] = True
+        # 🔐 Move to next step
+        request.session["otp_step"] = "reset"
+
         return redirect("reset_password")
 
-    return render(request, "password_panel/verify_otp.html")
-
-from django.contrib.auth.hashers import make_password
-
+    return render(request, "password_panel/verify_otp.html", {
+        "expiry_time": expiry_time
+    })
 
 def reset_password_view(request):
-    if not request.session.get("otp_verified"):
+
+    # 🚫 Block direct access
+    if request.session.get("otp_step") != "reset":
         return redirect("forgot_password")
+
+    email = request.session.get("reset_email")
 
     if request.method == "POST":
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
-        email = request.session.get("reset_email")
 
         if password != confirm_password:
             messages.error(request, "Passwords do not match.")
             return redirect("reset_password")
 
         user = User.objects.get(email=email)
-        user.password = make_password(password)
+        user.set_password(password)
         user.save()
 
-        # Clear session
+        # 🔐 Clear everything after success
         request.session.flush()
 
         messages.success(request, "Password reset successful.")
