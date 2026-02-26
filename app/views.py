@@ -178,8 +178,8 @@ def forgot_password_view(request):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # Prevent email enumeration
-            messages.success(request, "If this email exists, OTP has been sent.")
-            return redirect("verify_otp")
+            messages.error(request, "this email is not registered! Please enter registered email only")
+            return redirect("forgot_password")
 
         otp_code = PasswordResetOTP.generate_otp()
 
