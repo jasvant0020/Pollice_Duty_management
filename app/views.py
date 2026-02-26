@@ -174,15 +174,45 @@ from django.utils import timezone
 from datetime import timedelta
 
 def forgot_password_view(request):
+
     if request.method == "POST":
         email = request.POST.get("email")
 
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            messages.error(request, "This email is not registered!")
+            messages.error(request, "Email not registered.")
             return redirect("forgot_password")
 
+        # Get latest OTP record
+        last_otp = PasswordResetOTP.objects.filter(
+            user=user
+        ).order_by("-created_at").first()
+
+        if last_otp:
+
+            # 🔓 Auto unlock if time passed
+            last_otp.unlock_if_time_passed()
+
+            # 🚫 BLOCK if locked
+            if last_otp.is_locked:
+                remaining_seconds = int(
+                    (last_otp.locked_until - timezone.now()).total_seconds()
+                )
+
+                return render(request, "password_panel/forgot_password.html", {
+                    "lock_remaining": remaining_seconds,
+                    "lock_until": last_otp.locked_until.isoformat()
+                })
+
+            # 🔁 Cooldown 60 sec resend
+            seconds_passed = (timezone.now() - last_otp.created_at).total_seconds()
+            if seconds_passed < 60:
+                remaining = int(60 - seconds_passed)
+                messages.error(request, f"Wait {remaining} seconds before resending OTP.")
+                return redirect("forgot_password")
+
+        # ✅ Generate new OTP
         otp_code = PasswordResetOTP.generate_otp()
 
         PasswordResetOTP.objects.create(
@@ -192,8 +222,7 @@ def forgot_password_view(request):
 
         expiry_time = timezone.now() + timedelta(minutes=5)
 
-        # 🔐 Set strict step control
-        request.session.flush()  # clear old sessions first
+        request.session.flush()
         request.session["reset_email"] = email
         request.session["otp_expiry"] = expiry_time.isoformat()
         request.session["otp_step"] = "verify"
@@ -206,48 +235,70 @@ def forgot_password_view(request):
             fail_silently=False,
         )
 
+        messages.success(request, "OTP sent successfully.")
         return redirect("verify_otp")
 
     return render(request, "password_panel/forgot_password.html")
 
 def verify_otp_view(request):
 
-    # 🚫 Block direct access
     if request.session.get("otp_step") != "verify":
         return redirect("forgot_password")
 
     email = request.session.get("reset_email")
     expiry_time = request.session.get("otp_expiry")
 
-    if request.method == "POST":
-        otp = request.POST.get("otp")
+    user = User.objects.get(email=email)
 
-        try:
-            user = User.objects.get(email=email)
-            otp_record = PasswordResetOTP.objects.filter(
-                user=user,
-                otp=otp,
-                is_verified=False
-            ).latest("created_at")
-        except:
-            messages.error(request, "Invalid OTP.")
+    otp_record = PasswordResetOTP.objects.filter(
+        user=user,
+        is_verified=False
+    ).latest("created_at")
+
+    # 🔓 Unlock automatically if time passed
+    otp_record.unlock_if_time_passed()
+
+    # 🚫 If locked
+    if otp_record.is_locked:
+        remaining_lock = int((otp_record.locked_until - timezone.now()).total_seconds())
+        messages.error(request, f"Account locked. Try again in {remaining_lock // 60} minutes.")
+        return redirect("forgot_password")
+
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+
+        # ❌ Wrong OTP
+        if entered_otp != otp_record.otp:
+
+            otp_record.attempts += 1
+            otp_record.save()
+
+            remaining = otp_record.remaining_attempts()
+
+            if remaining <= 0:
+                otp_record.lock()
+                messages.error(request, "Too many wrong attempts. Locked for 10 minutes.")
+                return redirect("forgot_password")
+
+            messages.error(request, f"Invalid OTP. {remaining} attempts remaining.")
             return redirect("verify_otp")
 
+        # ⏰ Expired
         if otp_record.is_expired():
             request.session.flush()
             messages.error(request, "OTP expired.")
             return redirect("forgot_password")
 
+        # ✅ Correct OTP
         otp_record.is_verified = True
         otp_record.save()
 
-        # 🔐 Move to next step
         request.session["otp_step"] = "reset"
-
         return redirect("reset_password")
 
     return render(request, "password_panel/verify_otp.html", {
-        "expiry_time": expiry_time
+        "expiry_time": expiry_time,
+        "remaining_attempts": otp_record.remaining_attempts()
     })
 
 def reset_password_view(request):

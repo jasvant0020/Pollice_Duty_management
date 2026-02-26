@@ -261,8 +261,28 @@ class PasswordResetOTP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
 
+    # 🔐 NEW FIELDS
+    attempts = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    locked_until = models.DateTimeField(null=True, blank=True)
+
     def is_expired(self):
         return timezone.now() > self.created_at + timedelta(minutes=5)
+
+    def remaining_attempts(self):
+        return max(0, 5 - self.attempts)
+
+    def lock(self):
+        self.is_locked = True
+        self.locked_until = timezone.now() + timedelta(minutes=10)
+        self.save()
+
+    def unlock_if_time_passed(self):
+        if self.is_locked and self.locked_until and timezone.now() > self.locked_until:
+            self.is_locked = False
+            self.attempts = 0
+            self.locked_until = None
+            self.save()
 
     @staticmethod
     def generate_otp():

@@ -61,6 +61,12 @@
 
             </form>
 
+            {% if remaining_attempts %}
+            <p class="text-sm text-gray-600 text-center">
+                Remaining Attempts: {{ remaining_attempts }}
+            </p>
+            {% endif %}
+
         </div>
     </div>
 
