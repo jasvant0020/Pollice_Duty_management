@@ -37,6 +37,14 @@ def send_push_notification(user, title, body,id, url=None, sender=None, notifica
             f"Subject: {body}"
         )
 
+    # 🔥 ADD THIS BLOCK HERE
+    elif notification_type == "duty":
+        notification_body = (
+            # f"New Duty Assigned\n"
+            f"Assigned By: {sender.get_full_name()}\n"
+            f"Duty ID: {id}"
+        )
+
     else:
         # Default fallback
         notification_body = body
