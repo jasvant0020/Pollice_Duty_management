@@ -22,9 +22,12 @@
         <!-- 🔥 LIVE REALTIME NOTIFICATIONS (INSERT HERE) -->
         <template x-for="note in notifications" :key="note.id">
             <div x-data="{ open: false }"
-                 :class="note.status === 'approved' ? 'border-green-500' :
-                         note.status === 'rejected' ? 'border-red-500' :
-                         'border-yellow-500'"
+                 :class="
+                        note.status === 'approved' ? 'border-green-500' :
+                        note.status === 'rejected' ? 'border-red-500' :
+                        note.status === 'assigned' ? 'border-blue-500' :
+                        'border-yellow-500'
+                    "
                  class="bg-white rounded-xl shadow border-l-4">
 
                 <!-- HEADER -->
@@ -37,12 +40,20 @@
 
                         <div>
                             <p class="text-sm font-semibold text-gray-800">
-                                Your request has been
-                                <span x-text="note.status.toUpperCase()"
-                                      :class="note.status === 'approved' ? 'text-green-600' :
-                                              note.status === 'rejected' ? 'text-red-600' :
-                                              'text-yellow-600'">
-                                </span>
+                                <template x-if="note.status === 'assigned'">
+                                    <span class="text-blue-600">You have been ASSIGNED new duty</span>
+                                </template>
+
+                                <template x-if="note.status !== 'assigned'">
+                                    <span>
+                                        Your request has been 
+                                        <span x-text="note.status.toUpperCase()"
+                                            :class="note.status === 'approved' ? 'text-green-600' :
+                                                    note.status === 'rejected' ? 'text-red-600' :
+                                                    'text-yellow-600'">
+                                        </span>
+                                    </span>
+                                </template>
                             </p>
 
                             <p class="text-xs text-gray-500"
@@ -110,6 +121,8 @@
                 border-green-500
             {% elif note.status == 'rejected' %}
                 border-red-500
+            {% elif note.status == 'assigned' %}
+                border-blue-500
             {% else %}
                 border-yellow-500
             {% endif %}">
@@ -124,11 +137,17 @@
 
                     <div>
                         <p class="text-sm font-semibold text-gray-800">
-                            Your request has been 
+                                {% if note.status == 'assigned' %}
+                                    <span class="text-blue-600">You have been ASSIGNED new duty</span>
+                                {% else %}
+                                    Your request has been
+                                {% endif %} 
                             {% if note.status == 'approved' %}
                                 <span class="text-green-600">APPROVED</span>
                             {% elif note.status == 'rejected' %}
                                 <span class="text-red-600">REJECTED</span>
+                            {% elif note.status == 'assigned' %}
+                                <span class="text-blue-600 font-semibold">Assigned</span>
                             {% else %}
                                 <span class="text-yellow-600">PENDING</span>
                             {% endif %}
