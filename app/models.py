@@ -290,3 +290,44 @@ class PasswordResetOTP(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.otp}"
+
+
+class Notification(models.Model):
+
+    NOTIFICATION_TYPES = (
+        ("request_status", "Request Status"),
+        ("duty_assigned", "Duty Assigned"),
+        ("duty_ended", "Duty Ended"),
+        ("system_alert", "System Alert"),
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+
+    notification_type = models.CharField(
+        max_length=30,
+        choices=NOTIFICATION_TYPES
+    )
+
+    # 🔗 Generic relation support (future proof)
+    related_object_id = models.IntegerField(null=True, blank=True)
+    related_model = models.CharField(max_length=100, null=True, blank=True)
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_read"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.notification_type}"
