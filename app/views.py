@@ -1203,9 +1203,10 @@ def edit_vvip(request, vvip_id):
         )
 
         # Password change
-        password = request.POST.get("password")
-        if password:
-            vvip.set_password(password)
+        
+        # password = request.POST.get("password")
+        # if password:
+        #     vvip.set_password(password)
 
         # 🔴 Email uniqueness check
         if User.objects.filter(email=request.POST.get("email")).exclude(id=vvip.id).exists():
@@ -1619,15 +1620,16 @@ def edit_user(request, user_id):
         # ----------------------------
         # Password Update
         # ----------------------------
-        password = request.POST.get("password")
-        confirm_password = request.POST.get("confirm_password")
 
-        if password:
-            if password == confirm_password:
-                officer.set_password(password)
-            else:
-                messages.error(request, "Passwords do not match!")
-                return redirect("edit_user", user_id=user_id)
+        # password = request.POST.get("password")
+        # confirm_password = request.POST.get("confirm_password")
+
+        # if password:
+        #     if password == confirm_password:
+        #         officer.set_password(password)
+        #     else:
+        #         messages.error(request, "Passwords do not match!")
+        #         return redirect("edit_user", user_id=user_id)
 
         # 🔴 Email uniqueness check
         if User.objects.filter(email=officer.email).exclude(id=officer.id).exists():
