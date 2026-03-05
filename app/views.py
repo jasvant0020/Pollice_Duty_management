@@ -766,7 +766,6 @@ def munsi_end_vvip_duty(request, batch_id):
                 end_reason=reason,
                 ended_by=gd,
                 ended_at=timezone.now(),
-                end_datetime=timezone.now()
             )
             messages.success(request, "Duty batch ended successfully.")
         else:
