@@ -40,7 +40,7 @@ urlpatterns = [
      # Custom Admin Panel Pages
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('profile/', views.profile, name='profile'),
-    path("profile/edit/", views.edit_profile, name="edit_profile"),
+    path("edit_profile/", views.edit_profile, name="edit_profile"),
     path('manage/', views.manage, name='manage'),
     path('police_hierarchy_table/', views.police_hierarchy_table, name='police_hierarchy_table'),
     path('manage_users/', views.manage_users, name='manage_users'),

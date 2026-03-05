@@ -189,14 +189,24 @@
                             New Password
                         </label>
                         <div class="relative">
-                            <input type="password" name="password"
-                                   class="w-full border-2 border-amber-200 bg-white rounded-xl px-4 py-3 pl-11 text-gray-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none"
-                                   placeholder="Enter new password">
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 group-hover:text-amber-600 transition-colors">
+                            <input type="password" id="password" name="password"
+                                class="w-full border-2 border-amber-200 bg-white rounded-xl px-4 py-3 pl-11 pr-11 text-gray-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none"
+                                placeholder="Enter new password">
+
+                            <!-- Left Lock Icon -->
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                                 </svg>
                             </div>
+
+                            <!-- Eye Icon -->
+                            <button type="button"
+                                    onclick="togglePassword('password', this)"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                👁
+                            </button>
                         </div>
                     </div>
 
@@ -205,14 +215,24 @@
                             Confirm Password
                         </label>
                         <div class="relative">
-                            <input type="password" name="confirm_password"
-                                   class="w-full border-2 border-amber-200 bg-white rounded-xl px-4 py-3 pl-11 text-gray-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none"
-                                   placeholder="Confirm new password">
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400 group-hover:text-amber-600 transition-colors">
+                            <input type="password" id="confirm_password" name="confirm_password"
+                                class="w-full border-2 border-amber-200 bg-white rounded-xl px-4 py-3 pl-11 pr-11 text-gray-700 focus:border-amber-500 focus:ring-4 focus:ring-amber-100 transition-all duration-200 outline-none"
+                                placeholder="Confirm new password">
+
+                            <!-- Left Icon -->
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-amber-400">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                 </svg>
                             </div>
+
+                            <!-- Eye Icon -->
+                            <button type="button"
+                                    onclick="togglePassword('confirm_password', this)"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                👁
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -249,6 +269,19 @@ function previewImage(input) {
             document.getElementById("preview").src = e.target.result;
         };
         reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+<script>
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+
+    if (input.type === "password") {
+        input.type = "text";
+        btn.innerText = "🙈";
+    } else {
+        input.type = "password";
+        btn.innerText = "👁";
     }
 }
 </script>
