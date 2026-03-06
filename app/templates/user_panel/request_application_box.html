@@ -5,9 +5,29 @@
 <div class="max-w-4xl mx-auto px-4 py-8">
 
     <!-- Header -->
-    <div class="mb-6">
-        <h2 class="text-3xl font-bold text-gray-900">Send Request</h2>
-        <p class="text-gray-600">Fill out the form below to send your request.</p>
+    <div class="mb-6 flex items-center justify-between">
+        
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900">Send Request</h2>
+            <p class="text-gray-600">Fill out the form below to send your request.</p>
+        </div>
+
+        <!-- History Icon -->
+        <a href="{% url 'request_history' %}" 
+            class="p-2 rounded-lg bg-gray-200 hover:bg-teal-100 text-gray-700 hover:text-teal-700 transition"
+            title="Request History">
+
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                    class="w-5 h-5" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor">
+                    <circle cx="12" cy="12" r="9" stroke-width="2"/>
+                    <path d="M12 7v5l3 2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+
+        </a>
+
     </div>
 
     <!-- Request Form -->

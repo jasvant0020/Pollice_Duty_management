@@ -1297,6 +1297,11 @@ def request_application_box(request):
 
     return render(request, "user_panel/request_application_box.html")
 
+
+@role_required(["field_staff"])
+def request_history(request):
+    return render(request, "user_panel/request_history.html")
+
 @role_required(["field_staff"])
 def duty_history(request):
     return render(request, "user_panel/duty_history.html")
