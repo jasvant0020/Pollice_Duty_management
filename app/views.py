@@ -1300,7 +1300,16 @@ def request_application_box(request):
 
 @role_required(["field_staff"])
 def request_history(request):
-    return render(request, "user_panel/request_history.html")
+
+    requests = FieldStaffRequest.objects.filter(
+        staff=request.user
+    ).order_by("-submitted_at")
+
+    return render(
+        request,
+        "user_panel/request_history.html",
+        {"requests": requests}
+    )
 
 @role_required(["field_staff"])
 def duty_history(request):
