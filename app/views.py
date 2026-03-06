@@ -576,24 +576,7 @@ def munsi_assign_duty(request):
 
                         assigned_count += 1
                     
-                    channel_layer = get_channel_layer()
-
-                    # WebSocket notification
-                    async_to_sync(channel_layer.group_send)(
-                        f"user_{staff.id}",
-                        {
-                            "type": "send_status_update",
-                            "data": {
-                                "id": str(batch_id),
-                                "subject": f"Duty Assigned for {vvip.get_full_name()}",
-                                "message": f"You have been assigned duty at {duty_place}",
-                                "status": "assigned",
-                                "submitted_at": start_datetime.isoformat(),
-                                "notified_at": timezone.now().isoformat(),
-                                "photo": vvip.profile_photo.url if vvip.profile_photo else "",
-                            }
-                        }
-                    )
+                    
                     from django.urls import reverse
                     # 🔥 Firebase Push Notification
                     send_push_notification(

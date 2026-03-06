@@ -292,8 +292,6 @@ class PasswordResetOTP(models.Model):
         return f"{self.user.email} - {self.otp}"
 
 
-# from django.db import models
-# from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
@@ -336,7 +334,7 @@ class Notification(models.Model):
         default="normal"
     )
 
-    # Generic relation (BEST PRACTICE)
+    # 🔹 Generic relation
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
@@ -354,13 +352,25 @@ class Notification(models.Model):
         "object_id"
     )
 
+    # 🔹 Dynamic metadata for universal UI
+    metadata = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Extra dynamic notification data"
+    )
+
     is_read = models.BooleanField(default=False)
+
+    read_at = models.DateTimeField(null=True, blank=True)
 
     is_archived = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    # 🔹 Soft delete support
+    is_deleted = models.BooleanField(default=False)
 
-    read_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -368,6 +378,7 @@ class Notification(models.Model):
         indexes = [
             models.Index(fields=["user", "is_read"]),
             models.Index(fields=["user", "created_at"]),
+            models.Index(fields=["user", "is_deleted"]),
         ]
 
     def __str__(self):
