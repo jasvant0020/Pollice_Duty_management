@@ -292,6 +292,12 @@ class PasswordResetOTP(models.Model):
         return f"{self.user.email} - {self.otp}"
 
 
+# from django.db import models
+# from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+
 class Notification(models.Model):
 
     NOTIFICATION_TYPES = (
@@ -301,13 +307,22 @@ class Notification(models.Model):
         ("system_alert", "System Alert"),
     )
 
+    PRIORITY_CHOICES = (
+        ("low", "Low"),
+        ("normal", "Normal"),
+        ("high", "High"),
+        ("critical", "Critical"),
+    )
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="notifications"
+        related_name="notifications",
+        db_index=True
     )
 
     title = models.CharField(max_length=255)
+
     message = models.TextField()
 
     notification_type = models.CharField(
@@ -315,18 +330,44 @@ class Notification(models.Model):
         choices=NOTIFICATION_TYPES
     )
 
-    # 🔗 Generic relation support (future proof)
-    related_object_id = models.IntegerField(null=True, blank=True)
-    related_model = models.CharField(max_length=100, null=True, blank=True)
+    priority = models.CharField(
+        max_length=10,
+        choices=PRIORITY_CHOICES,
+        default="normal"
+    )
+
+    # Generic relation (BEST PRACTICE)
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+
+    object_id = models.PositiveIntegerField(
+        null=True,
+        blank=True
+    )
+
+    related_object = GenericForeignKey(
+        "content_type",
+        "object_id"
+    )
 
     is_read = models.BooleanField(default=False)
 
+    is_archived = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(auto_now_add=True)
+
+    read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["-created_at"]
+
         indexes = [
             models.Index(fields=["user", "is_read"]),
+            models.Index(fields=["user", "created_at"]),
         ]
 
     def __str__(self):
