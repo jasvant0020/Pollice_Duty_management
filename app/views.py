@@ -17,7 +17,7 @@ from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashboard_data, get_admin_dashboard_data
 from app.utils import notification_service
 from django.db.models import Count
-from app.models import SecurityCategory
+from app.models import SecurityCategory,Notification
 from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY,require_reset_session
 from django.contrib.auth import update_session_auth_hash
 from .models import User, VVIPDuty
@@ -576,6 +576,25 @@ def munsi_assign_duty(request):
 
                         assigned_count += 1
                     
+                    from django.urls import reverse
+
+                    # 🔔 Create In-App Notification
+                    Notification.objects.create(
+                        user=staff,
+                        # sender=gd,
+                        title="New VVIP Duty Assigned",
+                        message=f"You have been assigned VVIP duty for {vvip.get_full_name()} at {duty_place}.",
+                        notification_type="duty_assigned",
+                        priority="high",
+                        metadata={
+                            "vvip_id": vvip.id,
+                            "vvip_name": vvip.get_full_name(),
+                            "duty_place": duty_place,
+                            "start_datetime": start_datetime.isoformat(),
+                            "end_datetime": end_datetime.isoformat(),
+                            "batch_id": str(batch_id)
+                        }
+                    )
                     
                     from django.urls import reverse
                     # 🔥 Firebase Push Notification
@@ -857,85 +876,88 @@ def munsi_field_staff_requests(request):
 
     return render(request, "GD_munsi_panel/munsi_field_staff_requests.html", context)
 
+
+from django.urls import reverse
 @role_required(["gd_munsi"])
 def munsi_approve_request(request, req_id):
-    req = get_object_or_404(FieldStaffRequest, id=req_id, staff__gd_munsi=request.user)
+
+    req = get_object_or_404(
+        FieldStaffRequest,
+        id=req_id,
+        staff__gd_munsi=request.user
+    )
 
     req.status = "approved"
     req.notified_at = timezone.now()
     req.save()
 
-    # channel_layer = get_channel_layer()
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        f"user_{req.staff.id}",   # group per user
-        {
-            "type": "send_status_update",
-            "data": {
-                "id": req.id,
-                "subject": req.subject,
-                "message": req.message,
-                "status": req.status,
-                "submitted_at": str(req.submitted_at),
-                "notified_at": str(req.notified_at),
-                "photo": req.staff.profile_photo.url,
-            }
+    # 🔔 Create In-App Notification
+    Notification.objects.create(
+        user=req.staff,
+        title="Request Approved",
+        message=f"Your request (request id: {req.id}) has been approved.",
+        notification_type="request_status",
+        priority="normal",
+        metadata={
+            # "request_id": req.id,
+            # "status": "approved",
+            "subject": req.subject,
+            "message": req.message
         }
     )
 
-    # Send Firebase push notification
+    # 🔥 Firebase Push Notification
     send_push_notification(
         id=req.id,
         user=req.staff,
         title="Request Approved",
         body=req.subject,
-        url=f"/staff/request/{req.id}/",
+        # url=reverse("staff_request_detail", args=[req.id]),
         notification_type="status"
     )
 
     return redirect("munsi_field_staff_requests")
 
+
 @role_required(["gd_munsi"])
 def munsi_reject_request(request, req_id):
-    req = get_object_or_404(FieldStaffRequest, id=req_id, staff__gd_munsi=request.user)
+
+    req = get_object_or_404(
+        FieldStaffRequest,
+        id=req_id,
+        staff__gd_munsi=request.user
+    )
 
     req.status = "rejected"
     req.notified_at = timezone.now()
     req.save()
 
-    # channel_layer = get_channel_layer()
-
-    channel_layer = get_channel_layer()
-
-    async_to_sync(channel_layer.group_send)(
-        f"user_{req.staff.id}",   # group per user
-        {
-            "type": "send_status_update",
-            "data": {
-                "id": req.id,
-                "subject": req.subject,
-                "message": req.message,
-                "status": req.status,
-                "submitted_at": str(req.submitted_at),
-                "notified_at": str(req.notified_at),
-                "photo": req.staff.profile_photo.url,
-            }
+    # 🔔 Create In-App Notification
+    Notification.objects.create(
+        user=req.staff,
+        title="Request Rejected",
+        message=f"Your request (request id: {req.id}) has been rejected.",
+        notification_type="request_status",
+        priority="high",
+        metadata={
+            # "request_id": req.id,
+            # "status": "rejected",
+            "subject": req.subject,
+            "message": req.message
         }
     )
 
+    # 🔥 Firebase Push Notification
     send_push_notification(
         id=req.id,
         user=req.staff,
         title="Request Rejected",
         body=req.subject,
-        url=f"/staff/request/{req.id}/",
+        # url=reverse("staff_request_detail", args=[req.id]),
         notification_type="status"
     )
 
     return redirect("munsi_field_staff_requests")
-
 
 
 #------ Custom Admin Panel Views ------
@@ -1302,15 +1324,26 @@ def duty_history(request):
 @role_required(["field_staff"])
 def user_Notifications(request):
 
-    notifications = FieldStaffRequest.objects.filter(
-        staff=request.user
-    ).order_by('-submitted_at')
+    user = request.user
 
-    notifications.update(is_notified=True)
+    notifications = (
+        Notification.objects
+        .filter(
+            user=user,
+            is_deleted=False
+        )
+        .order_by("-created_at")
+    )
 
-    return render(request, "user_panel/user_Notifications.html", {
+    context = {
         "notifications": notifications
-    })
+    }
+
+    return render(
+        request,
+        "user_panel/user_Notifications.html",
+        context
+    )
 
 
 

@@ -1,237 +1,265 @@
 {% extends "user_panel/user_base.html" %}
 {% block page_title %}Notifications{% endblock %}
+
 {% block content %}
 {% include "error_message/error_message.html" %}
 {% load static %}
 
-<div x-data="notificationManager()" x-init="init()">
-<div class="max-w-6xl mx-auto px-6 py-8">
+<div x-data="notificationManager()" x-init="init()" class="relative">
 
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">
-        My Notifications new
-    </h2>
+    <div class="max-w-6xl mx-auto px-6 py-8">
 
-    <div id="liveNotifications">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            🔔 My Notifications
+        </h2>
 
-    <div class="space-y-4">
+        <!-- ================= CARD GRID ================= -->
 
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
-        <!-- 🔥 LIVE REALTIME NOTIFICATIONS (INSERT HERE) -->
-        <template x-for="note in notifications" :key="note.id">
-            <div x-data="{ open: false }"
-                 :class="
-                        note.status === 'approved' ? 'border-green-500' :
-                        note.status === 'rejected' ? 'border-red-500' :
-                        note.status === 'assigned' ? 'border-blue-500' :
-                        'border-yellow-500'
-                    "
-                 class="bg-white rounded-xl shadow border-l-4">
+            <!-- REALTIME CARDS -->
+            <template x-for="note in notifications" :key="note.id">
 
-                <!-- HEADER -->
-                <div @click="open = !open"
-                     class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
+                <div
+                    x-on:click="openNotification(note)"
+                    class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5"
+                    :class="priorityColor(note.priority)"
+                >
 
-                    <div class="flex items-center space-x-4">
-                        <img :src="note.photo"
-                             class="w-12 h-12 rounded-full object-cover">
+                    <div class="flex items-start gap-4">
 
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">
-                                <template x-if="note.status === 'assigned'">
-                                    <span class="text-blue-600">You have been ASSIGNED new duty</span>
-                                </template>
+                        <!-- ICON -->
+                        <div
+                            class="w-12 h-12 flex items-center justify-center rounded-full text-xl"
+                            :class="iconColor(note.notification_type)"
+                        >
+                            <span x-text="icon(note.notification_type)"></span>
+                        </div>
 
-                                <template x-if="note.status !== 'assigned'">
-                                    <span>
-                                        Your request has been 
-                                        <span x-text="note.status.toUpperCase()"
-                                            :class="note.status === 'approved' ? 'text-green-600' :
-                                                    note.status === 'rejected' ? 'text-red-600' :
-                                                    'text-yellow-600'">
-                                        </span>
-                                    </span>
-                                </template>
-                            </p>
+                        <div class="flex-1">
 
-                            <p class="text-xs text-gray-500"
-                               x-text="note.notified_at">
-                            </p>
+                            <p
+                                class="font-semibold text-gray-800 line-clamp-1"
+                                x-text="note.title"
+                            ></p>
 
-                            <p class="text-xs text-gray-500">
-                                Request id:
-                                <span class="text-xs text-gray-500" x-text="note.id"></span>
-                            </p>
+                            <p
+                                class="text-sm text-gray-500 line-clamp-2 mt-1"
+                                x-text="note.message"
+                            ></p>
+
+                            <p
+                                class="text-xs text-gray-400 mt-2"
+                                x-text="note.created_at"
+                            ></p>
 
                         </div>
+
                     </div>
 
-                    <svg :class="open ? 'rotate-180' : ''"
-                         class="w-5 h-5 text-gray-500 transition-transform"
-                         fill="none" stroke="currentColor" stroke-width="2"
-                         viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                              d="M19 9l-7 7-7-7"/>
-                    </svg>
                 </div>
 
-                <!-- DETAILS -->
-                <div x-show="open"
-                     x-transition
-                     class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
+            </template>
 
-                    <div><strong>Request ID:</strong> <span x-text="note.id"></span></div>
+            <!-- SERVER CARDS -->
 
-                    <div>
-                        <strong>Subject Submitted:</strong>
-                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
-                             x-text="note.subject"></div>
+            {% for note in notifications %}
+
+            <div
+                x-on:click="openNotification({
+                    id:'{{ note.id }}',
+                    title:'{{ note.title|escapejs }}',
+                    message:'{{ note.message|escapejs }}',
+                    notification_type:'{{ note.notification_type }}',
+                    priority:'{{ note.priority }}',
+                    metadata: {{ note.metadata|default:"{}"|safe }},
+                    created_at:'{{ note.created_at|date:"d M Y h:i A" }}'
+                })"
+                class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5
+
+                {% if note.priority == 'critical' %}
+                    border-red-600
+                {% elif note.priority == 'high' %}
+                    border-orange-500
+                {% elif note.priority == 'normal' %}
+                    border-blue-500
+                {% else %}
+                    border-green-500
+                {% endif %}
+                "
+            >
+
+                <div class="flex items-start gap-4">
+
+                    <div
+                        class="w-12 h-12 flex items-center justify-center rounded-full text-xl
+
+                        {% if note.notification_type == 'duty_assigned' %}
+                            bg-blue-100 text-blue-600
+                        {% elif note.notification_type == 'duty_ended' %}
+                            bg-green-100 text-green-600
+                        {% elif note.notification_type == 'system_alert' %}
+                            bg-red-100 text-red-600
+                        {% else %}
+                            bg-gray-100 text-gray-600
+                        {% endif %}
+                        "
+                    >
+
+                        {% if note.notification_type == "duty_assigned" %}
+                            📌
+                        {% elif note.notification_type == "duty_ended" %}
+                            ✅
+                        {% elif note.notification_type == "system_alert" %}
+                            ⚠️
+                        {% else %}
+                            🔔
+                        {% endif %}
+
                     </div>
 
-                    <div>
-                        <strong>Reason Submitted:</strong>
-                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
-                             x-text="note.message"></div>
-                    </div>
+                    <div class="flex-1">
 
-                    <div>
-                        <strong>Submitted On:</strong>
-                        <div class="bg-white p-3 rounded-lg shadow-sm mt-1"
-                             x-text="note.submitted_at"></div>
-                    </div>
-
-                    <div>
-                        <strong>Status:</strong>
-                        <span x-text="note.status"
-                              :class="note.status === 'approved' ? 'text-green-600 font-semibold' :
-                                      note.status === 'rejected' ? 'text-red-600 font-semibold' :
-                                      'text-yellow-600 font-semibold'">
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </template>
-
-        {% for note in notifications %}
-        <div x-data="{ open: false }"
-             class="bg-white rounded-xl shadow border-l-4 
-             {% if note.status == 'approved' %}
-                border-green-500
-            {% elif note.status == 'rejected' %}
-                border-red-500
-            {% elif note.status == 'assigned' %}
-                border-blue-500
-            {% else %}
-                border-yellow-500
-            {% endif %}">
-
-            <!-- HEADER ROW -->
-            <div @click="open = !open"
-                 class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
-
-                <div class="flex items-center space-x-4">
-                    <img src="{{ note.staff.profile_photo.url }}"
-                         class="w-12 h-12 rounded-full object-cover">
-
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800">
-                                {% if note.status == 'assigned' %}
-                                    <span class="text-blue-600">You have been ASSIGNED new duty</span>
-                                {% else %}
-                                    Your request has been
-                                {% endif %} 
-                            {% if note.status == 'approved' %}
-                                <span class="text-green-600">APPROVED</span>
-                            {% elif note.status == 'rejected' %}
-                                <span class="text-red-600">REJECTED</span>
-                            {% elif note.status == 'assigned' %}
-                                <span class="text-blue-600 font-semibold">Assigned</span>
-                            {% else %}
-                                <span class="text-yellow-600">PENDING</span>
-                            {% endif %}
-
-                        </p>
-
-                        <p class="text-xs text-gray-500">
-                            {{ note.notified_at|date:"d M Y h:i A" }}
-                        </p>
-                        <p class="text-xs text-gray-500">
-                            Request id:
+                        <p class="font-semibold text-gray-800 line-clamp-1">
                             {{ note.id }}
                         </p>
+
+                        <p class="text-sm text-gray-500 line-clamp-2 mt-1">
+                            {{ note.message }}
+                        </p>
+
+                        <p class="text-xs text-gray-400 mt-2">
+                            {{ note.created_at|date:"d M Y h:i A" }}
+                        </p>
+
                     </div>
-                </div>
-
-                <!-- Arrow -->
-                <svg :class="open ? 'rotate-180' : ''"
-                     class="w-5 h-5 text-gray-500 transition-transform"
-                     fill="none" stroke="currentColor" stroke-width="2"
-                     viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M19 9l-7 7-7-7"/>
-                </svg>
-            </div>
-
-            <!-- EXPANDABLE DETAILS -->
-            <div x-show="open"
-                 x-transition
-                 class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
-
-                <div>
-                    <strong>Request ID:</strong>
-                    {{ note.id }}
-                </div>
-
-                <div>
-                    <strong>Subject Submitted:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        {{ note.subject }}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Reason Submitted:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        {{ note.message }}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Submitted On:</strong>
-                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
-                        {{ note.submitted_at }}
-                    </div>
-                </div>
-
-                <div>
-                    <strong>Status:</strong>
-                    {% if note.status == 'approved' %}
-                        <span class="text-green-600 font-semibold">Approved</span>
-                    {% elif note.status == 'rejected' %}
-                        <span class="text-red-600 font-semibold">Rejected</span>
-                    {% else %}
-                        <span class="text-yellow-600 font-semibold">Pending</span>
-                    {% endif %}
 
                 </div>
 
             </div>
+
+            {% endfor %}
+
         </div>
 
-        {% empty %}
-        <p class="text-gray-500">No notifications yet.</p>
-        {% endfor %}
-
     </div>
+
+    <!-- ================= OVERLAY MODAL ================= -->
+
+    <div
+        x-show="selectedNotification"
+        x-transition
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
+
+        <div
+            x-on:click.outside="selectedNotification=null"
+            class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl"
+        >
+
+            <!-- HEADER -->
+
+            <div class="flex justify-between items-center mb-4">
+
+                <h3
+                    class="text-lg font-bold text-gray-800"
+                    x-text="selectedNotification.title"
+                ></h3>
+
+                <button
+                    x-on:click="selectedNotification=null"
+                    class="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            <!-- BODY -->
+
+            <div class="space-y-4 text-sm text-gray-700">
+
+                <div>
+                    <strong>Message</strong>
+
+                    <div
+                        class="bg-gray-50 rounded-lg p-3 mt-1"
+                        x-text="selectedNotification.message"
+                    ></div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <div>
+                        <strong>Type</strong>
+                        <p x-text="selectedNotification.notification_type"></p>
+                    </div>
+
+                    <div>
+                        <strong>Priority</strong>
+                        <p x-text="selectedNotification.priority"></p>
+                    </div>
+
+                </div>
+
+                <div>
+                    <strong>Created At</strong>
+                    <p x-text="selectedNotification.created_at"></p>
+                </div>
+
+                <template x-if="selectedNotification.metadata">
+
+                    <div>
+                        <strong class="block mb-2">Additional Info</strong>
+
+                        <div class="bg-gray-50 rounded-lg p-3 space-y-3 text-sm">
+
+                            <template
+                                x-for="[key, value] in Object.entries(selectedNotification.metadata)"
+                                :key="key"
+                            >
+
+                                <div class="border-b pb-2 last:border-none">
+
+                                    <div
+                                        class="font-semibold text-gray-600 capitalize"
+                                        x-text="key.replace(/_/g,' ')"
+                                    ></div>
+
+                                    <div
+                                        class="text-gray-800 wrap-break-word whitespace-pre-wrap"
+                                        x-text="value"
+                                    ></div>
+
+                                </div>
+
+                            </template>
+
+                        </div>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+        </div>
+
     </div>
 
 </div>
-</div>
+
 <script>
-function notificationManager() {
-    return {
-        notifications: [],
 
-        init() {
+function notificationManager(){
+
+    return{
+
+        notifications: [],
+        selectedNotification: null,
+
+        init(){
+
             const socket = new WebSocket(
                 (window.location.protocol === "https:" ? "wss://" : "ws://")
                 + window.location.host
@@ -239,42 +267,82 @@ function notificationManager() {
             );
 
             socket.onmessage = (e) => {
+
                 const response = JSON.parse(e.data);
 
-                if (response.type === "status_update") {
+                if(response.type === "new_notification"){
 
-                    const data = response.data;
+                    const n = response.data;
 
-                    const formatted = {
-                        id: data.id,
-                        subject: data.subject,
-                        message: data.message,
-                        status: data.status,
-                        submitted_at: this.formatDate(data.submitted_at),
-                        notified_at: this.formatDate(data.notified_at),
-                        photo: data.photo
-                    };
+                    this.notifications.unshift({
+                        id: n.id,
+                        title: n.title,
+                        message: n.message,
+                        notification_type: n.notification_type,
+                        priority: n.priority,
+                        metadata: n.metadata,
+                        created_at: this.formatDate(n.created_at)
+                    });
 
-                    this.notifications.unshift(formatted);
                 }
+
             };
+
         },
 
+        openNotification(note){
+            this.selectedNotification = note;
+        },
 
-        formatDate(dateString) {
+        formatDate(dateString){
+
             const date = new Date(dateString);
 
-            return date.toLocaleString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true
+            return date.toLocaleString("en-US",{
+                year:"numeric",
+                month:"short",
+                day:"numeric",
+                hour:"numeric",
+                minute:"2-digit",
+                hour12:true
             });
+
+        },
+
+        priorityColor(priority){
+
+            if(priority==="critical") return "border-red-600";
+            if(priority==="high") return "border-orange-500";
+            if(priority==="normal") return "border-blue-500";
+
+            return "border-gray-400";
+
+        },
+
+        icon(type){
+
+            if(type==="duty_assigned") return "📌";
+            if(type==="duty_ended") return "✅";
+            if(type==="system_alert") return "⚠️";
+
+            return "🔔";
+
+        },
+
+        iconColor(type){
+
+            if(type==="duty_assigned") return "bg-blue-100 text-blue-600";
+            if(type==="duty_ended") return "bg-green-100 text-green-600";
+            if(type==="system_alert") return "bg-red-100 text-red-600";
+
+            return "bg-gray-100 text-gray-600";
+
         }
+
     }
+
 }
+
 </script>
 
 {% endblock %}
