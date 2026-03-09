@@ -1955,6 +1955,9 @@ def delete_security_category(request, category_id):
 
 
 
+
+
+
 #------- centrtelize notification views ------------
 
 @login_required
@@ -2005,6 +2008,7 @@ def archive_notification(request, notification_id):
 
     return redirect("user_notifications")
 
+
 @login_required
 def delete_notification(request, notification_id):
 
@@ -2016,9 +2020,9 @@ def delete_notification(request, notification_id):
 
     notification.is_deleted = True
     notification.deleted_at = timezone.now()
-    notification.save(update_fields=["is_deleted", "deleted_at"])
+    notification.save(update_fields=["is_deleted","deleted_at"])
 
-    return redirect("user_notifications")
+    return JsonResponse({"status":"deleted"})
 
 
 

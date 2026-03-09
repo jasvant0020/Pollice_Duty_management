@@ -4,12 +4,14 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 {% load static %}
+
 <form style="display:none">
     {% csrf_token %}
 </form>
+
 <div x-data="notificationManager()" x-init="init()" class="relative">
 
-    <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
         <h2 class="text-2xl font-bold text-gray-800 mb-6">
             🔔 My Notifications
@@ -17,29 +19,32 @@
 
         <!-- ================= CARD GRID ================= -->
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
             <!-- REALTIME CARDS -->
+
             <template x-for="note in notifications" :key="note.id">
 
                 <div
-                    x-on:click="openNotification(note)"
+                    @click="openNotification(note)"
                     class="relative bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5"
                     :class="[priorityColor(note.priority), note.is_read ? 'opacity-70' : 'border-pink-600']"
                 >
 
-                    <!-- 🔴 UNREAD BADGE -->
+                    <!-- Unread Badge -->
+
                     <span
                         x-show="!note.is_read"
                         class="absolute top-2 right-2 flex h-3 w-3"
                     >
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
                     </span>
 
-                    <div class="flex items-start gap-4 relative">
+                    <div class="flex items-start gap-4">
 
                         <!-- ICON -->
+
                         <div
                             class="w-12 h-12 flex items-center justify-center rounded-full text-xl"
                             :class="iconColor(note.notification_type)"
@@ -49,20 +54,14 @@
 
                         <div class="flex-1">
 
-                            <p
-                                class="font-semibold text-gray-800 line-clamp-1"
-                                x-text="note.title"
-                            ></p>
+                            <p class="font-semibold text-gray-800 line-clamp-1"
+                               x-text="note.title"></p>
 
-                            <p
-                                class="text-sm text-gray-500 line-clamp-2 mt-1"
-                                x-text="note.message"
-                            ></p>
+                            <p class="text-sm text-gray-500 line-clamp-2 mt-1"
+                               x-text="note.message"></p>
 
-                            <p
-                                class="text-xs text-gray-400 mt-2"
-                                x-text="note.created_at"
-                            ></p>
+                            <p class="text-xs text-gray-400 mt-2"
+                               x-text="note.created_at"></p>
 
                         </div>
 
@@ -72,13 +71,13 @@
 
             </template>
 
-            <!-- SERVER CARDS -->
+
+            <!-- SERVER RENDERED CARDS -->
 
             {% for note in notifications %}
 
             <div
-                x-on:click="
-                    openNotification({
+                @click="openNotification({
                     id:'{{ note.id }}',
                     title:'{{ note.title|escapejs }}',
                     message:'{{ note.message|escapejs }}',
@@ -88,24 +87,32 @@
                     metadata: {{ note.metadata|default:"{}"|safe }},
                     created_at:'{{ note.created_at|date:"d M Y h:i A" }}'
                 })"
-                class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5
 
-                {% if note.priority == 'critical' %}
-                    border-red-600
-                {% elif note.priority == 'high' %}
-                    border-orange-500
-                {% elif note.priority == 'normal' %}
-                    border-blue-500
-                {% else %}
+                class="relative bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5
+
+                {% if note.is_read %}
                     border-green-500
+                {% else %}
+                    border-red-500
                 {% endif %}
                 "
             >
 
-                <div class="flex items-start gap-4 relative">
+                <!-- Unread Badge -->
+
+                {% if not note.is_read %}
+                <span class="absolute top-2 right-2 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                {% endif %}
+
+                <div class="flex items-start gap-4">
+
+                    <!-- ICON -->
 
                     <div
-                        class="w-12 h-12 flex items-center justify-center rounded-full text-xl
+                        class="w-12 h-12 flex items-center justify-center rounded-full text-2xl font-semibold
 
                         {% if note.notification_type == 'duty_assigned' %}
                             bg-blue-100 text-blue-600
@@ -118,24 +125,15 @@
                         {% endif %}
                         "
                     >
-                        <span
-                            {% if not note.is_read %}
-                            class="absolute top-2 right-2 flex h-3 w-3"
-                            {% else %}
-                            class="hidden"
-                            {% endif %}
-                        >
-                            <span class="relative inline-flex rounded-full h-3 w-3 font-semibold text-red-600 animate-bounce">🕭</span>
-                        </span>
 
                         {% if note.notification_type == "duty_assigned" %}
-                            📌
+                            🕭
                         {% elif note.notification_type == "duty_ended" %}
-                            ✅
+                            🕭
                         {% elif note.notification_type == "system_alert" %}
-                            ⚠️
+                            🕭
                         {% else %}
-                            🔔
+                            🕭
                         {% endif %}
 
                     </div>
@@ -166,110 +164,133 @@
 
     </div>
 
-    <!-- ================= OVERLAY MODAL ================= -->
+
+    <!-- ================= RESPONSIVE MODAL ================= -->
+
+<div
+    x-show="selectedNotification"
+    x-transition
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+>
+
+    <!-- MODAL CONTAINER -->
 
     <div
-        x-show="selectedNotification"
-        x-transition
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        @click.outside="selectedNotification=null"
+        class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-xl"
     >
 
-        <div
-            x-on:click.outside="selectedNotification=null"
-            class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl"
-        >
+        <!-- HEADER -->
 
-            <!-- HEADER -->
+        <div class="flex justify-between items-center p-5 border-b">
 
-            <div class="flex justify-between items-center mb-4">
+            <h3
+                class="text-lg sm:text-xl font-bold text-gray-800"
+                x-text="selectedNotification.title"
+            ></h3>
 
-                <h3
-                    class="text-lg font-bold text-gray-800"
-                    x-text="selectedNotification.title"
-                ></h3>
+            <button
+                @click="selectedNotification=null"
+                class="text-gray-500 hover:text-gray-700 text-xl"
+            >
+                ✕
+            </button>
 
-                <button
-                    x-on:click="selectedNotification=null"
-                    class="text-gray-500 hover:text-gray-700 text-xl"
-                >
-                    ✕
-                </button>
+        </div>
 
+
+        <!-- BODY (SCROLLABLE) -->
+
+        <div class="p-5 space-y-4 text-sm text-gray-700 overflow-y-auto">
+
+            <div>
+                <strong>Message</strong>
+
+                <div
+                    class="bg-gray-50 rounded-lg p-3 mt-1 wrap-break-word whitespace-pre-wrap"
+                    x-text="selectedNotification.message"
+                ></div>
             </div>
 
-            <!-- BODY -->
-
-            <div class="space-y-4 text-sm text-gray-700">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 <div>
-                    <strong>Message</strong>
-
-                    <div
-                        class="bg-gray-50 rounded-lg p-3 mt-1"
-                        x-text="selectedNotification.message"
-                    ></div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-
-                    <div>
-                        <strong>Type</strong>
-                        <p x-text="selectedNotification.notification_type"></p>
-                    </div>
-
-                    <div>
-                        <strong>Priority</strong>
-                        <p x-text="selectedNotification.priority"></p>
-                    </div>
-
+                    <strong>Type</strong>
+                    <p x-text="selectedNotification.notification_type"></p>
                 </div>
 
                 <div>
-                    <strong>Created At</strong>
-                    <p x-text="selectedNotification.created_at"></p>
+                    <strong>Priority</strong>
+                    <p x-text="selectedNotification.priority"></p>
                 </div>
 
-                <template x-if="selectedNotification.metadata">
+            </div>
 
-                    <div>
-                        <strong class="block mb-2">Additional Info</strong>
+            <div>
+                <strong>Created At</strong>
+                <p x-text="selectedNotification.created_at"></p>
+            </div>
 
-                        <div class="bg-gray-50 rounded-lg p-3 space-y-3 text-sm">
 
-                            <template
-                                x-for="[key, value] in Object.entries(selectedNotification.metadata)"
-                                :key="key"
-                            >
+            <!-- METADATA -->
 
-                                <div class="border-b pb-2 last:border-none">
+            <template x-if="selectedNotification.metadata">
 
-                                    <div
-                                        class="font-semibold text-gray-600 capitalize"
-                                        x-text="key.replace(/_/g,' ')"
-                                    ></div>
+                <div>
 
-                                    <div
-                                        class="text-gray-800 wrap-break-word whitespace-pre-wrap"
-                                        x-text="value"
-                                    ></div>
+                    <strong class="block mb-2">Additional Info</strong>
 
-                                </div>
+                    <div class="bg-gray-50 rounded-lg p-3 space-y-3 text-sm">
 
-                            </template>
+                        <template
+                            x-for="[key,value] in Object.entries(selectedNotification.metadata)"
+                            :key="key"
+                        >
 
-                        </div>
+                            <div class="border-b pb-2 last:border-none">
+
+                                <div
+                                    class="font-semibold text-gray-600 capitalize"
+                                    x-text="key.replace(/_/g,' ')"
+                                ></div>
+
+                                <div
+                                    class="text-gray-800 wrap-break-word whitespace-pre-wrap"
+                                    x-text="value"
+                                ></div>
+
+                            </div>
+
+                        </template>
 
                     </div>
 
-                </template>
+                </div>
 
-            </div>
+            </template>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="flex justify-end gap-3 p-5 border-t">
+
+            <button
+                @click="deleteNotification(selectedNotification)"
+                class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+            >
+                🗑 Delete
+            </button>
 
         </div>
 
     </div>
 
 </div>
+
+</div>
+
 
 <script>
 
@@ -288,25 +309,25 @@ function notificationManager(){
                 + "/ws/notifications/"
             );
 
-            socket.onmessage = (e) => {
+            socket.onmessage = (e)=>{
 
                 const response = JSON.parse(e.data);
 
-                if(response.type === "new_notification"){
+                if(response.type==="new_notification"){
 
                     const n = response.data;
 
                     this.notifications.unshift({
-                        id: n.id,
-                        title: n.title,
-                        message: n.message,
-                        notification_type: n.notification_type,
-                        priority: n.priority,
-                        is_read: false,
-                        metadata: typeof n.metadata === "string"
+                        id:n.id,
+                        title:n.title,
+                        message:n.message,
+                        notification_type:n.notification_type,
+                        priority:n.priority,
+                        is_read:false,
+                        metadata: typeof n.metadata==="string"
                             ? JSON.parse(n.metadata)
                             : n.metadata,
-                        created_at: this.formatDate(n.created_at)
+                        created_at:this.formatDate(n.created_at)
                     });
 
                 }
@@ -319,12 +340,12 @@ function notificationManager(){
 
             this.selectedNotification = note;
 
-            note.is_read = true;   // remove badge instantly
+            note.is_read = true;
 
             fetch(`/mark_notification_read/${note.id}/`,{
                 method:"POST",
                 headers:{
-                    "X-CSRFToken": this.getCSRFToken(),
+                    "X-CSRFToken":this.getCSRFToken(),
                     "Content-Type":"application/json"
                 }
             });
@@ -375,9 +396,30 @@ function notificationManager(){
             return "bg-gray-100 text-gray-600";
 
         },
+
         getCSRFToken(){
 
             return document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        },
+
+        deleteNotification(note){
+
+            fetch(`/delete_notification/${note.id}/`,{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications =
+                    this.notifications.filter(n=>n.id!==note.id);
+
+                this.selectedNotification=null;
+
+            });
 
         }
 

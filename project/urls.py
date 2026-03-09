@@ -83,6 +83,7 @@ urlpatterns = [
 
     #centrelize notification url
     path("mark_notification_read/<int:notification_id>/",views.mark_notification_read,name="mark_notification_read"),
+    path("delete_notification/<int:notification_id>/",views.delete_notification,name="delete_notification"),
 
     # Firebase push notification
     path("save-fcm-token/", views.save_fcm_token, name="save_fcm_token"),
