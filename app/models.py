@@ -210,26 +210,59 @@ class VVIPDuty(models.Model):
 
     def __str__(self):
         return f"{self.vvip} → {self.field_staff} ({self.category})"
-    
+
+from django.db.models import Max    
 class FieldStaffRequest(models.Model):
-        STATUS_CHOICES = (
-            ('pending', 'Pending'),
-            ('approved', 'Approved'),
-            ('rejected', 'Rejected'),
-        )
 
-        staff = models.ForeignKey(User, on_delete=models.CASCADE, related_name='requests')
-        subject = models.CharField(max_length=255)
-        message = models.TextField()
-        submitted_at = models.DateTimeField(auto_now_add=True)
-        status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
 
-        is_notified = models.BooleanField(default=False)
-        notified_at = models.DateTimeField(null=True, blank=True)
+    staff = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='requests'
+    )
 
-        def __str__(self):
-            return f"{self.subject} ({self.staff.username})"
-        
+    # USER BASED REQUEST NUMBER
+    request_number = models.PositiveIntegerField(null=True, blank=True,editable=False)
+
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+
+    is_notified = models.BooleanField(default=False)
+    notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('staff', 'request_number')
+        ordering = ['-submitted_at']
+
+    def save(self, *args, **kwargs):
+
+        if not self.request_number:
+
+            last_request = FieldStaffRequest.objects.filter(
+                staff=self.staff
+            ).aggregate(Max('request_number'))
+
+            last_number = last_request['request_number__max'] or 0
+
+            self.request_number = last_number + 1
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Request {self.request_number} - {self.staff.username}"
 
 class FCMToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fcm_tokens")

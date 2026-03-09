@@ -968,7 +968,7 @@ def munsi_approve_request(request, req_id):
     Notification.objects.create(
         user=req.staff,
         title="Request Approved",
-        message=f"Your request (request id: {req.id}) has been approved.",
+        message=f"Your request (request id: {req.request_number }) has been approved.",
         notification_type="request_status",
         priority="normal",
         metadata = {
@@ -978,7 +978,7 @@ def munsi_approve_request(request, req_id):
 
     # 🔥 Firebase Push Notification
     send_push_notification(
-        id=req.id,
+        id=req.request_number ,
         user=req.staff,
         title="Request Approved",
         body=req.subject,
@@ -1006,7 +1006,7 @@ def munsi_reject_request(request, req_id):
     Notification.objects.create(
         user=req.staff,
         title="Request Rejected",
-        message=f"Your request (request id: {req.id}) has been rejected.",
+        message=f"Your request (request id: {req.request_number }) has been rejected.",
         notification_type="request_status",
         priority="high",
         metadata = {
@@ -1016,7 +1016,7 @@ def munsi_reject_request(request, req_id):
 
     # 🔥 Firebase Push Notification
     send_push_notification(
-        id=req.id,
+        id=req.request_number ,
         user=req.staff,
         title="Request Rejected",
         body=req.subject,
