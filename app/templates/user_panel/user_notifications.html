@@ -66,7 +66,8 @@
             {% for note in notifications %}
 
             <div
-                x-on:click="openNotification({
+                x-on:click="
+                    openNotification({
                     id:'{{ note.id }}',
                     title:'{{ note.title|escapejs }}',
                     message:'{{ note.message|escapejs }}',
@@ -121,7 +122,7 @@
                     <div class="flex-1">
 
                         <p class="font-semibold text-gray-800 line-clamp-1">
-                            {{ note.id }}
+                            {{ note.title }}
                         </p>
 
                         <p class="text-sm text-gray-500 line-clamp-2 mt-1">
@@ -280,7 +281,9 @@ function notificationManager(){
                         message: n.message,
                         notification_type: n.notification_type,
                         priority: n.priority,
-                        metadata: n.metadata,
+                        metadata: typeof n.metadata === "string"
+                            ? JSON.parse(n.metadata)
+                            : n.metadata,
                         created_at: this.formatDate(n.created_at)
                     });
 

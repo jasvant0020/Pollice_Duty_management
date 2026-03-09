@@ -587,7 +587,7 @@ def munsi_assign_duty(request):
                         notification_type="duty_assigned",
                         priority="high",
                         metadata={
-                            "vvip_id": vvip.id,
+                            # "vvip_id": vvip.id,
                             "vvip_name": vvip.get_full_name(),
                             "duty_place": duty_place,
                             "start_datetime": start_datetime.isoformat(),
@@ -626,6 +626,8 @@ def munsi_assign_duty(request):
         "vvips": vvips,
         "categories": categories
     })
+
+
 
 @role_required(["gd_munsi"])
 def munsi_dashboard(request):
@@ -699,17 +701,24 @@ def munsi_deactivate_duty(request, duty_id):
             return redirect("munsi_active_duty")
 
         try:
+
             duty = VVIPDuty.objects.get(
                 id=duty_id,
                 assigned_by=gd,
                 is_active=True
             )
 
-            VVIPDuty.objects.filter(
+            duties = VVIPDuty.objects.filter(
                 batch_id=duty.batch_id,
                 assigned_by=gd,
                 is_active=True
-            ).update(
+            )
+
+            # ✅ Evaluate staff BEFORE update
+            staff_users = [d.field_staff for d in duties.select_related("field_staff")]
+
+            # 🔹 End batch duties
+            duties.update(
                 is_active=False,
                 end_reason=reason,
                 ended_by=gd,
@@ -717,11 +726,40 @@ def munsi_deactivate_duty(request, duty_id):
                 end_datetime=timezone.now()
             )
 
+            # 🔔 Send notifications
+            for staff in staff_users:
+
+                Notification.objects.create(
+                    user=staff,
+                    title="VVIP Duty Ended",
+                    message=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
+                    notification_type="duty_ended",
+                    priority="high",
+                    metadata={
+                        "vvip_name": duty.vvip.get_full_name(),
+                        "batch_id": str(duty.batch_id),
+                        "reason": reason
+                    }
+                )
+
+                # 🔥 Firebase push
+                try:
+                    send_push_notification(
+                        user=staff,
+                        title="Duty Ended",
+                        body=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
+                        id=str(duty.batch_id),
+                        url=reverse("user_assign_duty"),
+                        sender=gd,
+                        notification_type="duty"
+                    )
+                except Exception as e:
+                    print("Push notification error:", e)
+
             messages.success(request, "Duty batch ended successfully!")
 
         except VVIPDuty.DoesNotExist:
             messages.error(request, "Duty not found or already inactive.")
-
 
     return redirect("munsi_active_duty")
 
@@ -764,19 +802,54 @@ def munsi_end_vvip_duty(request, batch_id):
         )
 
         if duties.exists():
+
+            # ✅ Evaluate staff BEFORE update
+            staff_users = [d.field_staff for d in duties.select_related("field_staff")]
+
+            # 🔹 End all duties in batch
             duties.update(
                 is_active=False,
                 end_reason=reason,
                 ended_by=gd,
                 ended_at=timezone.now(),
+                end_datetime=timezone.now()
             )
+
+            # 🔔 Send notifications
+            for staff in staff_users:
+
+                Notification.objects.create(
+                    user=staff,
+                    title="VVIP Duty Ended",
+                    message="Your VVIP duty has been ended.",
+                    notification_type="duty_ended",
+                    priority="high",
+                    metadata={
+                        "batch_id": str(batch_id),
+                        "reason": reason
+                    }
+                )
+
+                # 🔥 Firebase push
+                try:
+                    send_push_notification(
+                        user=staff,
+                        title="Duty Ended",
+                        body="Your VVIP duty has been ended.",
+                        id=str(batch_id),
+                        url=reverse("user_assign_duty"),
+                        sender=gd,
+                        notification_type="duty"
+                    )
+                except Exception as e:
+                    print("Push notification error:", e)
+
             messages.success(request, "Duty batch ended successfully.")
+
         else:
             messages.warning(request, "No active duties found.")
 
-
     return redirect("munsi_active_duty")
-
 
 
 @role_required(["gd_munsi"])
@@ -898,11 +971,8 @@ def munsi_approve_request(request, req_id):
         message=f"Your request (request id: {req.id}) has been approved.",
         notification_type="request_status",
         priority="normal",
-        metadata={
-            # "request_id": req.id,
-            # "status": "approved",
-            "subject": req.subject,
-            "message": req.message
+        metadata = {
+            "note": "For more details visit Request History"
         }
     )
 
@@ -939,11 +1009,8 @@ def munsi_reject_request(request, req_id):
         message=f"Your request (request id: {req.id}) has been rejected.",
         notification_type="request_status",
         priority="high",
-        metadata={
-            # "request_id": req.id,
-            # "status": "rejected",
-            "subject": req.subject,
-            "message": req.message
+        metadata = {
+            "note": "For more details visit Request History"
         }
     )
 

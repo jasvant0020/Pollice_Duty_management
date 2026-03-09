@@ -194,54 +194,73 @@
     <!-- ================= MODAL OVERLAY ================= -->
 
     <div x-show="showModal"
-         x-transition
-         class="fixed inset-0 bg-black/40 backdrop-blur-xs bg-opacity-50 flex items-center justify-center z-50">
+        x-transition
+        class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6">
 
         <div @click.outside="closeModal()"
-             class="bg-white w-full max-w-md mx-4 sm:mx-0 rounded-2xl shadow-2xl p-4 sm:p-6 relative">
+            class="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative
+                    max-h-[90vh] flex flex-col">
 
             <!-- Close Button -->
             <button @click="closeModal()"
-                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
+                    class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-lg">
                 ✕
             </button>
 
-            <!-- Staff Image -->
-            <div class="text-center">
-                <img :src="modalData.image"
-                     class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-indigo-500">
-                <h3 class="mt-4 text-xl font-bold text-gray-800"
-                    x-text="modalData.name"></h3>
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto p-5 sm:p-6">
+
+                <!-- Staff Image -->
+                <div class="text-center">
+                    <img :src="modalData.image"
+                        class="w-24 h-24 rounded-full mx-auto object-cover border-4 border-indigo-500">
+
+                    <h3 class="mt-4 text-xl font-bold text-gray-800"
+                        x-text="modalData.name"></h3>
+                </div>
+
+                <!-- Details -->
+                <div class="mt-6 space-y-4 text-sm text-gray-700 wrap-break-word">
+
+                    <div>
+                        <p class="font-semibold text-gray-600">Request ID</p>
+                        <p x-text="modalData.id"
+                        class="bg-gray-100 p-3 rounded-lg"></p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-gray-600">Subject</p>
+                        <p x-text="modalData.subject"
+                        class="bg-gray-100 p-3 rounded-lg"></p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-gray-600">Message</p>
+                        <p x-text="modalData.message"
+                        class="bg-gray-100 p-3 rounded-lg whitespace-pre-wrap"></p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-gray-600">Submitted On</p>
+                        <p x-text="modalData.date"></p>
+                    </div>
+
+                </div>
             </div>
 
-            <!-- Details -->
-            <div class="mt-6 space-y-3 text-sm text-gray-700">
+            <!-- Sticky Actions -->
+            <div class="border-t p-4 flex justify-between bg-white rounded-b-2xl">
 
-                <p><strong>Request id:</strong></p>
-                <p x-text="modalData.id" class="bg-gray-100 p-3 rounded-lg"></p>
-
-                <p><strong>subject:</strong></p>
-                <p x-text="modalData.subject" class="bg-gray-100 p-3 rounded-lg"></p>
-
-                <p><strong>message:</strong></p>
-                <p x-text="modalData.message" class="bg-gray-100 p-3 rounded-lg"></p>
-
-                <p><strong>Submitted On:</strong></p>
-                <p x-text="modalData.date"></p>
-
-            </div>
-
-            <!-- Actions -->
-            <div class="flex justify-between mt-6">
                 <a :href="'{% url 'munsi_approve_request' 0 %}'.replace('0', modalData.id)"
-                   class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
+                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm">
                     Approve
                 </a>
 
                 <a :href="'{% url 'munsi_reject_request' 0 %}'.replace('0', modalData.id)"
-                   class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
+                class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm">
                     Reject
                 </a>
+
             </div>
 
         </div>
