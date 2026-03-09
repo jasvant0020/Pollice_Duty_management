@@ -1955,6 +1955,79 @@ def delete_security_category(request, category_id):
 
 
 
+#------- centrtelize notification views ------------
+
+@login_required
+def mark_notification_read(request, notification_id):
+
+    if request.method == "POST":
+
+        notification = Notification.objects.filter(
+            id=notification_id,
+            user=request.user
+        ).first()
+
+        if notification and not notification.is_read:
+
+            notification.is_read = True
+            notification.read_at = timezone.now()
+            notification.save()
+
+        return JsonResponse({"status": "success"})
+
+    return JsonResponse({"status": "error"})
+
+@login_required
+def mark_all_notifications_read(request):
+
+    Notification.objects.filter(
+        user=request.user,
+        is_read=False,
+        is_deleted=False
+    ).update(
+        is_read=True,
+        read_at=timezone.now()
+    )
+
+    return redirect("user_notifications")
+
+@login_required
+def archive_notification(request, notification_id):
+
+    notification = get_object_or_404(
+        Notification,
+        id=notification_id,
+        user=request.user
+    )
+
+    notification.is_archived = True
+    notification.save(update_fields=["is_archived"])
+
+    return redirect("user_notifications")
+
+@login_required
+def delete_notification(request, notification_id):
+
+    notification = get_object_or_404(
+        Notification,
+        id=notification_id,
+        user=request.user
+    )
+
+    notification.is_deleted = True
+    notification.deleted_at = timezone.now()
+    notification.save(update_fields=["is_deleted", "deleted_at"])
+
+    return redirect("user_notifications")
+
+
+
+
+
+
+
+
+
 
 
 

@@ -81,8 +81,8 @@ urlpatterns = [
     path("verify_otp/", views.verify_otp_view, name="verify_otp"),
     path("reset_password/", views.reset_password_view, name="reset_password"),
 
-
-
+    #centrelize notification url
+    path("mark_notification_read/<int:notification_id>/",views.mark_notification_read,name="mark_notification_read"),
 
     # Firebase push notification
     path("save-fcm-token/", views.save_fcm_token, name="save_fcm_token"),

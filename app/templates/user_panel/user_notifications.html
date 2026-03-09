@@ -4,7 +4,9 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 {% load static %}
-
+<form style="display:none">
+    {% csrf_token %}
+</form>
 <div x-data="notificationManager()" x-init="init()" class="relative">
 
     <div class="max-w-6xl mx-auto px-6 py-8">
@@ -22,11 +24,20 @@
 
                 <div
                     x-on:click="openNotification(note)"
-                    class="bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5"
-                    :class="priorityColor(note.priority)"
+                    class="relative bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5"
+                    :class="[priorityColor(note.priority), note.is_read ? 'opacity-70' : 'border-pink-600']"
                 >
 
-                    <div class="flex items-start gap-4">
+                    <!-- 🔴 UNREAD BADGE -->
+                    <span
+                        x-show="!note.is_read"
+                        class="absolute top-2 right-2 flex h-3 w-3"
+                    >
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+
+                    <div class="flex items-start gap-4 relative">
 
                         <!-- ICON -->
                         <div
@@ -71,6 +82,7 @@
                     id:'{{ note.id }}',
                     title:'{{ note.title|escapejs }}',
                     message:'{{ note.message|escapejs }}',
+                    is_read: {{ note.is_read|yesno:"true,false" }},
                     notification_type:'{{ note.notification_type }}',
                     priority:'{{ note.priority }}',
                     metadata: {{ note.metadata|default:"{}"|safe }},
@@ -90,7 +102,7 @@
                 "
             >
 
-                <div class="flex items-start gap-4">
+                <div class="flex items-start gap-4 relative">
 
                     <div
                         class="w-12 h-12 flex items-center justify-center rounded-full text-xl
@@ -106,6 +118,15 @@
                         {% endif %}
                         "
                     >
+                        <span
+                            {% if not note.is_read %}
+                            class="absolute top-2 right-2 flex h-3 w-3"
+                            {% else %}
+                            class="hidden"
+                            {% endif %}
+                        >
+                            <span class="relative inline-flex rounded-full h-3 w-3 font-semibold text-red-600 animate-bounce">🕭</span>
+                        </span>
 
                         {% if note.notification_type == "duty_assigned" %}
                             📌
@@ -281,6 +302,7 @@ function notificationManager(){
                         message: n.message,
                         notification_type: n.notification_type,
                         priority: n.priority,
+                        is_read: false,
                         metadata: typeof n.metadata === "string"
                             ? JSON.parse(n.metadata)
                             : n.metadata,
@@ -294,7 +316,19 @@ function notificationManager(){
         },
 
         openNotification(note){
+
             this.selectedNotification = note;
+
+            note.is_read = true;   // remove badge instantly
+
+            fetch(`/mark_notification_read/${note.id}/`,{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken": this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            });
+
         },
 
         formatDate(dateString){
@@ -339,6 +373,11 @@ function notificationManager(){
             if(type==="system_alert") return "bg-red-100 text-red-600";
 
             return "bg-gray-100 text-gray-600";
+
+        },
+        getCSRFToken(){
+
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         }
 
