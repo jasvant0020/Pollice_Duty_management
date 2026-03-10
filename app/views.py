@@ -1330,32 +1330,31 @@ def request_application_box(request):
                 message=message
             )
 
-            # ✅ Get dedicated GD Munsi
-            # Get assigned Munsi
+            # 👮 Get Dedicated Munsi
             munsi_user = request.user.gd_munsi
 
-            channel_layer = get_channel_layer()
 
-            async_to_sync(channel_layer.group_send)(
-                f"munsi_{munsi_user.id}",
-                {
-                    "type": "new_request",
-                    "data": {
-                        "id": request_obj.id,
-                        "name": f"{request.user.first_name} {request.user.last_name}",
-                        "photo": request.user.profile_photo.url,
-                        "subject": request_obj.subject,
-                        "message": request_obj.message,
-                        "date": str(request_obj.submitted_at),
-                    }
+            # 🔔 Create In-App Notification for Munsi
+            Notification.objects.create(
+                user=munsi_user,
+                title="New Staff Request",
+                message=f"{request.user.get_full_name() or request.user.username} submitted a new request.",
+                notification_type="request",
+                priority="high",
+                metadata={
+                    "staff": request.user.username,
+                    "request_id": request_obj.request_number,
+                    "subject": request_obj.subject,
+                    "note": "Open Staff Requests panel for review"
                 }
             )
 
-            # ✅ Send Push Notification
+
+            # 🔥 Firebase Push Notification
             send_push_notification(
                 id=request_obj.id,
                 user=munsi_user,
-                title="New Request From",
+                title="New Request From Staff",
                 body=request_obj.subject,
                 sender=request.user,
                 url=f"/munsi/request/{request_obj.id}/",
@@ -1363,7 +1362,7 @@ def request_application_box(request):
             )
 
             messages.success(request, "Your request has been submitted successfully.")
-            return redirect("user_Notifications")
+            return redirect("request_history")
 
         else:
             messages.error(request, "Please fill all fields.")
@@ -1387,31 +1386,6 @@ def request_history(request):
 @role_required(["field_staff"])
 def duty_history(request):
     return render(request, "user_panel/duty_history.html")
-
-@role_required(["field_staff"])
-def user_Notifications(request):
-
-    user = request.user
-
-    notifications = (
-        Notification.objects
-        .filter(
-            user=user,
-            is_deleted=False
-        )
-        .order_by("-created_at")
-    )
-
-    context = {
-        "notifications": notifications
-    }
-
-    return render(
-        request,
-        "user_panel/user_Notifications.html",
-        context
-    )
-
 
 
 @role_required(["field_staff"])
@@ -1958,7 +1932,46 @@ def delete_security_category(request, category_id):
 
 
 
-#------- centrtelize notification views ------------
+# ------- centralized notification views ------------
+
+@role_required(["field_staff","gd_munsi","admin","super_admin","master_admin"])
+def centrelize_Notifications(request):
+
+    user = request.user
+
+    notifications = (
+        Notification.objects
+        .filter(
+            user=user,
+            is_deleted=False
+        )
+        .order_by("-created_at")
+    )
+
+    context = {
+        "notifications": notifications
+    }
+
+    # Select template based on role
+    if user.role == "field_staff":
+        template = "user_panel/centrelize_Notifications.html"
+
+    elif user.role == "gd_munsi":
+        template = "GD_munsi_panel/centrelize_Notifications.html"
+
+    elif user.role == "admin":
+        template = "admin_panel/centrelize_Notifications.html"
+
+    elif user.role == "super_admin":
+        template = "admin_panel/centrelize_Notifications.html"
+
+    elif user.role == "master_admin":
+        template = "admin_panel/centrelize_Notifications.html"
+
+    else:
+        template = "user_panel/centrelize_Notifications.html"
+
+    return render(request, template, context)
 
 @login_required
 def mark_notification_read(request, notification_id):
@@ -1983,16 +1996,19 @@ def mark_notification_read(request, notification_id):
 @login_required
 def mark_all_notifications_read(request):
 
-    Notification.objects.filter(
-        user=request.user,
-        is_read=False,
-        is_deleted=False
-    ).update(
-        is_read=True,
-        read_at=timezone.now()
-    )
+    if request.method == "POST":
 
-    return redirect("user_notifications")
+        Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).update(
+            is_read=True,
+            read_at=timezone.now()
+        )
+
+        return JsonResponse({"status":"success"})
+
+    return JsonResponse({"status":"error"})
 
 @login_required
 def archive_notification(request, notification_id):
@@ -2006,7 +2022,7 @@ def archive_notification(request, notification_id):
     notification.is_archived = True
     notification.save(update_fields=["is_archived"])
 
-    return redirect("user_notifications")
+    return redirect("centrelize_Notifications")
 
 
 @login_required
@@ -2024,7 +2040,21 @@ def delete_notification(request, notification_id):
 
     return JsonResponse({"status":"deleted"})
 
+@login_required
+def delete_all_notifications(request):
 
+    if request.method == "POST":
+
+        Notification.objects.filter(
+            user=request.user,
+            is_deleted=False
+        ).update(
+            is_deleted=True
+        )
+
+        return JsonResponse({"status":"success"})
+
+    return JsonResponse({"status":"error"})
 
 
 

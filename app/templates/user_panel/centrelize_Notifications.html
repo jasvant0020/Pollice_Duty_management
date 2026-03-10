@@ -13,9 +13,68 @@
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
 
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            🔔 My Notifications
-        </h2>
+        <div class="flex items-center justify-between mb-6">
+
+            <h2 class="text-2xl font-bold text-gray-800">
+                🔔 My Notifications
+            </h2>
+
+            <!-- THREE DOT MENU -->
+
+            <div class="relative">
+
+                <button
+                    @click="menuOpen = !menuOpen"
+                    class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <circle cx="4" cy="10" r="1.5"/>
+                        <circle cx="10" cy="10" r="1.5"/>
+                        <circle cx="16" cy="10" r="1.5"/>
+                    </svg>
+                </button>
+
+                <!-- DROPDOWN -->
+
+                <div
+                    x-show="menuOpen"
+                    @click.outside="menuOpen=false"
+                    x-transition
+                    class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-40"
+                >
+
+                    <!-- MARK ALL READ -->
+
+                    <button
+                        @click="if(confirm('Mark all notifications as read?')) markAllRead()"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    >
+                        <span class="text-green-500 text-lg">✔</span>
+                        <span>Mark all as read</span>
+                    </button>
+
+                    <!-- DIVIDER -->
+
+                    <div class="border-t"></div>
+
+                    <!-- DELETE ALL -->
+
+                    <button
+                        @click="if(confirm('Delete all notifications?')) deleteAllNotifications()"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition"
+                    >
+                        <span class="text-lg">🗑</span>
+                        <span>Delete all notifications</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
 
         <!-- ================= CARD GRID ================= -->
 
@@ -157,7 +216,18 @@
                 </div>
 
             </div>
+            {% empty %}
 
+            <div class="col-span-full text-center py-12">
+                <div class="text-5xl mb-3">🔔</div>
+                <p class="text-gray-500 text-lg font-medium">
+                    No notifications yet
+                </p>
+                <p class="text-gray-400 text-sm mt-1">
+                    You're all caught up!
+                </p>
+            </div>
+            
             {% endfor %}
 
         </div>
@@ -300,6 +370,7 @@ function notificationManager(){
 
         notifications: [],
         selectedNotification: null,
+        menuOpen:false,
 
         init(){
 
@@ -421,7 +492,47 @@ function notificationManager(){
 
             });
 
-        }
+        },
+        markAllRead(){
+
+            fetch("/mark_all_notifications_read/",{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications.forEach(n=>{
+                    n.is_read = true;
+                });
+
+                this.menuOpen=false;
+
+            });
+
+        },
+        deleteAllNotifications(){
+
+            if(!confirm("Delete all notifications?")) return;
+
+            fetch("/delete_all_notifications/",{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications=[];
+                this.menuOpen=false;
+                this.selectedNotification=null;
+
+            });
+
+        },
 
     }
 

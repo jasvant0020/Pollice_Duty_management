@@ -73,7 +73,6 @@ urlpatterns = [
     path("duty_history/", views.duty_history, name="duty_history"),
     path("request_application_box/", views.request_application_box, name="request_application_box"), 
     path("request_history/", views.request_history, name="request_history"),  
-    path("user_Notifications/", views.user_Notifications, name="user_Notifications"),
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
     
     #forgot password urls
@@ -82,8 +81,14 @@ urlpatterns = [
     path("reset_password/", views.reset_password_view, name="reset_password"),
 
     #centrelize notification url
+    path("centrelize_Notifications/", views.centrelize_Notifications, name="centrelize_Notifications"),
     path("mark_notification_read/<int:notification_id>/",views.mark_notification_read,name="mark_notification_read"),
     path("delete_notification/<int:notification_id>/",views.delete_notification,name="delete_notification"),
+    path("mark_all_notifications_read/",views.mark_all_notifications_read,name="mark_all_notifications_read"),
+    path("delete_all_notifications/",views.delete_all_notifications,name="delete_all_notifications"),
+
+
+
 
     # Firebase push notification
     path("save-fcm-token/", views.save_fcm_token, name="save_fcm_token"),
