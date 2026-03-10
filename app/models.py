@@ -328,14 +328,15 @@ class PasswordResetOTP(models.Model):
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-
 class Notification(models.Model):
 
     NOTIFICATION_TYPES = (
         ("request_status", "Request Status"),
+        ("request", "Staff Request"),
         ("duty_assigned", "Duty Assigned"),
         ("duty_ended", "Duty Ended"),
         ("system_alert", "System Alert"),
+        ("centralized", "Centralized Notification"),
     )
 
     PRIORITY_CHOICES = (
@@ -345,10 +346,22 @@ class Notification(models.Model):
         ("critical", "Critical"),
     )
 
-    user = models.ForeignKey(
+    # 🔹 Sender
+    sender = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="notifications_sent",
+        db_index=True
+    )
+
+    # 🔹 Receiver (previously 'user')
+    receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="notifications",
+        related_name="centralized_notifications_receive",
+        null=True,
         db_index=True
     )
 
@@ -367,7 +380,7 @@ class Notification(models.Model):
         default="normal"
     )
 
-    # 🔹 Generic relation
+    # 🔹 Generic relation (link to request/duty/etc)
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
@@ -385,7 +398,7 @@ class Notification(models.Model):
         "object_id"
     )
 
-    # 🔹 Dynamic metadata for universal UI
+    # 🔹 Dynamic metadata
     metadata = models.JSONField(
         null=True,
         blank=True,
@@ -394,25 +407,98 @@ class Notification(models.Model):
 
     is_read = models.BooleanField(default=False)
 
-    read_at = models.DateTimeField(null=True, blank=True)
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
 
     is_archived = models.BooleanField(default=False)
 
-    # 🔹 Soft delete support
+    # 🔹 Soft delete
     is_deleted = models.BooleanField(default=False)
 
-    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         ordering = ["-created_at"]
 
         indexes = [
-            models.Index(fields=["user", "is_read"]),
-            models.Index(fields=["user", "created_at"]),
-            models.Index(fields=["user", "is_deleted"]),
+            models.Index(fields=["receiver", "is_read"]),
+            models.Index(fields=["receiver", "created_at"]),
+            models.Index(fields=["receiver", "is_deleted"]),
         ]
 
     def __str__(self):
-        return f"{self.user} - {self.notification_type}"
+        return f"{self.sender} → {self.receiver} ({self.notification_type})"
+
+
+from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+
+class CentralizedNotifyLog(models.Model):
+
+    NOTIFY_TYPE = (
+        ("normal", "Normal"),
+        ("sos", "SOS")
+    )
+
+    SCOPE_TYPE = (
+        ("staff", "All Dedicated Staff"),
+        ("admin", "All Dedicated Admin"),
+        ("specific", "Specific Person")
+    )
+
+    sender = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="centralized_notifications_sent"
+    )
+
+    notify_type = models.CharField(
+        max_length=20,
+        choices=NOTIFY_TYPE
+    )
+
+    scope = models.CharField(
+        max_length=20,
+        choices=SCOPE_TYPE
+    )
+
+    target_user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    title = models.CharField(
+        max_length=255
+    )
+
+    message = models.TextField()
+
+    # ⭐ NEW FIELD (store all recipients)
+    recipients = models.JSONField(
+        default=dict,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.sender} -> {self.scope} ({self.notify_type})"

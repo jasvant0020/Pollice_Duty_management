@@ -17,7 +17,7 @@ from django.db.models import Q
 from app.utils.user_counts import get_admin_staff_counts, get_super_admin_dashboard_data, get_admin_dashboard_data
 from app.utils import notification_service
 from django.db.models import Count
-from app.models import SecurityCategory,Notification
+from app.models import SecurityCategory,Notification,CentralizedNotifyLog
 from app.utils.auth_utils import has_suspended_parent,ROLE_HIERARCHY,require_reset_session
 from django.contrib.auth import update_session_auth_hash
 from .models import User, VVIPDuty
@@ -580,8 +580,8 @@ def munsi_assign_duty(request):
 
                     # 🔔 Create In-App Notification
                     Notification.objects.create(
-                        user=staff,
-                        # sender=gd,
+                        receiver=staff,
+                        sender=request.user,
                         title="New VVIP Duty Assigned",
                         message=f"You have been assigned VVIP duty for {vvip.get_full_name()} at {duty_place}.",
                         notification_type="duty_assigned",
@@ -730,7 +730,8 @@ def munsi_deactivate_duty(request, duty_id):
             for staff in staff_users:
 
                 Notification.objects.create(
-                    user=staff,
+                    receiver=staff,
+                    sender=request.user,
                     title="VVIP Duty Ended",
                     message=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
                     notification_type="duty_ended",
@@ -819,7 +820,8 @@ def munsi_end_vvip_duty(request, batch_id):
             for staff in staff_users:
 
                 Notification.objects.create(
-                    user=staff,
+                    receiver=staff,
+                    sender=request.user,
                     title="VVIP Duty Ended",
                     message="Your VVIP duty has been ended.",
                     notification_type="duty_ended",
@@ -828,7 +830,7 @@ def munsi_end_vvip_duty(request, batch_id):
                         "batch_id": str(batch_id),
                         "reason": reason
                     }
-                )
+                )   
 
                 # 🔥 Firebase push
                 try:
@@ -966,12 +968,13 @@ def munsi_approve_request(request, req_id):
 
     # 🔔 Create In-App Notification
     Notification.objects.create(
-        user=req.staff,
+        receiver=req.staff,
+        sender=request.user,
         title="Request Approved",
-        message=f"Your request (request id: {req.request_number }) has been approved.",
+        message=f"Your request (request id: {req.request_number}) has been approved.",
         notification_type="request_status",
         priority="normal",
-        metadata = {
+        metadata={
             "note": "For more details visit Request History"
         }
     )
@@ -1004,12 +1007,13 @@ def munsi_reject_request(request, req_id):
 
     # 🔔 Create In-App Notification
     Notification.objects.create(
-        user=req.staff,
+        receiver=req.staff,
+        sender=request.user,
         title="Request Rejected",
-        message=f"Your request (request id: {req.request_number }) has been rejected.",
+        message=f"Your request (request id: {req.request_number}) has been rejected.",
         notification_type="request_status",
         priority="high",
-        metadata = {
+        metadata={
             "note": "For more details visit Request History"
         }
     )
@@ -1336,7 +1340,8 @@ def request_application_box(request):
 
             # 🔔 Create In-App Notification for Munsi
             Notification.objects.create(
-                user=munsi_user,
+                receiver=munsi_user,
+                sender=request.user,
                 title="New Staff Request",
                 message=f"{request.user.get_full_name() or request.user.username} submitted a new request.",
                 notification_type="request",
@@ -1942,7 +1947,7 @@ def centrelize_Notifications(request):
     notifications = (
         Notification.objects
         .filter(
-            user=user,
+            receiver=user,
             is_deleted=False
         )
         .order_by("-created_at")
@@ -1980,7 +1985,7 @@ def mark_notification_read(request, notification_id):
 
         notification = Notification.objects.filter(
             id=notification_id,
-            user=request.user
+            receiver=request.user
         ).first()
 
         if notification and not notification.is_read:
@@ -1999,7 +2004,7 @@ def mark_all_notifications_read(request):
     if request.method == "POST":
 
         Notification.objects.filter(
-            user=request.user,
+            receiver=request.user,
             is_read=False
         ).update(
             is_read=True,
@@ -2016,7 +2021,7 @@ def archive_notification(request, notification_id):
     notification = get_object_or_404(
         Notification,
         id=notification_id,
-        user=request.user
+        receiver=request.user
     )
 
     notification.is_archived = True
@@ -2031,7 +2036,7 @@ def delete_notification(request, notification_id):
     notification = get_object_or_404(
         Notification,
         id=notification_id,
-        user=request.user
+        receiver=request.user
     )
 
     notification.is_deleted = True
@@ -2046,7 +2051,7 @@ def delete_all_notifications(request):
     if request.method == "POST":
 
         Notification.objects.filter(
-            user=request.user,
+            receiver=request.user,
             is_deleted=False
         ).update(
             is_deleted=True
@@ -2055,6 +2060,137 @@ def delete_all_notifications(request):
         return JsonResponse({"status":"success"})
 
     return JsonResponse({"status":"error"})
+
+
+
+
+
+
+#-------------centrelize notify -----------
+@role_required(["gd_munsi","admin","super_admin","master_admin"])
+def centrelize_notify(request):
+
+    current_user = request.user
+
+    if request.method == "POST":
+
+        title = request.POST.get("title")
+        message = request.POST.get("message")
+        notify_type = request.POST.get("notify_type")
+        scope = request.POST.get("scope")
+        target_user_id = request.POST.get("target_user")
+
+        users = []
+
+        # -------- determine receivers --------
+
+        if scope == "staff":
+
+            users = User.objects.filter(
+                role="field_staff",
+                gd_munsi=current_user
+            )
+
+        elif scope == "admin":
+
+            users = User.objects.filter(
+                id=current_user.admin_id
+            )
+
+        elif scope == "specific" and target_user_id:
+
+            users = User.objects.filter(
+                id=target_user_id
+            )
+
+        # -------- create notifications --------
+
+        for user in users:
+
+            Notification.objects.create(
+                receiver=user,
+                sender=current_user,
+                title=title,
+                message=message,
+                notification_type=notify_type,
+                priority="critical" if notify_type == "sos" else "normal",
+                metadata={
+                    "sent_by": current_user.username
+                }
+            )
+
+
+
+        recipient_data = []
+
+        for user in users:
+            recipient_data.append({
+                "id": user.id,
+                "username": user.username,
+                "role": user.role
+            })
+        # -------- log entry --------
+
+        CentralizedNotifyLog.objects.create(
+            sender=current_user,
+            notify_type=notify_type,
+            scope=scope,
+            target_user_id=target_user_id if scope == "specific" else None,
+            title=title,
+            message=message,
+            recipients={
+                "count": len(recipient_data),
+                "users": recipient_data
+            }
+        )
+
+        messages.success(request, "Notification sent successfully.")
+        return redirect("centrelize_notify")
+
+
+    # -------- filter users for dropdown --------
+
+    if current_user.role == "gd_munsi":
+
+        staff_users = User.objects.filter(
+            role="field_staff",
+            gd_munsi=current_user
+        )
+
+        admin_users = User.objects.filter(
+            id=current_user.admin_id
+        )
+
+        users = staff_users | admin_users
+
+    elif current_user.role == "admin":
+
+        users = User.objects.filter(
+            role__in=["gd_munsi","field_staff"]
+        )
+
+    elif current_user.role == "super_admin":
+
+        users = User.objects.filter(
+            role__in=["admin","gd_munsi","field_staff"]
+        )
+
+    else:  # master_admin
+
+        users = User.objects.all()
+
+
+    context = {
+        "users": users
+    }
+
+    return render(
+        request,
+        "GD_munsi_panel/centrelize_notify.html",
+        context
+    )
+
+
 
 
 

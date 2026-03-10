@@ -87,6 +87,9 @@ urlpatterns = [
     path("mark_all_notifications_read/",views.mark_all_notifications_read,name="mark_all_notifications_read"),
     path("delete_all_notifications/",views.delete_all_notifications,name="delete_all_notifications"),
 
+    #centralized notification sending panel
+    path("centrelize_notify/",views.centrelize_notify,name="centrelize_notify"),
+
 
 
 
