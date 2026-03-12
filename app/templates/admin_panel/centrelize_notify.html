@@ -1,4 +1,4 @@
-{% extends 'GD_munsi_panel/base.html' %}
+{% extends 'admin_panel/admin_base.html' %}
 {% block page_title %}Centrelize Notify{% endblock %}
 
 {% block content %}
@@ -174,7 +174,9 @@ const targetUser = document.getElementById("target_user");
 function updatePreview(){
 
     receiverList.innerHTML = "";
+    previewBox.classList.add("hidden");
 
+    // ----- specific user -----
     if(
         scopeSelect.value === "specific_super_admin" ||
         scopeSelect.value === "specific_admin"
@@ -195,66 +197,139 @@ function updatePreview(){
 
     }
 
-    else if(scopeSelect.value === "staff"){
+    // ----- developer -----
+    else if(scopeSelect.value === "developer"){
 
-        previewBox.classList.remove("hidden");
+        const devUsers = allUsers.filter(u => u.role === "developer");
 
-        const staffUsers = allUsers.filter(u => u.role === "field_staff");
+        if(devUsers.length){
+            previewBox.classList.remove("hidden");
 
-        staffUsers.forEach(user => {
-
-            const li = document.createElement("li");
-            li.textContent = user.username + " (staff)";
-            receiverList.appendChild(li);
-
-        });
-
-    }
-
-    else if(scopeSelect.value === "admin"){
-
-        previewBox.classList.remove("hidden");
-
-        const adminUsers = allUsers.filter(u =>
-            u.role === "admin" ||
-            u.role === "super_admin" ||
-            u.role === "master_admin"
-        );
-
-        adminUsers.forEach(user => {
-
-            const li = document.createElement("li");
-            li.textContent = user.username + " (" + user.role + ")";
-            receiverList.appendChild(li);
-
-        });
-
-    }
-    else if(scopeSelect.value === "gd_munsi"){
-
-        previewBox.classList.remove("hidden");
-
-        const users = allUsers.filter(u => u.role === "gd_munsi");
-
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (GD Munsi)";
-            receiverList.appendChild(li);
-        });
+            devUsers.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Developer)";
+                receiverList.appendChild(li);
+            });
+        }
 
     }
 
-    else if(scopeSelect.value === "super_admin"){
-
-        previewBox.classList.remove("hidden");
+    // ----- all super admin -----
+    else if(scopeSelect.value === "all_super_admin"){
 
         const users = allUsers.filter(u => u.role === "super_admin");
 
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (Super Admin)";
-            receiverList.appendChild(li);
-        });
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Super Admin)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- master admin -----
+    else if(scopeSelect.value === "master_admin"){
+
+        const users = allUsers.filter(u => u.role === "master_admin");
+
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Master Admin)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- all admin -----
+    else if(scopeSelect.value === "all_admin"){
+
+        const users = allUsers.filter(u => u.role === "admin");
+
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Admin)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- staff -----
+    else if(scopeSelect.value === "staff"){
+
+        const staffUsers = allUsers.filter(u => u.role === "field_staff");
+
+        if(staffUsers.length){
+            previewBox.classList.remove("hidden");
+
+            staffUsers.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Staff)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- admin -----
+    else if(scopeSelect.value === "admin"){
+
+        const users = allUsers.filter(u => u.role === "admin");
+
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Admin)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- gd munsi -----
+    else if(scopeSelect.value === "gd_munsi"){
+
+        const users = allUsers.filter(u => u.role === "gd_munsi");
+
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (GD Munsi)";
+                receiverList.appendChild(li);
+            });
+        }
+
+    }
+
+    // ----- super admin -----
+    else if(scopeSelect.value === "super_admin"){
+
+        const users = allUsers.filter(u => u.role === "super_admin");
+
+        if(users.length){
+            previewBox.classList.remove("hidden");
+
+            users.forEach(user=>{
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Super Admin)";
+                receiverList.appendChild(li);
+            });
+        }
 
     }
 

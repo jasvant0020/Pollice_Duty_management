@@ -143,6 +143,8 @@ def login_view(request):
                 return redirect("munsi_dashboard")
             elif user.role == "field_staff":
                 return redirect("user_profile")
+            elif user.role == "vvip":
+                return redirect("user_profile")
 
             messages.error(request, "Unknown role assigned!")
             return redirect("login")
@@ -1302,7 +1304,7 @@ def edit_vvip(request, vvip_id):
 
 
 #----- Custom user Panel Views -----
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def user_assign_duty(request):
 
     user = request.user
@@ -1318,7 +1320,7 @@ def user_assign_duty(request):
 
 from django.contrib import messages
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def request_application_box(request):
 
     if request.method == "POST":
@@ -1375,7 +1377,7 @@ def request_application_box(request):
     return render(request, "user_panel/request_application_box.html")
 
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def request_history(request):
 
     requests = FieldStaffRequest.objects.filter(
@@ -1388,20 +1390,20 @@ def request_history(request):
         {"requests": requests}
     )
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def duty_history(request):
     return render(request, "user_panel/duty_history.html")
 
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def attendance_panel(request):
     return render(request, "user_panel/attendance_panel.html")
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def user_profile(request):
     return render(request, "user_panel/user_profile.html")
 
-@role_required(["field_staff"])
+@role_required(["field_staff","vvip"])
 def edit_user_profile(request):
 
     user = request.user
@@ -1939,7 +1941,7 @@ def delete_security_category(request, category_id):
 
 # ------- centralized notification views ------------
 
-@role_required(["field_staff","gd_munsi","admin","super_admin","master_admin"])
+@role_required(["field_staff","gd_munsi","admin","super_admin","master_admin","vvip"])
 def centrelize_Notifications(request):
 
     user = request.user
@@ -2069,44 +2071,86 @@ def delete_all_notifications(request):
 #-------------centrelize notify -----------
 @role_required(["gd_munsi","admin","super_admin","master_admin"])
 def centrelize_notify(request):
-
     current_user = request.user
 
     if request.method == "POST":
-
         title = request.POST.get("title")
         message = request.POST.get("message")
         notify_type = request.POST.get("notify_type")
         scope = request.POST.get("scope")
         target_user_id = request.POST.get("target_user")
 
-        users = []
+        users = User.objects.none()
 
         # -------- determine receivers --------
+        # -------- determine receivers --------
+        if current_user.role == "master_admin":
 
-        if scope == "staff":
+            if scope == "developer":
+                users = User.objects.filter(role="developer")
 
-            users = User.objects.filter(
-                role="field_staff",
-                gd_munsi=current_user
-            )
+            elif scope == "all_super_admin":
+                users = User.objects.filter(role="super_admin")
 
-        elif scope == "admin":
+            elif scope == "specific_super_admin" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="super_admin"
+                )
 
-            users = User.objects.filter(
-                id=current_user.admin_id
-            )
 
-        elif scope == "specific" and target_user_id:
+        elif current_user.role == "super_admin":
 
-            users = User.objects.filter(
-                id=target_user_id
-            )
+            if scope == "master_admin":
+                users = User.objects.filter(role="master_admin")
+
+            elif scope == "all_admin":
+                users = User.objects.filter(
+                    role="admin",
+                    created_by=current_user
+                )
+
+            elif scope == "specific_admin" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="admin",
+                    created_by=current_user
+                )
+
+
+        elif current_user.role == "admin":
+
+            if scope == "super_admin":
+                users = User.objects.filter(role="super_admin")
+
+            elif scope == "gd_munsi":
+                users = User.objects.filter(
+                    role="gd_munsi",
+                    admin=current_user
+                )
+
+            elif scope == "staff":
+                users = User.objects.filter(
+                    role="field_staff",
+                    gd_munsi__admin=current_user
+                )
+
+
+        elif current_user.role == "gd_munsi":
+
+            if scope == "admin":
+                users = User.objects.filter(
+                    id=current_user.admin_id
+                )
+
+            elif scope == "staff":
+                users = User.objects.filter(
+                    role="field_staff",
+                    gd_munsi=current_user
+                )
 
         # -------- create notifications --------
-
         for user in users:
-
             Notification.objects.create(
                 receiver=user,
                 sender=current_user,
@@ -2114,88 +2158,64 @@ def centrelize_notify(request):
                 message=message,
                 notification_type=notify_type,
                 priority="critical" if notify_type == "sos" else "normal",
-                metadata={
-                    "sent_by": current_user.username
-                }
+                metadata={"sent_by": current_user.username}
             )
 
-
-
-        recipient_data = []
-
-        for user in users:
-            recipient_data.append({
-                "id": user.id,
-                "username": user.username,
-                "role": user.role
-            })
-        # -------- log entry --------
+        # -------- log centralized notification --------
+        recipient_data = [{"id": u.id, "username": u.username, "role": u.role} for u in users]
 
         CentralizedNotifyLog.objects.create(
             sender=current_user,
             notify_type=notify_type,
             scope=scope,
-            target_user_id=target_user_id if scope == "specific" else None,
+            target_user_id=target_user_id if scope=="specific" else None,
             title=title,
             message=message,
-            recipients={
-                "count": len(recipient_data),
-                "users": recipient_data
-            }
+            recipients={"count": len(recipient_data), "users": recipient_data}
         )
 
         messages.success(request, "Notification sent successfully.")
         return redirect("centrelize_notify")
 
-
-    # -------- filter users for dropdown --------
-
-    if current_user.role == "gd_munsi":
-
-        staff_users = User.objects.filter(
-            role="field_staff",
-            gd_munsi=current_user
-        )
-
-        admin_users = User.objects.filter(
-            id=current_user.admin_id
-        )
-
-        users = staff_users | admin_users
-
-    elif current_user.role == "admin":
+    # -------- prepare users for dropdown --------
+    if current_user.role == "master_admin":
 
         users = User.objects.filter(
-            role__in=["gd_munsi","field_staff"]
+            role__in=["developer", "super_admin"]
         )
+
 
     elif current_user.role == "super_admin":
 
         users = User.objects.filter(
-            role__in=["admin","gd_munsi","field_staff"]
+            Q(role="master_admin") |
+            Q(role="admin", created_by=current_user)
         )
 
-    else:  # master_admin
 
-        users = User.objects.all()
+    elif current_user.role == "admin":
 
-
-    context = {
-        "users": users
-    }
-
-    return render(
-        request,
-        "GD_munsi_panel/centrelize_notify.html",
-        context
-    )
+        users = User.objects.filter(
+            Q(role="super_admin") |
+            Q(role="gd_munsi", admin=current_user) |
+            Q(role="field_staff", gd_munsi__admin=current_user)
+        )
 
 
+    elif current_user.role == "gd_munsi":
 
+        users = User.objects.filter(
+            Q(id=current_user.admin_id) |
+            Q(role="field_staff", gd_munsi=current_user)
+        )
 
+    # -------- choose template --------
+    if current_user.role == "gd_munsi":
+        template = "GD_munsi_panel/centrelize_notify.html"
+    else:
+        template = "admin_panel/centrelize_notify.html"
 
-
-
+    return render(request, template, {"users": users})
 
 
 
