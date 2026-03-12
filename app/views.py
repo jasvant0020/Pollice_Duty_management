@@ -2196,7 +2196,7 @@ def centrelize_notify(request):
     elif current_user.role == "admin":
 
         users = User.objects.filter(
-            Q(role="super_admin") |
+            Q(id=current_user.created_by_id) |
             Q(role="gd_munsi", admin=current_user) |
             Q(role="field_staff", gd_munsi__admin=current_user)
         )
