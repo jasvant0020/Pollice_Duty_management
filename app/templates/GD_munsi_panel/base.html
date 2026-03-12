@@ -14,7 +14,7 @@
 </head>
 
 <body x-data="{ sidebarOpen: false }"
-      class="bg-linear-to-br from-gray-50 via-blue-50 to-gray-100 font-sans antialiased md:flex">
+      class="bg-gray-300 font-sans antialiased md:flex">
 
     <!-- Mobile Overlay -->
     <div x-show="sidebarOpen"
@@ -178,7 +178,7 @@
     <!-- Main Content -->
     <main class="flex-1 min-h-screen md:ml-64 transition-all duration-300">
         <!-- Header -->
-        <header class="bg-white/80 backdrop-blur-lg shadow-lg border-b border-gray-200/50 sticky top-0 z-40">
+        <header class="bg-white backdrop-blur-lg shadow-lg border-b border-gray-200/50 sticky top-0 z-40">
             <div class="px-4 sm:px-6 md:px-8 py-3 md:py-4 flex justify-between items-center">
                 <!-- Mobile Menu Button -->
                 <button @click="sidebarOpen = !sidebarOpen"
