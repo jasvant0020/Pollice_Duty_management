@@ -80,6 +80,10 @@ urlpatterns = [
     path("verify_otp/", views.verify_otp_view, name="verify_otp"),
     path("reset_password/", views.reset_password_view, name="reset_password"),
 
+    #verify email
+    path("send-email-otp/", views.send_email_otp, name="send_email_otp"),
+    path("verify-email-otp/", views.verify_email_otp, name="verify_email_otp"),
+
     #centrelize notification url
     path("centrelize_Notifications/", views.centrelize_Notifications, name="centrelize_Notifications"),
     path("mark_notification_read/<int:notification_id>/",views.mark_notification_read,name="mark_notification_read"),

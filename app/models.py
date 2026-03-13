@@ -25,6 +25,8 @@ class User(AbstractUser):
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    email_verified = models.BooleanField(default=False)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
     phone = models.CharField(
         max_length=15,
         validators=[RegexValidator(r'^[0-9]{10}$', 'Enter a valid 10-digit phone number')],

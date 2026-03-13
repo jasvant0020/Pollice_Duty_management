@@ -1480,6 +1480,8 @@ def attendance_panel(request):
 def user_profile(request):
     return render(request, "user_panel/user_profile.html")
 
+from django.utils import timezone
+
 @role_required(["field_staff","vvip"])
 def edit_user_profile(request):
 
@@ -1497,6 +1499,10 @@ def edit_user_profile(request):
             if User.objects.filter(email=new_email).exclude(id=user.id).exists():
                 messages.error(request, "Email already in use.")
                 return redirect("edit_user_profile")
+
+            # 🔐 Reset verification if email changed
+            user.email_verified = False
+            user.email_verified_at = None
 
         user.email = new_email
         user.username = new_email
@@ -1520,7 +1526,7 @@ def edit_user_profile(request):
                 return redirect("edit_user_profile")
 
             user.set_password(password)
-            update_session_auth_hash(request, user)  # Prevent logout
+            update_session_auth_hash(request, user)
 
         user.save()
 
@@ -2312,6 +2318,51 @@ def centrelize_notify(request):
     return render(request, template, {"users": users})
 
 
+from django.conf import settings
+import random
+def send_email_otp(request):
+
+    otp = random.randint(100000, 999999)
+
+    request.session["email_otp"] = otp
+
+    send_mail(
+        "Email Verification OTP",
+        f"Your OTP is {otp}",
+        settings.EMAIL_HOST_USER,
+        [request.user.email]
+    )
+
+    return JsonResponse({"status": "success"})
+
+
+@login_required
+def verify_email_otp(request):
+
+    data = json.loads(request.body)
+    otp = data.get("otp")
+
+    session_otp = request.session.get("email_otp")
+
+    if session_otp and str(session_otp) == str(otp):
+
+        user = request.user
+        user.email_verified = True
+        user.email_verified_at = timezone.now()
+        user.save()
+
+        # remove OTP after success
+        del request.session["email_otp"]
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Email verified successfully"
+        })
+
+    return JsonResponse({
+        "status": "error",
+        "message": "Invalid OTP"
+    })
 
 
 
