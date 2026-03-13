@@ -831,10 +831,13 @@ def munsi_end_vvip_duty(request, batch_id):
                 end_datetime=timezone.now()
             )
 
+            # 🔔 WebSocket channel layer
+            channel_layer = get_channel_layer()
+
             # 🔔 Send notifications
             for staff in staff_users:
 
-                Notification.objects.create(
+                notification = Notification.objects.create(
                     receiver=staff,
                     sender=request.user,
                     title="VVIP Duty Ended",
@@ -845,7 +848,20 @@ def munsi_end_vvip_duty(request, batch_id):
                         "batch_id": str(batch_id),
                         "reason": reason
                     }
-                )   
+                )
+
+                # 🔴 WebSocket real-time notification
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{staff.id}",
+                    {
+                        "type": "send_status_update",
+                        "data": {
+                            "title": notification.title,
+                            "message": notification.message,
+                            "notification_id": notification.id
+                        }
+                    }
+                )
 
                 # 🔥 Firebase push
                 try:
