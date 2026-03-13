@@ -969,7 +969,7 @@ def munsi_approve_request(request, req_id):
     req.save()
 
     # 🔔 Create In-App Notification
-    Notification.objects.create(
+    notification = Notification.objects.create(
         receiver=req.staff,
         sender=request.user,
         title="Request Approved",
@@ -978,6 +978,20 @@ def munsi_approve_request(request, req_id):
         priority="normal",
         metadata={
             "note": "For more details visit Request History"
+        }
+    )
+
+    # 🔔 Send websocket event
+    channel_layer = get_channel_layer()
+
+    async_to_sync(channel_layer.group_send)(
+        f"user_{req.staff.id}",
+        {
+            "type": "send_status_update",
+            "data": {
+                "title": notification.title,
+                "message": notification.message,
+            }
         }
     )
 
@@ -1008,15 +1022,29 @@ def munsi_reject_request(request, req_id):
     req.save()
 
     # 🔔 Create In-App Notification
-    Notification.objects.create(
+    notification = Notification.objects.create(
         receiver=req.staff,
         sender=request.user,
         title="Request Rejected",
-        message=f"Your request (request id: {req.request_number}) has been rejected.",
+        message=f"Your request (request id: {req.request_number}) has been approved.",
         notification_type="request_status",
-        priority="high",
+        priority="normal",
         metadata={
             "note": "For more details visit Request History"
+        }
+    )
+
+    # 🔔 Send websocket event
+    channel_layer = get_channel_layer()
+
+    async_to_sync(channel_layer.group_send)(
+        f"user_{req.staff.id}",
+        {
+            "type": "send_status_update",
+            "data": {
+                "title": notification.title,
+                "message": notification.message,
+            }
         }
     )
 
