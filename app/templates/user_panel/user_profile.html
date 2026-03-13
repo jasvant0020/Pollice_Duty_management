@@ -78,11 +78,22 @@
                         </p>
                     </div>
 
-                    <div class="group">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Email Address</p>
-                        <p class="font-semibold text-gray-900 text-lg group-hover:text-teal-600 transition-colors break-all">
-                            {{ request.user.email }}
+                    <div class="group whitespace-nowrap">
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                            Email Address
                         </p>
+
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-gray-900 text-lg group-hover:text-teal-600 transition-colors break-all">
+                                {{ request.user.email }}
+                            </p>
+
+                            {% if user.email_verified %}
+                                <span class="text-green-600 text-sm font-semibold px-3 py-1 bg-green-100 rounded-lg whitespace-nowrap">
+                                    ✓ Verified
+                                </span>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <div class="group">
