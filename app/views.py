@@ -1583,10 +1583,10 @@ def add_user(request):
     if request.method == "POST":
         name = request.POST.get("name")
         email = request.POST.get("email")
-        phone = request.POST.get("phone")
-        gender = request.POST.get("gender")
-        dob = request.POST.get("dob")
-        rank = request.POST.get("rank")
+        phone = request.POST.get("phone") or None
+        gender = request.POST.get("gender") or None
+        dob = request.POST.get("dob") or None
+        rank = request.POST.get("rank") or None
         role = request.POST.get("role")
         password = request.POST.get("password")   
         confirm_password = request.POST.get("confirm_password")

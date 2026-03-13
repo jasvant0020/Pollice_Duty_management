@@ -1,132 +1,253 @@
 {% extends 'admin_panel/admin_base.html' %}
 {% block page_title %}Add User{% endblock %}
+
 {% block content %}
 {% include "error_message/error_message.html" %}
-<form method="POST" class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-indigo-600">
-    {% csrf_token %}
 
-    <!-- Name -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Name:</label>
-        <input type="text" name="name" class="w-full text-gray-800 border rounded p-2" required>
-    </div>
+<div class="mb-4">
+    <button onclick="toggleFormMode()"
+        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+        Toggle Quick Create
+    </button>
+</div>
 
-    <!-- Email -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Email:</label>
-        <input type="email" name="email" class="w-full text-gray-800 border rounded p-2" required>
-    </div>
+<form method="POST"
+class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-indigo-600">
 
-    <!-- Phone -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
-        <input name="phone" class="w-full text-gray-800 border rounded p-2" required
-        type="tel"
-        placeholder="Enter 10 digit mobile number"
-        pattern="[6-9][0-9]{9}"
-        maxlength="10"
-        minlength="10"
-        title="Enter valid 10 digit Indian mobile number">
-    </div>
+{% csrf_token %}
 
-    <!-- Password -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Password:</label>
-        <input type="password" name="password" class="w-full text-gray-800 border rounded p-2" required>
-    </div>
+<!-- ================= FULL FORM ================= -->
 
-    <!-- Confirm Password -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
-        <input type="password" name="confirm_password" class="w-full text-gray-800 border rounded p-2" required>
-    </div>
+<div id="full_form">
 
-    <!-- Gender -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Gender:</label>
-        <select name="gender" class="w-full text-gray-800 border rounded p-2" required>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-        </select>
-    </div>
+```
+<!-- Name -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Name:</label>
+    <input type="text" name="name" class="w-full text-gray-800 border rounded p-2">
+</div>
 
-    <!-- DOB -->
-    <div>
-        <label class="block text-gray-700 font-semibold mb-1">Date of Birth:</label>
+<!-- Email -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Email:</label>
+    <input type="email" name="email" class="w-full text-gray-800 border rounded p-2">
+</div>
 
-        <div class="relative">
-            <input id="dob" type="date" name="dob"
-                class="w-full text-gray-800 border rounded p-2 pr-10 bg-white"
-                required>
+<!-- Phone -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Phone:</label>
+    <input name="phone" class="w-full text-gray-800 border rounded p-2"
+    type="tel"
+    placeholder="Enter 10 digit mobile number"
+    pattern="[6-9][0-9]{9}"
+    maxlength="10"
+    minlength="10">
+</div>
 
-            <!-- Calendar Icon -->
-            <div class="absolute inset-y-0 right-3 flex items-center cursor-pointer"
-                onclick="document.getElementById('dob').showPicker()">
+<!-- Password -->
+<div class="relative">
+    <label class="block text-gray-700 font-semibold mb-1">Password:</label>
+    <input id="password_full" type="password" name="password" class="w-full text-gray-800 border rounded p-2 pr-10">
+    <span onclick="togglePassword('password_full', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
+</div>
 
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5 text-gray-500 hover:text-gray-700"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
+<!-- Confirm Password -->
+<div class="relative">
+    <label class="block text-gray-700 font-semibold mb-1">Confirm Password:</label>
+    <input id="confirm_full" type="password" name="confirm_password" class="w-full text-gray-800 border rounded p-2 pr-10">
+    <span onclick="togglePassword('confirm_full', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
+</div>
 
-                    <path stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10m-13 9h16a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z"/>
-                </svg>
+<!-- Gender -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Gender:</label>
+    <select name="gender" class="w-full text-gray-800 border rounded p-2">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="other">Other</option>
+    </select>
+</div>
 
-            </div>
+<!-- DOB -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Date of Birth:</label>
+
+    <div class="relative">
+        <input id="dob" type="date" name="dob"
+            class="w-full text-gray-800 border rounded p-2 pr-10 bg-white">
+
+        <div class="absolute inset-y-0 right-3 flex items-center cursor-pointer"
+            onclick="document.getElementById('dob').showPicker()">
+
+            <svg xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-gray-500 hover:text-gray-700"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+
+                <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7V3m8 4V3m-9 8h10m-13 9h16a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v11a2 2 0 002 2z"/>
+            </svg>
+
         </div>
     </div>
+</div>
+```
 
-    <!-- Role -->
-    <div>
-        <label class="font-semibold text-gray-700">Role:</label>
-        <select name="role" id="role" class="w-full text-gray-800 border rounded p-2" required onchange="toggleGDMunsi()">
-            {% for r in allowed_roles %}
-                <option value="{{ r }}">{{ r|title }}</option>
-            {% endfor %}
-        </select>
-    </div>
+</div>
 
-    <!-- Rank -->
-    <div>
-        <label class="font-semibold text-gray-700">Rank:</label>
-        <select name="rank" id="rank" class="w-full text-gray-800 border rounded p-2">
-            {% for r in police_rank %}
-                <option value="{{ r.police_rank }}">{{ r.police_rank }}</option>
-            {% endfor %}
-        </select>
-    </div>
+<!-- ================= QUICK FORM ================= -->
 
-    <!-- GD Munsi selection (only for admin creating field staff) -->
-    <div id="gd_munsi_block" style="display:none;">
-        <label class="font-semibold text-gray-700">Select GD Munsi:</label>
-        <select name="gd_munsi_id" class="w-full text-gray-800 border rounded p-2">
-            {% for gm in gd_munsi_list %}
-                <option value="{{ gm.id }}">{{ gm.first_name }} ({{ gm.email }})</option>
-            {% endfor %}
-        </select>
-    </div>
+<div id="quick_form" style="display:none">
 
-    <button type="submit" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
-        Save
-    </button>
+```
+<!-- Email -->
+<div>
+    <label class="block text-gray-700 font-semibold mb-1">Username (Email)</label>
+    <input type="email" name="email"
+    class="w-full text-gray-800 border rounded p-2"
+    placeholder="Enter Email">
+</div>
+
+<!-- Password -->
+<div class="relative">
+    <label class="block text-gray-700 font-semibold mb-1">Password</label>
+    <input id="password_quick" type="password" name="password"
+    class="w-full text-gray-800 border rounded p-2 pr-10">
+    <span onclick="togglePassword('password_quick', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
+</div>
+
+<!-- Confirm Password -->
+<div class="relative">
+    <label class="block text-gray-700 font-semibold mb-1">Confirm Password</label>
+    <input id="confirm_quick" type="password" name="confirm_password"
+    class="w-full text-gray-800 border rounded p-2 pr-10">
+    <span onclick="togglePassword('confirm_quick', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
+</div>
+```
+
+</div>
+
+<!-- Role -->
+
+<div>
+<label class="font-semibold text-gray-700">Role:</label>
+
+<select name="role" id="role"
+class="w-full text-gray-800 border rounded p-2"
+onchange="toggleGDMunsi()">
+
+{% for r in allowed_roles %}
+
+<option value="{{ r }}">{{ r|title }}</option>
+{% endfor %}
+
+</select>
+</div>
+
+<!-- Rank -->
+
+<div>
+<label class="font-semibold text-gray-700">Rank:</label>
+
+<select name="rank" id="rank"
+class="w-full text-gray-800 border rounded p-2">
+
+{% for r in police_rank %}
+
+<option value="{{ r.police_rank }}">{{ r.police_rank }}</option>
+{% endfor %}
+
+</select>
+</div>
+
+<!-- GD Munsi -->
+
+<div id="gd_munsi_block" style="display:none;">
+
+<label class="font-semibold text-gray-700">Select GD Munsi:</label>
+
+<select name="gd_munsi_id"
+class="w-full text-gray-800 border rounded p-2">
+
+{% for gm in gd_munsi_list %}
+
+<option value="{{ gm.id }}">
+{{ gm.first_name }} ({{ gm.email }})
+</option>
+{% endfor %}
+
+</select>
+
+</div>
+
+<button type="submit"
+class="mt-4 px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700">
+Save </button>
+
 </form>
 
 <script>
-function toggleGDMunsi() {
-    const role = document.getElementById("role").value;
-    const block = document.getElementById("gd_munsi_block");
 
-    if (role === "field_staff") {
-        block.style.display = "block";
-    } else {
-        block.style.display = "none";
+let quickMode = false
+
+function toggleFormMode(){
+
+    const full = document.getElementById("full_form")
+    const quick = document.getElementById("quick_form")
+
+    quickMode = !quickMode
+
+    if(quickMode){
+
+        full.style.display = "none"
+        quick.style.display = "block"
+
+    }else{
+
+        full.style.display = "block"
+        quick.style.display = "none"
+
     }
+
 }
-toggleGDMunsi();
+
+
+function toggleGDMunsi(){
+
+    const role = document.getElementById("role").value
+    const block = document.getElementById("gd_munsi_block")
+
+    if(role === "field_staff"){
+
+        block.style.display = "block"
+
+    }else{
+
+        block.style.display = "none"
+
+    }
+
+}
+
+function togglePassword(id, icon){
+
+    const input = document.getElementById(id)
+
+    if(input.type === "password"){
+        input.type = "text"
+        icon.textContent = "🙈"
+    }else{
+        input.type = "password"
+        icon.textContent = "👁"
+    }
+
+}
+
+toggleGDMunsi()
+
 </script>
 
 {% endblock %}
