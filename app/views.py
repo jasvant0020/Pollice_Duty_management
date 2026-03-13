@@ -1369,7 +1369,7 @@ def request_application_box(request):
 
 
             # 🔔 Create In-App Notification for Munsi
-            Notification.objects.create(
+            notification = Notification.objects.create(
                 receiver=munsi_user,
                 sender=request.user,
                 title="New Staff Request",
@@ -1381,6 +1381,21 @@ def request_application_box(request):
                     "request_id": request_obj.request_number,
                     "subject": request_obj.subject,
                     "note": "Open Staff Requests panel for review"
+                }
+            )
+
+            # 🔥 WebSocket Real-time Notification
+            channel_layer = get_channel_layer()
+
+            async_to_sync(channel_layer.group_send)(
+                f"user_{munsi_user.id}",
+                {
+                    "type": "send_status_update",
+                    "data": {
+                        "title": notification.title,
+                        "message": notification.message,
+                        "request_id": request_obj.request_number
+                    }
                 }
             )
 
