@@ -187,7 +187,7 @@
                                 </div>
 
                                 <form method="POST"
-                                    action="{% url 'munsi_deactivate_duty' duty.id %}">
+                                    action="{% url 'munsi_deactivate_duty_individual' duty.id %}">
                                     {% csrf_token %}
 
                                     <textarea name="end_reason"

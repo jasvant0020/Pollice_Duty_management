@@ -703,7 +703,7 @@ def munsi_previous_duties(request):
 
 
 @role_required(["gd_munsi"])
-def munsi_deactivate_duty(request, duty_id):
+def munsi_deactivate_duty_individual(request, duty_id):
 
     gd = request.user
 
@@ -723,56 +723,61 @@ def munsi_deactivate_duty(request, duty_id):
                 is_active=True
             )
 
-            duties = VVIPDuty.objects.filter(
-                batch_id=duty.batch_id,
-                assigned_by=gd,
-                is_active=True
+            staff = duty.field_staff
+
+            # 🔹 End only THIS duty
+            duty.is_active = False
+            duty.end_reason = reason
+            duty.ended_by = gd
+            duty.ended_at = timezone.now()
+            duty.end_datetime = timezone.now()
+            duty.save()
+
+            # 🔔 Create notification
+            notification = Notification.objects.create(
+                receiver=staff,
+                sender=request.user,
+                title="VVIP Duty Ended",
+                message=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
+                notification_type="duty_ended",
+                priority="high",
+                metadata={
+                    "vvip_name": duty.vvip.get_full_name(),
+                    "batch_id": str(duty.batch_id),
+                    "reason": reason
+                }
             )
 
-            # ✅ Evaluate staff BEFORE update
-            staff_users = [d.field_staff for d in duties.select_related("field_staff")]
+            # 🔴 WebSocket
+            channel_layer = get_channel_layer()
 
-            # 🔹 End batch duties
-            duties.update(
-                is_active=False,
-                end_reason=reason,
-                ended_by=gd,
-                ended_at=timezone.now(),
-                end_datetime=timezone.now()
-            )
-
-            # 🔔 Send notifications
-            for staff in staff_users:
-
-                Notification.objects.create(
-                    receiver=staff,
-                    sender=request.user,
-                    title="VVIP Duty Ended",
-                    message=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
-                    notification_type="duty_ended",
-                    priority="high",
-                    metadata={
-                        "vvip_name": duty.vvip.get_full_name(),
-                        "batch_id": str(duty.batch_id),
-                        "reason": reason
+            async_to_sync(channel_layer.group_send)(
+                f"user_{staff.id}",
+                {
+                    "type": "send_status_update",
+                    "data": {
+                        "title": notification.title,
+                        "message": notification.message,
+                        "notification_id": notification.id
                     }
+                }
+            )
+
+            # 🔥 Firebase push
+            try:
+                send_push_notification(
+                    user=staff,
+                    title="Duty Ended",
+                    body=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
+                    id=str(duty.batch_id),
+                    url=reverse("user_assign_duty"),
+                    sender=gd,
+                    notification_type="duty"
                 )
+            except Exception as e:
+                print("Push notification error:", e)
 
-                # 🔥 Firebase push
-                try:
-                    send_push_notification(
-                        user=staff,
-                        title="Duty Ended",
-                        body=f"Your duty for {duty.vvip.get_full_name()} has been ended.",
-                        id=str(duty.batch_id),
-                        url=reverse("user_assign_duty"),
-                        sender=gd,
-                        notification_type="duty"
-                    )
-                except Exception as e:
-                    print("Push notification error:", e)
-
-            messages.success(request, "Duty batch ended successfully!")
+            messages.success(request, "Individual duty ended successfully!")
 
         except VVIPDuty.DoesNotExist:
             messages.error(request, "Duty not found or already inactive.")
