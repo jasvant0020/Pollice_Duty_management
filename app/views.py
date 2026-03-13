@@ -550,6 +550,7 @@ def munsi_assign_duty(request):
                 else:
                     final_staff_queryset = list(never_staff)
 
+                channel_layer = get_channel_layer()
 
                 for staff in final_staff_queryset:
 
@@ -581,7 +582,7 @@ def munsi_assign_duty(request):
                     from django.urls import reverse
 
                     # 🔔 Create In-App Notification
-                    Notification.objects.create(
+                    notification = Notification.objects.create(
                         receiver=staff,
                         sender=request.user,
                         title="New VVIP Duty Assigned",
@@ -589,12 +590,24 @@ def munsi_assign_duty(request):
                         notification_type="duty_assigned",
                         priority="high",
                         metadata={
-                            # "vvip_id": vvip.id,
                             "vvip_name": vvip.get_full_name(),
                             "duty_place": duty_place,
                             "start_datetime": start_datetime.isoformat(),
                             "end_datetime": end_datetime.isoformat(),
                             "batch_id": str(batch_id)
+                        }
+                    )
+
+                    # 🔔 WebSocket Real-Time Notification
+                    async_to_sync(channel_layer.group_send)(
+                        f"user_{staff.id}",
+                        {
+                            "type": "send_status_update",
+                            "data": {
+                                "title": notification.title,
+                                "message": notification.message,
+                                "notification_id": notification.id
+                            }
                         }
                     )
                     
@@ -2193,8 +2206,11 @@ def centrelize_notify(request):
                 )
 
         # -------- create notifications --------
+        channel_layer = get_channel_layer()
+
         for user in users:
-            Notification.objects.create(
+
+            notification = Notification.objects.create(
                 receiver=user,
                 sender=current_user,
                 title=title,
@@ -2202,6 +2218,20 @@ def centrelize_notify(request):
                 notification_type=notify_type,
                 priority="critical" if notify_type == "sos" else "normal",
                 metadata={"sent_by": current_user.username}
+            )
+
+            # 🔔 Send WebSocket real-time update
+            async_to_sync(channel_layer.group_send)(
+                f"user_{user.id}",
+                {
+                    "type": "send_status_update",
+                    "data": {
+                        "title": notification.title,
+                        "message": notification.message,
+                        "sender": current_user.username,
+                        "type": notify_type
+                    }
+                }
             )
 
         # -------- log centralized notification --------
@@ -2259,6 +2289,11 @@ def centrelize_notify(request):
         template = "admin_panel/centrelize_notify.html"
 
     return render(request, template, {"users": users})
+
+
+
+
+
 
 
 
