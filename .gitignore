@@ -15,8 +15,8 @@ env/
 *.log
 *.pot
 *.pyc
-# *.sqlite3
-# db.sqlite3
+*.sqlite3
+db.sqlite3
 
 # Media & Static (if using local dev folders)
 media
