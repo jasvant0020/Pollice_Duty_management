@@ -9,7 +9,7 @@ import os
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('jasvant0020_admin/', admin.site.urls),
 
     # Login panel pages
     path("", views.login_view, name="login"),
