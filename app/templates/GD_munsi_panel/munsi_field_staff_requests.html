@@ -100,6 +100,7 @@
         {% for req in pending_requests %}
             <div @click="openModal({
                     id: '{{ req.id }}',
+                    request_number: '{{ req.request_number }}',
                     name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
                     image: '{{ req.staff.profile_photo.url }}',
                     subject: `{{ req.subject|escapejs }}`,
@@ -130,6 +131,7 @@
         <div 
             @click="openModal({
                 id: '{{ req.id }}',
+                request_number: '{{ req.request_number }}',
                 name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
                 image: '{{ req.staff.profile_photo.url }}',
                 subject: `{{ req.subject|escapejs }}`,
@@ -162,6 +164,7 @@
         <div 
             @click="openModal({
                 id: '{{ req.id }}',
+                request_number: '{{ req.request_number }}',
                 name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
                 image: '{{ req.staff.profile_photo.url }}',
                 subject: `{{ req.subject|escapejs }}`,
@@ -224,7 +227,7 @@
 
                     <div>
                         <p class="font-semibold text-gray-600">Request ID</p>
-                        <p x-text="modalData.id"
+                        <p x-text="modalData.request_number"
                         class="bg-gray-100 p-3 rounded-lg"></p>
                     </div>
 
@@ -300,6 +303,7 @@ function requestManager() {
 
                     const formatted = {
                         id: response.data.id,
+                        request_number: response.data.request_number,
                         name: response.data.name,
                         image: response.data.photo,
                         subject: response.data.subject,

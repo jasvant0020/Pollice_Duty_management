@@ -1436,7 +1436,7 @@ def request_application_box(request):
 
             # 🔥 Firebase Push Notification
             send_push_notification(
-                id=request_obj.id,
+                id=request_obj.request_number,
                 user=munsi_user,
                 title="New Request From Staff",
                 body=request_obj.subject,
