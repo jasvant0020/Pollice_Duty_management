@@ -1035,7 +1035,7 @@ def munsi_approve_request(request, req_id):
         user=req.staff,
         title="Request Approved",
         body=req.subject,
-        # url=reverse("staff_request_detail", args=[req.id]),
+        url=reverse("staff_request_detail", args=[req.id]),
         notification_type="status"
     )
 
@@ -1088,7 +1088,7 @@ def munsi_reject_request(request, req_id):
         user=req.staff,
         title="Request Rejected",
         body=req.subject,
-        # url=reverse("staff_request_detail", args=[req.id]),
+        url=reverse("staff_request_detail", args=[req.id]),
         notification_type="status"
     )
 
@@ -1441,7 +1441,7 @@ def request_application_box(request):
                 title="New Request From Staff",
                 body=request_obj.subject,
                 sender=request.user,
-                url=f"/munsi/request/{request_obj.id}/",
+                url=reverse("munsi_field_staff_requests"),
                 notification_type="request"
             )
 
@@ -2259,6 +2259,17 @@ def centrelize_notify(request):
                         "type": notify_type
                     }
                 }
+            )
+
+            # 🔥 Firebase Push Notification
+            send_push_notification(
+                id=notification.id,
+                user=user,
+                title=title,
+                body=message,
+                sender=current_user,
+                url=reverse("centrelize_Notifications"),
+                notification_type=notify_type
             )
 
         # -------- log centralized notification --------
