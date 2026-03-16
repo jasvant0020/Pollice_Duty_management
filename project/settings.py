@@ -61,8 +61,7 @@ AUTH_USER_MODEL = 'app.User'
 
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']
-# NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"  #for local use 
-NPM_BIN_PATH = "/usr/bin/npm"                    #for production use
+NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH", "/usr/bin/npm")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
