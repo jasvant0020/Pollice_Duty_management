@@ -31,7 +31,7 @@ DEBUG = os.environ.get("DEBUG") == "True"
 
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1").split(",")
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.ngrok-free.dev",
+    "https://duty-management.uppfms.com"
 ]
 
 
@@ -61,7 +61,7 @@ AUTH_USER_MODEL = 'app.User'
 
 TAILWIND_APP_NAME = 'theme'
 INTERNAL_IPS = ['127.0.0.1']
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = "/usr/bin/npm"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
