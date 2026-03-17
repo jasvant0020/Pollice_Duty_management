@@ -1,0 +1,271 @@
+{% extends 'GD_munsi_panel/base.html' %}
+{% block page_title %}Reassign Duty{% endblock %}
+
+{% block content %}
+{% include "error_message/error_message.html" %}
+
+<div class="max-w-5xl mx-auto px-4 py-12">
+
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
+        <div>
+            <nav class="flex mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-500">
+                <span>Security Operations</span>
+                <span class="mx-2">/</span>
+                <span class="text-gray-400">Personnel Reallocation</span>
+            </nav>
+            <h2 class="text-4xl font-black text-gray-900 leading-tight">
+                Reassign Staff
+            </h2>
+            <p class="text-gray-500 text-lg mt-2 max-w-md">
+                Strategic gap filling for <span class="text-indigo-600 font-bold">{{ vvip.get_full_name|default:vvip.username|title }}'s</span> security detail.
+            </p>
+        </div>
+
+        <div class="bg-white border border-gray-200 p-1.5 rounded-2xl shadow-sm flex items-center">
+            <button type="button" id="autoBtn" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-indigo-600 text-white shadow-md shadow-indigo-200">
+                Auto-Fill
+            </button>
+            <button type="button" id="manualBtn" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 text-gray-500 hover:text-gray-700">
+                Manual Select
+            </button>
+            <input type="checkbox" id="modeToggle" class="hidden">
+        </div>
+    </div>
+
+    {% if assignment_needed %}
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
+        {% for rank, data in assignment_needed.items %}
+        <div class="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <span class="text-xs font-black uppercase text-gray-400 tracking-widest">{{ rank }}</span>
+                    <h4 class="text-2xl font-bold text-gray-800">{{ data.current }}<span class="text-gray-300 mx-1">/</span><span class="text-indigo-600">{{ data.required }}</span></h4>
+                </div>
+                <div class="bg-red-50 text-red-600 px-3 py-1 rounded-full text-xs font-bold">
+                    -{{ data.shortage }} Needed
+                </div>
+            </div>
+            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-indigo-500 h-full rounded-full transition-all duration-500" style="width: {% widthratio data.current data.required 100 %}%"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <form method="POST" id="reassignForm">
+        {% csrf_token %}
+
+        <div class="space-y-10">
+            {% for rank, data in assignment_needed.items %}
+            <section>
+                <div class="flex items-center gap-4 mb-5">
+                    <h3 class="text-lg font-bold text-gray-800">{{ rank }} Candidates</h3>
+                    <div class="h-px flex-1 bg-gradient-to-r from-gray-200 to-transparent"></div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {% for staff in data.available_staff|slice:":6" %}
+                    <label class="group relative block cursor-pointer">
+                        <input type="checkbox" name="selected_staff" value="{{ staff.id }}" data-max="{{ data.shortage }}"  data-rank="{{ rank }}" class="manual-checkbox sr-only">
+                        
+                        <div class="staff-card h-full border-2 border-gray-100 bg-white p-5 rounded-2xl transition-all duration-200 group-hover:border-indigo-200 group-hover:shadow-md">
+                            <div class="flex items-center gap-4">
+                                <div class="relative">
+                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                                        {{ staff.get_full_name|slice:":1"|upper }}
+                                    </div>
+                                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold text-gray-900 truncate">
+                                        {{ staff.get_full_name|default:staff.username|title }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 font-medium">Ready for deployment</p>
+                                </div>
+
+                                <div class="check-indicator opacity-0 transition-opacity">
+                                    <div class="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px]">
+                                        ✓
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    {% empty %}
+                    <div class="col-span-full py-8 text-center border-2 border-dashed border-gray-200 rounded-2xl text-gray-400">
+                        No qualified staff available for this rank.
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+        </div>
+
+        <div class="sticky bottom-4 mt-12">
+            <div class="bg-gray-900/95 backdrop-blur-md border border-white/10 p-4 rounded-3xl shadow-2xl flex items-center justify-between">
+                <a href="{% url 'munsi_active_duty' %}" class="px-6 text-gray-400 hover:text-white font-bold text-sm transition-colors">
+                    Cancel
+                </a>
+
+                <div class="flex items-center gap-4">
+                    <span id="selectionCount" class="hidden text-indigo-300 text-xs font-bold uppercase tracking-widest mr-2">
+                        0 Staff Selected
+                    </span>
+                    
+                    {% if has_available_staff %}
+                    <button type="submit" class="px-8 py-3 bg-indigo-500 hover:bg-indigo-400 text-white rounded-2xl font-black text-sm transition-all active:scale-95 flex items-center gap-3">
+                        <span id="assignText">⚡ RUN AUTO-OPTIMIZATION</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </button>
+                    {% else %}
+                    <button disabled class="px-8 py-3 bg-gray-800 text-gray-500 rounded-2xl font-bold text-sm cursor-not-allowed">
+                        RESOURCES UNAVAILABLE
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% else %}
+    <div class="max-w-md mx-auto text-center py-20">
+        <div class="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">
+            ✓
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900">All Posts Filled</h3>
+        <p class="text-gray-500 mt-2">The security detail for this VVIP is currently at full capacity.</p>
+        <a href="{% url 'munsi_active_duty' %}" class="inline-block mt-8 font-bold text-indigo-600 hover:text-indigo-700">Return to Dashboard &rarr;</a>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    /* Selection styles for manual mode */
+    .manual-mode .manual-checkbox:checked + .staff-card {
+        border-color: #4f46e5;
+        background-color: #f8fafc;
+        transform: translateY(-2px);
+    }
+    .manual-mode .manual-checkbox:checked + .staff-card .check-indicator {
+        opacity: 1;
+    }
+    /* Hide indicators by default */
+    .check-indicator { display: none; }
+    .manual-mode .check-indicator { display: block; }
+</style>
+
+<script>
+    const autoBtn = document.getElementById('autoBtn');
+    const manualBtn = document.getElementById('manualBtn');
+    const modeToggle = document.getElementById('modeToggle');
+    const form = document.getElementById('reassignForm');
+    const checkboxes = document.querySelectorAll('.manual-checkbox');
+    const btnText = document.getElementById('assignText');
+    const countDisplay = document.getElementById('selectionCount');
+
+    function setMode(isManual) {
+        modeToggle.checked = isManual;
+
+        if (isManual) {
+            manualBtn.classList.add('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
+            manualBtn.classList.remove('text-gray-500');
+            autoBtn.classList.remove('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
+            autoBtn.classList.add('text-gray-500');
+
+            form.classList.add('manual-mode');
+            btnText.innerText = "CONFIRM SELECTION";
+            countDisplay.classList.remove('hidden');
+
+        } else {
+            autoBtn.classList.add('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
+            autoBtn.classList.remove('text-gray-500');
+            manualBtn.classList.remove('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
+            manualBtn.classList.add('text-gray-500');
+
+            form.classList.remove('manual-mode');
+            btnText.innerText = "⚡ RUN AUTO-OPTIMIZATION";
+            countDisplay.classList.add('hidden');
+
+            checkboxes.forEach(cb => cb.checked = false);
+            updateCount();
+        }
+    }
+
+    autoBtn.addEventListener('click', () => setMode(false));
+    manualBtn.addEventListener('click', () => setMode(true));
+
+    function updateCount() {
+        const checked = document.querySelectorAll('.manual-checkbox:checked');
+        countDisplay.innerText = `${checked.length} Staff Selected`;
+
+        validateLimits();
+    }
+
+    function validateLimits() {
+        const submitBtn = form.querySelector('button[type="submit"]');
+
+        let valid = true;
+
+        // Group by rank
+        const rankMap = {};
+
+        checkboxes.forEach(cb => {
+            const rank = cb.dataset.rank;
+            const max = parseInt(cb.dataset.max || 0);
+
+            if (!rankMap[rank]) {
+                rankMap[rank] = {
+                    selected: 0,
+                    max: max
+                };
+            }
+
+            if (cb.checked) {
+                rankMap[rank].selected += 1;
+            }
+        });
+
+        // Validate each rank
+        for (let rank in rankMap) {
+            if (rankMap[rank].selected > rankMap[rank].max) {
+                valid = false;
+            }
+        }
+
+        if (!valid) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-50','cursor-not-allowed');
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('opacity-50','cursor-not-allowed');
+        }
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', function () {
+
+            const rank = this.dataset.rank;
+            const max = parseInt(this.dataset.max || 0);
+
+            const sameRankChecked = document.querySelectorAll(
+                `.manual-checkbox[data-rank="${rank}"]:checked`
+            );
+
+            if (sameRankChecked.length > max) {
+                this.checked = false;
+
+                alert(`Only ${max} ${rank} allowed`);
+                return;
+            }
+
+            updateCount();
+        });
+    });
+</script>
+
+{% endblock %}

@@ -643,6 +643,107 @@ def munsi_assign_duty(request):
     })
 
 
+@role_required(["gd_munsi"])
+def munsi_reassign_duty(request, batch_id):
+
+    gd = request.user
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        assigned_by=gd
+    ).select_related("vvip", "category")
+
+    if not duties.exists():
+        messages.error(request, "Invalid batch.")
+        return redirect("munsi_active_duty")
+
+    duty_sample = duties.first()
+    category = duty_sample.category
+    vvip = duty_sample.vvip
+
+    required_rank_data = category.personnel_by_rank or {}
+
+    # 🔥 CURRENT ACTIVE STAFF (remaining after removal)
+    active_staff_ids = duties.filter(is_active=True).values_list("field_staff_id", flat=True)
+
+    # 🔥 Already active globally (avoid conflict)
+    globally_active_staff = VVIPDuty.objects.filter(
+        is_active=True
+    ).values_list("field_staff_id", flat=True)
+
+    available_staff = User.objects.filter(
+        role="field_staff",
+        gd_munsi=gd
+    ).exclude(id__in=globally_active_staff)
+
+    assignment_needed = {}
+
+    for rank, required_count in required_rank_data.items():
+        current_count = duties.filter(
+            is_active=True,
+            field_staff__rank=rank
+        ).count()
+
+        shortage = int(required_count) - current_count
+
+        if shortage > 0:
+            assignment_needed[rank] = {
+                "required": required_count,
+                "current": current_count,
+                "shortage": shortage,
+                "available_staff": available_staff.filter(rank=rank)
+            }
+
+    if request.method == "POST":
+
+        selected_ids = request.POST.getlist("selected_staff")
+
+        with transaction.atomic():
+
+            for rank, data in assignment_needed.items():
+
+                # 🔵 MANUAL MODE
+                if selected_ids:
+                    staff_queryset = User.objects.filter(
+                        id__in=selected_ids,
+                        rank=rank
+                    )[:data["shortage"]]
+
+                # 🟢 AUTO MODE
+                else:
+                    staff_queryset = data["available_staff"][:data["shortage"]]
+
+                for staff in staff_queryset:
+                    VVIPDuty.objects.create(
+                        vvip=vvip,
+                        category=category,
+                        field_staff=staff,
+                        assigned_by=gd,
+                        duty_place=duty_sample.duty_place,
+                        start_datetime=timezone.now(),
+                        end_datetime=duty_sample.end_datetime,
+                        vehicle=duty_sample.vehicle,
+                        duty_type=duty_sample.duty_type,
+                        special_instructions=duty_sample.special_instructions,
+                        is_active=True,
+                        batch_id=batch_id
+                    )
+        
+        messages.success(request, "Replacement staff assigned successfully.")
+        return redirect("munsi_active_duty")
+    
+    has_available_staff = any(
+            data["available_staff"].exists()
+            for data in assignment_needed.values()
+        )
+        
+    return render(request, "GD_munsi_panel/munsi_reassign_duty.html", {
+        "assignment_needed": assignment_needed,
+        "vvip": vvip,
+        "has_available_staff": has_available_staff
+    })
+
+
 
 @role_required(["gd_munsi"])
 def munsi_dashboard(request):
@@ -675,11 +776,27 @@ def munsi_active_duty(request):
     for duty in duties:
         grouped_duties[duty.batch_id].append(duty)
 
-    active_batch_count = len(grouped_duties)
+    # 🔥 ADD THIS BLOCK
+    enriched_grouped_duties = {}
+
+    for batch_id, duty_list in grouped_duties.items():
+
+        category = duty_list[0].category
+        personnel = category.personnel_by_rank or {}
+
+        total_required = sum(int(v) for v in personnel.values())
+        current_count = len(duty_list)
+
+        enriched_grouped_duties[batch_id] = {
+            "duties": duty_list,
+            "total_required": total_required,
+            "current_count": current_count,
+            "has_shortage": current_count < total_required
+        }
 
     return render(request, "GD_munsi_panel/munsi_active_duty.html", {
-        "grouped_duties": dict(grouped_duties),
-        "active_duty_count": active_batch_count,
+        "grouped_duties": enriched_grouped_duties,
+        "active_duty_count": len(grouped_duties),
     })
 
 @role_required(["gd_munsi"])
@@ -785,23 +902,6 @@ def munsi_deactivate_duty_individual(request, duty_id):
     return redirect("munsi_active_duty")
 
 
-def munsi_vvip_duty_print(request, batch_id):
-
-    duties = VVIPDuty.objects.filter(
-        batch_id=batch_id,
-        is_active=True
-    ).select_related("vvip", "field_staff", "category")
-
-    duty = duties.first()
-
-    return render(request, "GD_munsi_panel/vvip_duty_print.html", {
-        "vvip": duty.vvip if duty else None,
-        "duties": duties,
-        "duty": duty,
-        "total_staff": duties.count()
-    })
-
-
 
 @role_required(["gd_munsi"])
 def munsi_end_vvip_duty(request, batch_id):
@@ -888,6 +988,26 @@ def munsi_end_vvip_duty(request, batch_id):
             messages.warning(request, "No active duties found.")
 
     return redirect("munsi_active_duty")
+
+
+
+@role_required(["gd_munsi"])
+def munsi_vvip_duty_print(request, batch_id):
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        is_active=True
+    ).select_related("vvip", "field_staff", "category")
+
+    duty = duties.first()
+
+    return render(request, "GD_munsi_panel/vvip_duty_print.html", {
+        "vvip": duty.vvip if duty else None,
+        "duties": duties,
+        "duty": duty,
+        "total_staff": duties.count()
+    })
+
 
 
 @role_required(["gd_munsi"])
@@ -1035,7 +1155,7 @@ def munsi_approve_request(request, req_id):
         user=req.staff,
         title="Request Approved",
         body=req.subject,
-        url=reverse("staff_request_detail", args=[req.id]),
+        url=reverse("centrelize_Notifications"),
         notification_type="status"
     )
 
@@ -1088,7 +1208,7 @@ def munsi_reject_request(request, req_id):
         user=req.staff,
         title="Request Rejected",
         body=req.subject,
-        url=reverse("staff_request_detail", args=[req.id]),
+        url=reverse("centrelize_Notifications"),
         notification_type="status"
     )
 
