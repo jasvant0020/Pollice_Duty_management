@@ -1366,12 +1366,22 @@ def manage_users(request):
 
 @role_required(["admin"])
 def manage_vvip(request):
-    vvips = User.objects.filter(role="vvip",admin=request.user).select_related("category")
-    context = {
-            "vvips": vvips,
-        }
+    vvips = User.objects.filter(
+        role="vvip",
+        admin=request.user
+    ).select_related("category")
 
-    return render(request,"admin_panel/manage_vvip.html",context)
+    active_vvips = vvips.filter(is_active=True)
+    suspended_vvips = vvips.filter(is_active=False)
+
+    return render(
+        request,
+        "admin_panel/manage_vvip.html",
+        {
+            "active_vvips": active_vvips,
+            "suspended_vvips": suspended_vvips,
+        }
+    )
 
 
 @role_required(["admin"])
@@ -1990,24 +2000,27 @@ def toggle_user_status(request, user_id):
     target_user = get_object_or_404(User, id=user_id)
     acting_user = request.user
 
+    # 🔁 Smart redirect (go back to same page)
+    redirect_url = request.META.get("HTTP_REFERER", "manage_users")
+
     # 🚫 Cannot suspend yourself
     if target_user.id == acting_user.id:
         messages.error(request, "You cannot suspend your own account.")
-        return redirect("manage_users")
+        return redirect(redirect_url)
 
     # 🚫 Role hierarchy enforcement
     if ROLE_HIERARCHY[acting_user.role] <= ROLE_HIERARCHY[target_user.role]:
         messages.error(request, "You are not allowed to suspend this user.")
-        return redirect("manage_users")
+        return redirect(redirect_url)
 
     # 🔐 Scope enforcement
     if acting_user.role == "admin" and target_user.admin != acting_user:
         messages.error(request, "You cannot manage users outside your admin scope.")
-        return redirect("manage_users")
+        return redirect(redirect_url)
 
     if acting_user.role == "gd_munsi" and target_user.gd_munsi != acting_user:
         messages.error(request, "You cannot manage users outside your GD scope.")
-        return redirect("manage_users")
+        return redirect(redirect_url)
 
     # ✅ Toggle status
     if request.method == "POST":
@@ -2016,11 +2029,10 @@ def toggle_user_status(request, user_id):
 
         msg = "activated" if target_user.is_active else "suspended"
         messages.success(request, f"{target_user.username} has been {msg}.")
-        return redirect("manage_users")
+        return redirect(redirect_url)
 
     messages.error(request, "Invalid request.")
-    return redirect("manage_users")
-
+    return redirect(redirect_url)
 
 
 #-------- CRUD opration by admin to Manage Police Categories ---------

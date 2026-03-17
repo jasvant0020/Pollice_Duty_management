@@ -72,7 +72,6 @@
                     <tbody>
                         {% for officer in officers %}
                             {% if officer.is_active and officer.role == "field_staff" %}
-                            {% comment %} {% if officer.role == "field_staff" %} {% endcomment %}
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }} {{ officer.last_name }}</td>
                                 <td class="p-3 text-gray-800 whitespace-nowrap">{{ officer.email }}</td>
