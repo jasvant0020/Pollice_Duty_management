@@ -168,10 +168,12 @@
     const btnText = document.getElementById('assignText');
     const countDisplay = document.getElementById('selectionCount');
 
+    // ---------------- MODE SWITCH ----------------
     function setMode(isManual) {
         modeToggle.checked = isManual;
 
         if (isManual) {
+            // Manual UI
             manualBtn.classList.add('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
             manualBtn.classList.remove('text-gray-500');
             autoBtn.classList.remove('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
@@ -182,6 +184,7 @@
             countDisplay.classList.remove('hidden');
 
         } else {
+            // Auto UI
             autoBtn.classList.add('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
             autoBtn.classList.remove('text-gray-500');
             manualBtn.classList.remove('bg-indigo-600','text-white','shadow-md','shadow-indigo-200');
@@ -191,6 +194,7 @@
             btnText.innerText = "⚡ RUN AUTO-OPTIMIZATION";
             countDisplay.classList.add('hidden');
 
+            // Clear all selections
             checkboxes.forEach(cb => cb.checked = false);
             updateCount();
         }
@@ -199,19 +203,18 @@
     autoBtn.addEventListener('click', () => setMode(false));
     manualBtn.addEventListener('click', () => setMode(true));
 
+    // ---------------- COUNT UPDATE ----------------
     function updateCount() {
         const checked = document.querySelectorAll('.manual-checkbox:checked');
         countDisplay.innerText = `${checked.length} Staff Selected`;
-
         validateLimits();
     }
 
+    // ---------------- VALIDATION ----------------
     function validateLimits() {
         const submitBtn = form.querySelector('button[type="submit"]');
-
         let valid = true;
 
-        // Group by rank
         const rankMap = {};
 
         checkboxes.forEach(cb => {
@@ -219,10 +222,7 @@
             const max = parseInt(cb.dataset.max || 0);
 
             if (!rankMap[rank]) {
-                rankMap[rank] = {
-                    selected: 0,
-                    max: max
-                };
+                rankMap[rank] = { selected: 0, max: max };
             }
 
             if (cb.checked) {
@@ -230,7 +230,6 @@
             }
         });
 
-        // Validate each rank
         for (let rank in rankMap) {
             if (rankMap[rank].selected > rankMap[rank].max) {
                 valid = false;
@@ -246,8 +245,29 @@
         }
     }
 
+    // ---------------- BLOCK CLICK IN AUTO MODE ----------------
+    checkboxes.forEach(cb => {
+        const label = cb.closest('label');
+
+        if (label) {
+            label.addEventListener('click', function (e) {
+                if (!modeToggle.checked) {
+                    // Auto mode → prevent selection
+                    e.preventDefault();
+                }
+            });
+        }
+    });
+
+    // ---------------- CHECKBOX CHANGE ----------------
     checkboxes.forEach(cb => {
         cb.addEventListener('change', function () {
+
+            // ❌ Block if not manual mode
+            if (!modeToggle.checked) {
+                this.checked = false;
+                return;
+            }
 
             const rank = this.dataset.rank;
             const max = parseInt(this.dataset.max || 0);
@@ -258,7 +278,6 @@
 
             if (sameRankChecked.length > max) {
                 this.checked = false;
-
                 alert(`Only ${max} ${rank} allowed`);
                 return;
             }
@@ -266,6 +285,7 @@
             updateCount();
         });
     });
+
 </script>
 
 {% endblock %}
