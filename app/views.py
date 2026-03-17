@@ -394,7 +394,11 @@ def munsi_assign_duty(request):
         start_datetime = parse_datetime(request.POST.get("start_datetime"))
         end_datetime = parse_datetime(request.POST.get("end_datetime"))
         vehicle = request.POST.get("vehicle") or None
+        
         duty_type = request.POST.get("duty_type") or "static"
+        if duty_type == "other":
+            duty_type = request.POST.get("custom_duty_type")
+
         special_instructions = request.POST.get("special_instructions")
 
         confirm_partial = request.POST.get("confirm_partial")
