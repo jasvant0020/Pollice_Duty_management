@@ -23,6 +23,16 @@
                value="{{ vvip.email }}"
                class="w-full text-gray-800 border border-gray-300 rounded-md p-2 pr-10 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
 
+        <!-- Phone Number -->
+        <label class="block font-medium">Mobile Number</label>
+        <input type="text" name="phone"
+            value="{{ vvip.phone }}"
+            required
+            pattern="[0-9]{10}"
+            maxlength="10"
+            class="w-full p-2 border rounded-lg mb-4"
+            placeholder="Enter 10-digit mobile number">
+        
         
         <!-- Gender -->
         <label class="block font-medium">Gender</label>

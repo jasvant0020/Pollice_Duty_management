@@ -1384,6 +1384,7 @@ def add_vvip(request):
     if request.method == "POST":
         name = request.POST.get("name")
         email = request.POST.get("email")
+        phone = request.POST.get("phone")
         password = request.POST.get("password")
         gender = request.POST.get("gender")
         dob = request.POST.get("dob")
@@ -1405,6 +1406,16 @@ def add_vvip(request):
         if User.objects.filter(email=email).exists():
             messages.error(request, "This email is already registered. Please use a different email.")
             return render(request, "admin_panel/add_vvip.html", context)
+        
+        # 🔴 Mobile validation
+        if not phone or not phone.isdigit() or len(phone) != 10:
+            messages.error(request, "Enter a valid 10-digit phone number.")
+            return render(request, "admin_panel/add_vvip.html", context)
+
+        # 🔴 Unique mobile check (recommended)
+        if User.objects.filter(phone=phone).exists():
+            messages.error(request, "This mobile number is already registered.")
+            return render(request, "admin_panel/add_vvip.html", context)
 
         User.objects.create(
             username=email,
@@ -1417,7 +1428,8 @@ def add_vvip(request):
             role="vvip",
             admin=request.user,
             created_by=request.user,
-            category=category_obj
+            category=category_obj,
+            phone=phone
         )
 
         messages.success(request, "VVIP created successfully")
@@ -1451,6 +1463,7 @@ def edit_vvip(request, vvip_id):
         vvip.username = request.POST.get("email")
         vvip.gender = request.POST.get("gender").lower()
         vvip.dob = request.POST.get("dob") or None
+        phone = request.POST.get("phone").strip()
 
         # Rank
         rank = request.POST.get("rank")
@@ -1467,16 +1480,24 @@ def edit_vvip(request, vvip_id):
             admin=request.user
         )
 
-        # Password change
-        
-        # password = request.POST.get("password")
-        # if password:
-        #     vvip.set_password(password)
-
         # 🔴 Email uniqueness check
         if User.objects.filter(email=request.POST.get("email")).exclude(id=vvip.id).exists():
             messages.error(request, "This email is already registered. Please use a different email.")
             return redirect("edit_vvip", vvip_id=vvip.id)
+        
+        # 🔴 Phone validation
+        if not phone or not phone.isdigit() or len(phone) != 10:
+            messages.error(request, "Enter a valid 10-digit phone number.")
+            return redirect("edit_vvip", vvip_id=vvip.id)
+
+        # 🔴 Unique phone check
+        existing_user = User.objects.filter(phone=phone).exclude(id=vvip.id).first()
+        if existing_user:
+            messages.error(request, "This phone number is already registered.")
+            return render(request, "admin_panel/edit_vvip.html", context)
+
+        vvip.phone = phone
+        print("PHONE:", phone)
 
         vvip.save()
         messages.success(request, "VVIP profile updated successfully")
