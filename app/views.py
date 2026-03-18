@@ -2231,11 +2231,38 @@ def vvip_profile(request):
 
 @role_required(["vvip"])
 def vvip_assigned_duty(request):
-    return render(request, "vvip_panel/vvip_assigned_duty.html")
+
+    user = request.user
+
+    duties = (
+        VVIPDuty.objects
+        .filter(vvip=user, is_active=True)
+        .select_related("vvip", "category", "assigned_by", "field_staff")
+        .order_by("field_staff__rank", "-assigned_at")   # 🔥 ADD THIS
+    )
+
+    # 🔥 GROUP BY batch_id
+    grouped_duties = defaultdict(list)
+
+    for duty in duties:
+        grouped_duties[duty.batch_id].append(duty)
+
+    return render(request, "vvip_panel/vvip_assigned_duty.html", {
+        "grouped_duties": grouped_duties.values()
+    })
 
 @role_required(["vvip"])
 def vvip_request_history(request):
-    return render(request, "vvip_panel/vvip_request_history.html")
+
+    requests = VVIPRequest.objects.filter(
+        vvip=request.user
+    ).order_by("-submitted_at")
+
+    return render(
+        request,
+        "vvip_panel/vvip_request_history.html",
+        {"requests": requests}
+    )
 
 @role_required(["vvip"])
 def vvip_request_application_box(request):
