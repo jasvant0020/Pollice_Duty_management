@@ -53,12 +53,18 @@
 
         <option value="super_admin">Super Admin</option>
         <option value="gd_munsi">GD Munsi</option>
+        <option value="specific_staff">Specific Staff</option>
+        <option value="specific_vvip">Specific VVIP</option>
         <option value="staff">All Staff</option>
+        <option value="all_vvip">All VVIP</option>
 
         {% elif request.user.role == "gd_munsi" %}
 
         <option value="admin">Admin</option>
+        <option value="specific_vvip">Specific VVIP</option>
+        <option value="all_vvip">All VVIP</option>
         <option value="staff">All Staff</option>
+        <option value="specific_staff">Specific Staff</option>
 
         {% endif %}
 
@@ -163,7 +169,6 @@ const allUsers = [
 {% endfor %}
 ];
 
-
 const scopeSelect = document.getElementById("scope");
 const userSelectBox = document.getElementById("user_select");
 const previewBox = document.getElementById("receiver_preview");
@@ -171,113 +176,130 @@ const receiverList = document.getElementById("receiver_list");
 const targetUser = document.getElementById("target_user");
 
 
+// 🔹 Filter dropdown based on scope
+function filterDropdown(){
+
+    const scope = scopeSelect.value;
+    targetUser.innerHTML = '<option value="">Select User</option>';
+
+    let filteredUsers = [];
+
+    if(scope === "specific_staff"){
+        filteredUsers = allUsers.filter(u => u.role === "field_staff");
+    }
+
+    else if(scope === "specific_vvip"){
+        filteredUsers = allUsers.filter(u => u.role === "vvip");
+    }
+
+    else if(scope === "specific_admin"){
+        filteredUsers = allUsers.filter(u => u.role === "admin");
+    }
+
+    else if(scope === "specific_super_admin"){
+        filteredUsers = allUsers.filter(u => u.role === "super_admin");
+    }
+
+    filteredUsers.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user.id;
+        option.textContent = user.username + " (" + user.role + ")";
+        targetUser.appendChild(option);
+    });
+}
+
+
+// 🔹 Preview
 function updatePreview(){
 
     receiverList.innerHTML = "";
+    previewBox.classList.add("hidden");
 
-    if(
-        scopeSelect.value === "specific_super_admin" ||
-        scopeSelect.value === "specific_admin"
-    ){
+    const scope = scopeSelect.value;
+
+    if(scope.includes("specific")){
 
         const selectedId = targetUser.value;
 
         if(selectedId){
-
             const user = allUsers.find(u => u.id === selectedId);
 
-            previewBox.classList.remove("hidden");
+            if(user){
+                previewBox.classList.remove("hidden");
 
-            const li = document.createElement("li");
-            li.textContent = user.username + " (" + user.role + ")";
-            receiverList.appendChild(li);
+                const li = document.createElement("li");
+                li.textContent = user.username + " (" + user.role + ")";
+                receiverList.appendChild(li);
+            }
         }
-
     }
 
-    else if(scopeSelect.value === "staff"){
-
-        previewBox.classList.remove("hidden");
-
+    else if(scope === "staff"){
         const staffUsers = allUsers.filter(u => u.role === "field_staff");
 
-        staffUsers.forEach(user => {
+        if(staffUsers.length){
+            previewBox.classList.remove("hidden");
 
-            const li = document.createElement("li");
-            li.textContent = user.username + " (staff)";
-            receiverList.appendChild(li);
-
-        });
-
+            staffUsers.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user.username + " (Staff)";
+                receiverList.appendChild(li);
+            });
+        }
     }
 
-    else if(scopeSelect.value === "admin"){
+    else if(scope === "all_vvip"){
+        const vvipUsers = allUsers.filter(u => u.role === "vvip");
 
-        previewBox.classList.remove("hidden");
+        if(vvipUsers.length){
+            previewBox.classList.remove("hidden");
 
+            vvipUsers.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user.username + " (VVIP)";
+                receiverList.appendChild(li);
+            });
+        }
+    }
+
+    else if(scope === "admin"){
         const adminUsers = allUsers.filter(u =>
-            u.role === "admin" ||
-            u.role === "super_admin" ||
-            u.role === "master_admin"
+            ["admin","super_admin","master_admin"].includes(u.role)
         );
 
-        adminUsers.forEach(user => {
+        if(adminUsers.length){
+            previewBox.classList.remove("hidden");
 
-            const li = document.createElement("li");
-            li.textContent = user.username + " (" + user.role + ")";
-            receiverList.appendChild(li);
-
-        });
-
+            adminUsers.forEach(user => {
+                const li = document.createElement("li");
+                li.textContent = user.username + " (" + user.role + ")";
+                receiverList.appendChild(li);
+            });
+        }
     }
-    else if(scopeSelect.value === "gd_munsi"){
-
-        previewBox.classList.remove("hidden");
-
-        const users = allUsers.filter(u => u.role === "gd_munsi");
-
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (GD Munsi)";
-            receiverList.appendChild(li);
-        });
-
-    }
-
-    else if(scopeSelect.value === "super_admin"){
-
-        previewBox.classList.remove("hidden");
-
-        const users = allUsers.filter(u => u.role === "super_admin");
-
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (Super Admin)";
-            receiverList.appendChild(li);
-        });
-
-    }
-
 }
 
 
+// 🔹 Handle scope change
 scopeSelect.addEventListener("change", function(){
 
-    if(
-        this.value === "specific_super_admin" ||
-        this.value === "specific_admin"
-    ){
+    targetUser.value = "";
+    receiverList.innerHTML = "";
+    previewBox.classList.add("hidden");
+
+    if(this.value.includes("specific")){
         userSelectBox.style.display = "block";
+        filterDropdown();   // ✅ show only relevant users
     }
     else{
         userSelectBox.style.display = "none";
     }
 
     updatePreview();
-
 });
 
 
+// 🔹 On selecting user
 targetUser.addEventListener("change", updatePreview);
 
 </script>

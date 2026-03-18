@@ -2558,6 +2558,26 @@ def centrelize_notify(request):
                     role="field_staff",
                     gd_munsi__admin=current_user
                 )
+            
+            elif scope == "specific_staff" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="field_staff",
+                    gd_munsi__admin=current_user
+                )
+
+            elif scope == "all_vvip":
+                users = User.objects.filter(
+                    role="vvip",
+                    created_by=current_user
+                )
+
+            elif scope == "specific_vvip" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="vvip",
+                    created_by=current_user
+                )
 
 
         elif current_user.role == "gd_munsi":
@@ -2571,6 +2591,26 @@ def centrelize_notify(request):
                 users = User.objects.filter(
                     role="field_staff",
                     gd_munsi=current_user
+                )
+            
+            elif scope == "specific_staff" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="field_staff",
+                    gd_munsi=current_user
+                )
+
+            elif scope == "all_vvip":
+                users = User.objects.filter(
+                    role="vvip",
+                    created_by=current_user.admin
+                )
+
+            elif scope == "specific_vvip" and target_user_id:
+                users = User.objects.filter(
+                    id=target_user_id,
+                    role="vvip",
+                    created_by=current_user.admin
                 )
 
         # -------- create notifications --------
@@ -2620,7 +2660,7 @@ def centrelize_notify(request):
             sender=current_user,
             notify_type=notify_type,
             scope=scope,
-            target_user_id=target_user_id if scope=="specific" else None,
+            target_user_id=target_user_id if "specific" in scope else None,
             title=title,
             message=message,
             recipients={"count": len(recipient_data), "users": recipient_data}
@@ -2650,7 +2690,8 @@ def centrelize_notify(request):
         users = User.objects.filter(
             Q(id=current_user.created_by_id) |
             Q(role="gd_munsi", admin=current_user) |
-            Q(role="field_staff", gd_munsi__admin=current_user)
+            Q(role="field_staff", gd_munsi__admin=current_user) |
+            Q(role="vvip", created_by=current_user)
         )
 
 
@@ -2658,7 +2699,8 @@ def centrelize_notify(request):
 
         users = User.objects.filter(
             Q(id=current_user.admin_id) |
-            Q(role="field_staff", gd_munsi=current_user)
+            Q(role="field_staff", gd_munsi=current_user) |
+            Q(role="vvip", created_by=current_user.admin)   # ✅ ADD THIS
         )
 
     # -------- choose template --------
