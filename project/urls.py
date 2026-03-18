@@ -16,7 +16,7 @@ urlpatterns = [
     path("login/", views.login_view, name="login"),
     path('logout/', views.logout_view, name='logout'),
 
-    # GD Munsi Panel Pages
+    # GD Munsi Panel urls
     path('munsi_dashboard/', views.munsi_dashboard, name='munsi_dashboard'),
     path('police/', views.police_list, name='police_list'),
     path('vvip/', views.vvip_list, name='vvip_list'),
@@ -34,11 +34,7 @@ urlpatterns = [
     path('munsi_approve_request/<int:req_id>/', views.munsi_approve_request, name='munsi_approve_request'),
     path('munsi_reject_request/<int:req_id>/', views.munsi_reject_request, name='munsi_reject_request'),
 
-
-
-
-
-     # Custom Admin Panel Pages
+     # Custom Admin Panel urls
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('profile/', views.profile, name='profile'),
     path("edit_profile/", views.edit_profile, name="edit_profile"),
@@ -49,25 +45,16 @@ urlpatterns = [
     path('manage_vvip/', views.manage_vvip, name='manage_vvip'),
     path('add_vvip/', views.add_vvip, name='add_vvip'),
     path('edit_vvip/<int:vvip_id>/', views.edit_vvip, name='edit_vvip'),
-    # path('vvip_delete/<int:vvip_id>/', views.delete_vvip, name='delete_vvip'),
 
-
-    # -------------------------------------------------------
-    # UPDATED: Added CRUD URLs for Manage Users functionality
-    # -------------------------------------------------------
-    path('add_user/', views.add_user, name='add_user'),           
-    path('manage_users/edit/<int:user_id>/', views.edit_user, name='edit_user'),  
-    path('manage_users/delete/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'), 
-    # path('user_list/', views.user_list, name='user_list'),
-
-    # -------------------------------------------------------
-    # UPDATED: Added CRUD URLs for Manage security Categories
-    # -------------------------------------------------------
     path('add_security_category/', views.add_security_category, name='add_security_category'),
     path('edit_security_category/<int:category_id>/', views.edit_security_category, name='edit_security_category'),
     path('delete_security_category/<int:category_id>/', views.delete_security_category, name='delete_security_category'),
 
-    # Custom user Panel Pages
+    path('add_user/', views.add_user, name='add_user'),           
+    path('manage_users/edit/<int:user_id>/', views.edit_user, name='edit_user'),  
+    path('manage_users/delete/<int:user_id>/', views.toggle_user_status, name='toggle_user_status'), 
+    
+    # Field staff Panel urls
     path("user_profile/", views.user_profile, name="user_profile"),
     path("edit_user_profile/", views.edit_user_profile, name="edit_user_profile"),
     path("user_assign_duty/", views.user_assign_duty, name="user_assign_duty"),
@@ -75,7 +62,14 @@ urlpatterns = [
     path("request_application_box/", views.request_application_box, name="request_application_box"), 
     path("request_history/", views.request_history, name="request_history"),  
     path("attendance_panel/", views.attendance_panel, name="attendance_panel"),
-    
+
+    #vvip panel urls
+    path("vvip_profile/", views.vvip_profile, name="vvip_profile"),
+    path("edit_vvip_profile/", views.edit_vvip_profile, name="edit_vvip_profile"),
+    path("vvip_assigned_duty/", views.vvip_assigned_duty, name="vvip_assigned_duty"),
+    path("vvip_request_history/", views.vvip_request_history, name="vvip_request_history"),
+    path("vvip_request_application_box/", views.vvip_request_application_box, name="vvip_request_application_box"),
+
     #forgot password urls
     path("forgot_password/", views.forgot_password_view, name="forgot_password"),
     path("verify_otp/", views.verify_otp_view, name="verify_otp"),

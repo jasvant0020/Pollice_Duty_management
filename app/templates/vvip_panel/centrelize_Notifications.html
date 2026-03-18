@@ -1,0 +1,543 @@
+{% extends "vvip_panel/vvip_base.html" %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+{% include "error_message/error_message.html" %}
+{% load static %}
+
+<form style="display:none">
+    {% csrf_token %}
+</form>
+
+<div x-data="notificationManager()" x-init="init()" class="relative">
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+        <div class="flex items-center justify-between mb-6">
+
+            <h2 class="text-2xl font-bold text-gray-800">
+                🔔 My Notifications
+            </h2>
+
+            <!-- THREE DOT MENU -->
+
+            <div class="relative">
+
+                <button
+                    @click="menuOpen = !menuOpen"
+                    class="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-800 transition"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <circle cx="4" cy="10" r="1.5"/>
+                        <circle cx="10" cy="10" r="1.5"/>
+                        <circle cx="16" cy="10" r="1.5"/>
+                    </svg>
+                </button>
+
+                <!-- DROPDOWN -->
+
+                <div
+                    x-show="menuOpen"
+                    @click.outside="menuOpen=false"
+                    x-transition
+                    class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-40"
+                >
+
+                    <!-- MARK ALL READ -->
+
+                    <button
+                        @click="if(confirm('Mark all notifications as read?')) markAllRead()"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
+                    >
+                        <span class="text-green-500 text-lg">✔</span>
+                        <span>Mark all as read</span>
+                    </button>
+
+                    <!-- DIVIDER -->
+
+                    <div class="border-t"></div>
+
+                    <!-- DELETE ALL -->
+
+                    <button
+                        @click="if(confirm('Delete all notifications?')) deleteAllNotifications()"
+                        class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition"
+                    >
+                        <span class="text-lg">🗑</span>
+                        <span>Delete all notifications</span>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ================= CARD GRID ================= -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+            <!-- REALTIME CARDS -->
+
+            <template x-for="note in notifications" :key="note.id">
+
+                <div
+                    @click="openNotification(note)"
+                    class="relative bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5"
+                    :class="[priorityColor(note.priority), note.is_read ? 'opacity-70' : 'border-pink-600']"
+                >
+
+                    <!-- Unread Badge -->
+
+                    <span
+                        x-show="!note.is_read"
+                        class="absolute top-2 right-2 flex h-3 w-3"
+                    >
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-400"></span>
+                    </span>
+
+                    <div class="flex items-start gap-4">
+
+                        <!-- ICON -->
+
+                        <div
+                            class="w-12 h-12 flex items-center justify-center rounded-full text-xl"
+                            :class="iconColor(note.notification_type)"
+                        >
+                            <span x-text="icon(note.notification_type)"></span>
+                        </div>
+
+                        <div class="flex-1">
+
+                            <p class="font-semibold text-gray-800 line-clamp-1"
+                               x-text="note.title"></p>
+
+                            <p class="text-sm text-gray-500 line-clamp-2 mt-1"
+                               x-text="note.message"></p>
+
+                            <p class="text-xs text-gray-400 mt-2"
+                               x-text="note.created_at"></p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+
+            <!-- SERVER RENDERED CARDS -->
+
+            {% for note in notifications %}
+
+            <div
+                @click="openNotification({
+                    id:'{{ note.id }}',
+                    title:'{{ note.title|escapejs }}',
+                    message:'{{ note.message|escapejs }}',
+                    is_read: {{ note.is_read|yesno:"true,false" }},
+                    notification_type:'{{ note.notification_type }}',
+                    priority:'{{ note.priority }}',
+                    metadata: {{ note.metadata|default:"{}"|safe }},
+                    created_at:'{{ note.created_at|date:"d M Y h:i A" }}'
+                })"
+
+                class="relative bg-white rounded-xl shadow hover:shadow-lg transition cursor-pointer border-l-4 p-5
+
+                {% if note.is_read %}
+                    border-green-500
+                {% else %}
+                    border-red-500
+                {% endif %}
+                "
+            >
+
+                <!-- Unread Badge -->
+
+                {% if not note.is_read %}
+                <span class="absolute top-2 right-2 flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                {% endif %}
+
+                <div class="flex items-start gap-4">
+
+                    <!-- ICON -->
+
+                    <div
+                        class="w-12 h-12 flex items-center justify-center rounded-full text-2xl font-semibold
+
+                        {% if note.notification_type == 'duty_assigned' %}
+                            bg-blue-100 text-blue-600
+                        {% elif note.notification_type == 'duty_ended' %}
+                            bg-green-100 text-green-600
+                        {% elif note.notification_type == 'system_alert' %}
+                            bg-red-100 text-red-600
+                        {% else %}
+                            bg-gray-100 text-gray-600
+                        {% endif %}
+                        "
+                    >
+
+                        {% if note.notification_type == "duty_assigned" %}
+                            🕭
+                        {% elif note.notification_type == "duty_ended" %}
+                            🕭
+                        {% elif note.notification_type == "system_alert" %}
+                            🕭
+                        {% else %}
+                            🕭
+                        {% endif %}
+
+                    </div>
+
+                    <div class="flex-1">
+
+                        <p class="font-semibold text-gray-800 line-clamp-1">
+                            {{ note.title }}
+                        </p>
+
+                        <p class="text-sm text-gray-500 line-clamp-2 mt-1">
+                            {{ note.message }}
+                        </p>
+
+                        <p class="text-xs text-gray-400 mt-2">
+                            {{ note.created_at|date:"d M Y h:i A" }}
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+            {% empty %}
+
+            <div class="col-span-full text-center py-12">
+                <div class="text-5xl mb-3">🔔</div>
+                <p class="text-gray-500 text-lg font-medium">
+                    No notifications yet
+                </p>
+                <p class="text-gray-400 text-sm mt-1">
+                    You're all caught up!
+                </p>
+            </div>
+            
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= RESPONSIVE MODAL ================= -->
+
+<div
+    x-show="selectedNotification"
+    x-transition
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+>
+
+    <!-- MODAL CONTAINER -->
+
+    <div
+        @click.outside="selectedNotification=null"
+        class="bg-white rounded-2xl w-full max-w-xl max-h-[90vh] flex flex-col shadow-xl"
+    >
+
+        <!-- HEADER -->
+
+        <div class="flex justify-between items-center p-5 border-b">
+
+            <h3
+                class="text-lg sm:text-xl font-bold text-gray-800"
+                x-text="selectedNotification.title"
+            ></h3>
+
+            <button
+                @click="selectedNotification=null"
+                class="text-gray-500 hover:text-gray-700 text-xl"
+            >
+                ✕
+            </button>
+
+        </div>
+
+
+        <!-- BODY (SCROLLABLE) -->
+
+        <div class="p-5 space-y-4 text-sm text-gray-700 overflow-y-auto">
+
+            <div>
+                <strong>Message</strong>
+
+                <div
+                    class="bg-gray-50 rounded-lg p-3 mt-1 wrap-break-word whitespace-pre-wrap"
+                    x-text="selectedNotification.message"
+                ></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                <div>
+                    <strong>Type</strong>
+                    <p x-text="selectedNotification.notification_type"></p>
+                </div>
+
+                <div>
+                    <strong>Priority</strong>
+                    <p x-text="selectedNotification.priority"></p>
+                </div>
+
+            </div>
+
+            <div>
+                <strong>Created At</strong>
+                <p x-text="selectedNotification.created_at"></p>
+            </div>
+
+
+            <!-- METADATA -->
+
+            <template x-if="selectedNotification.metadata">
+
+                <div>
+
+                    <strong class="block mb-2">Additional Info</strong>
+
+                    <div class="bg-gray-50 rounded-lg p-3 space-y-3 text-sm">
+
+                        <template
+                            x-for="[key,value] in Object.entries(selectedNotification.metadata)"
+                            :key="key"
+                        >
+
+                            <div class="border-b pb-2 last:border-none">
+
+                                <div
+                                    class="font-semibold text-gray-600 capitalize"
+                                    x-text="key.replace(/_/g,' ')"
+                                ></div>
+
+                                <div
+                                    class="text-gray-800 wrap-break-word whitespace-pre-wrap"
+                                    x-text="value"
+                                ></div>
+
+                            </div>
+
+                        </template>
+
+                    </div>
+
+                </div>
+
+            </template>
+
+        </div>
+
+
+        <!-- FOOTER -->
+
+        <div class="flex justify-end gap-3 p-5 border-t">
+
+            <button
+                @click="deleteNotification(selectedNotification)"
+                class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white"
+            >
+                🗑 Delete
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+
+<script>
+
+function notificationManager(){
+
+    return{
+
+        notifications: [],
+        selectedNotification: null,
+        menuOpen:false,
+
+        init(){
+
+            const socket = new WebSocket(
+                (window.location.protocol === "https:" ? "wss://" : "ws://")
+                + window.location.host
+                + "/ws/notifications/"
+            );
+
+            socket.onmessage = (e)=>{
+
+                const response = JSON.parse(e.data);
+
+                if(response.type==="new_notification"){
+
+                    const n = response.data;
+
+                    this.notifications.unshift({
+                        id:n.id,
+                        title:n.title,
+                        message:n.message,
+                        notification_type:n.notification_type,
+                        priority:n.priority,
+                        is_read:false,
+                        metadata: typeof n.metadata==="string"
+                            ? JSON.parse(n.metadata)
+                            : n.metadata,
+                        created_at:this.formatDate(n.created_at)
+                    });
+
+                }
+
+            };
+
+        },
+
+        openNotification(note){
+
+            this.selectedNotification = note;
+
+            note.is_read = true;
+
+            fetch(`/mark_notification_read/${note.id}/`,{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            });
+
+        },
+
+        formatDate(dateString){
+
+            const date = new Date(dateString);
+
+            return date.toLocaleString("en-US",{
+                year:"numeric",
+                month:"short",
+                day:"numeric",
+                hour:"numeric",
+                minute:"2-digit",
+                hour12:true
+            });
+
+        },
+
+        priorityColor(priority){
+
+            if(priority==="critical") return "border-red-600";
+            if(priority==="high") return "border-orange-500";
+            if(priority==="normal") return "border-blue-500";
+
+            return "border-gray-400";
+
+        },
+
+        icon(type){
+
+            if(type==="duty_assigned") return "📌";
+            if(type==="duty_ended") return "✅";
+            if(type==="system_alert") return "⚠️";
+
+            return "🔔";
+
+        },
+
+        iconColor(type){
+
+            if(type==="duty_assigned") return "bg-blue-100 text-blue-600";
+            if(type==="duty_ended") return "bg-green-100 text-green-600";
+            if(type==="system_alert") return "bg-red-100 text-red-600";
+
+            return "bg-gray-100 text-gray-600";
+
+        },
+
+        getCSRFToken(){
+
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        },
+
+        deleteNotification(note){
+
+            fetch(`/delete_notification/${note.id}/`,{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications =
+                    this.notifications.filter(n=>n.id!==note.id);
+
+                this.selectedNotification=null;
+
+            });
+
+        },
+        markAllRead(){
+
+            fetch("/mark_all_notifications_read/",{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications.forEach(n=>{
+                    n.is_read = true;
+                });
+
+                this.menuOpen=false;
+
+            });
+
+        },
+        deleteAllNotifications(){
+
+            if(!confirm("Delete all notifications?")) return;
+
+            fetch("/delete_all_notifications/",{
+                method:"POST",
+                headers:{
+                    "X-CSRFToken":this.getCSRFToken(),
+                    "Content-Type":"application/json"
+                }
+            })
+            .then(()=>{
+
+                this.notifications=[];
+                this.menuOpen=false;
+                this.selectedNotification=null;
+
+            });
+
+        },
+
+    }
+
+}
+
+</script>
+
+{% endblock %}

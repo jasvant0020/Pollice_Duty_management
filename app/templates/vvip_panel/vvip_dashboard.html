@@ -1,0 +1,93 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Dashboard - Police Duty Management</title> 
+    {% tailwind_css %}
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800">
+    <!-- Header -->
+    <div class="bg-indigo-900 text-gray-100 text-xl font-bold px-6 py-4">
+        Police Duty Management - User Dashboard
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        <!-- Duty Assignment Panel -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Current Duty Assignment</h2>
+            {% comment %} {% if current_duty %} {% endcomment %}
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <p><strong>Location:</strong> {{ location }}</p>
+                <p><strong>Partner:</strong> {{ partner.name }}</p>
+                <p><strong>Time:</strong> {{ start_time }} - {{ end_time }}</p>
+                <p><strong>Status:</strong> {{ status }}</p>
+            </div>
+            <button class="w-full bg-indigo-900 text-white py-2 rounded-lg mt-4">Mark Reached</button>
+            <button class="w-full bg-green-700 text-white py-2 rounded-lg mt-3">Mark Completed</button>
+            {% comment %} {% else %}
+            <p>No active duty assigned.</p>
+            {% endif %} {% endcomment %}
+        </div>
+
+        <!-- Request Application Box -->
+        <div class="bg-white p-6 rounded-2xl shadow">           
+            <form method="post" enctype="multipart/form-data">
+                <h2 class="text-lg font-semibold mb-4">Send Request / Application</h2>
+                {% csrf_token %}
+                <textarea name="message" rows="5" class="w-full border rounded-lg p-3" placeholder="Write your request..."></textarea>
+                <input type="file" name="file" class="mt-2 block text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700
+" />
+                <button class="w-full bg-indigo-900 text-white py-2 rounded-lg mt-4">Submit Request</button>
+            </form>
+        </div>
+
+        <!-- Duty History -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Past Duty History</h2>
+            {% for duty in duty_history %}
+            <div class="bg-gray-100 p-4 rounded-lg mb-3">
+                <p><strong>Date:</strong> {{ date }}</p>
+                <p><strong>Location:</strong> {{ location }}</p>
+                <p><strong>Partner:</strong> {{ partner.name }}</p>
+                <p><strong>Status:</strong> {{ status }}</p>
+            </div>
+            {% empty %}
+            <p>No past duty records found.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Notifications -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Notifications</h2>
+            {% for note in notifications %}
+            <div class="bg-gray-100 p-3 rounded-lg mb-2">
+                {{ note.text }}
+            </div>
+            {% empty %}
+            <p>No notifications.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Attendance Panel -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Attendance</h2>
+            <div class="bg-gray-100 p-4 rounded-lg">
+                <p><strong>Today Check-in:</strong> {{ attendance.checkin }}</p>
+                <p><strong>Check-out:</strong> {{ attendance.checkout|default:"Pending" }}</p>
+            </div>
+            <button class="w-full bg-red-700 text-white py-2 rounded-lg mt-4">Check Out</button>
+        </div>
+
+        <!-- Profile -->
+        <div class="bg-white p-6 rounded-2xl shadow">
+            <h2 class="text-lg font-semibold mb-4">Profile</h2>
+            <p><strong>Name:</strong> {{ user.full_name }}</p>
+            <p><strong>Rank:</strong> {{ user.rank }}</p>
+            <p><strong>Badge No:</strong> {{ user.badge_number }}</p>
+            <p><strong>Police Station:</strong> {{ user.station }}</p>
+        </div>
+    </div>
+</body>
+</html>

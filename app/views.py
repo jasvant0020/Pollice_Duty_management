@@ -144,7 +144,7 @@ def login_view(request):
             elif user.role == "field_staff":
                 return redirect("user_profile")
             elif user.role == "vvip":
-                return redirect("user_profile")
+                return redirect("vvip_profile")
 
             messages.error(request, "Unknown role assigned!")
             return redirect("login")
@@ -1534,7 +1534,7 @@ def edit_vvip(request, vvip_id):
 
 
 #----- Custom user Panel Views -----
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def user_assign_duty(request):
 
     user = request.user
@@ -1550,7 +1550,7 @@ def user_assign_duty(request):
 
 from django.contrib import messages
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def request_application_box(request):
 
     if request.method == "POST":
@@ -1622,7 +1622,7 @@ def request_application_box(request):
     return render(request, "user_panel/request_application_box.html")
 
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def request_history(request):
 
     requests = FieldStaffRequest.objects.filter(
@@ -1635,22 +1635,22 @@ def request_history(request):
         {"requests": requests}
     )
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def duty_history(request):
     return render(request, "user_panel/duty_history.html")
 
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def attendance_panel(request):
     return render(request, "user_panel/attendance_panel.html")
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def user_profile(request):
     return render(request, "user_panel/user_profile.html")
 
 from django.utils import timezone
 
-@role_required(["field_staff","vvip"])
+@role_required(["field_staff"])
 def edit_user_profile(request):
 
     user = request.user
@@ -1946,21 +1946,6 @@ def edit_user(request, user_id):
                 )
                 return redirect("edit_user", user_id=user_id)
 
-
-        # ----------------------------
-        # Password Update
-        # ----------------------------
-
-        # password = request.POST.get("password")
-        # confirm_password = request.POST.get("confirm_password")
-
-        # if password:
-        #     if password == confirm_password:
-        #         officer.set_password(password)
-        #     else:
-        #         messages.error(request, "Passwords do not match!")
-        #         return redirect("edit_user", user_id=user_id)
-
         # 🔴 Email uniqueness check
         if User.objects.filter(email=officer.email).exclude(id=officer.id).exists():
             messages.error(request, "This email is already registered. Please use a different email.")
@@ -2186,6 +2171,75 @@ def delete_security_category(request, category_id):
     return redirect("manage_security_categories")
 
 
+#vvip views
+@role_required(["vvip"])
+def edit_vvip_profile(request):
+
+    user = request.user
+
+    if request.method == "POST":
+
+        # -------- BASIC INFO --------
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        new_email = request.POST.get("email")
+
+        # 🔴 Email uniqueness check
+        if new_email and new_email != user.email:
+            if User.objects.filter(email=new_email).exclude(id=user.id).exists():
+                messages.error(request, "Email already in use.")
+                return redirect("edit_vvip_profile")
+
+            # 🔐 Reset verification if email changed
+            user.email_verified = False
+            user.email_verified_at = None
+
+        user.email = new_email
+        user.username = new_email  # if using email as username
+        user.phone = request.POST.get("phone")
+
+        # -------- PROFILE PHOTO --------
+        if request.FILES.get("profile_photo"):
+            user.profile_photo = request.FILES.get("profile_photo")
+
+        # -------- PASSWORD CHANGE --------
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
+
+        if password or confirm_password:
+            if password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("edit_vvip_profile")
+
+            if len(password) < 6:
+                messages.error(request, "Password must be at least 6 characters.")
+                return redirect("edit_vvip_profile")
+
+            user.set_password(password)
+            update_session_auth_hash(request, user)  # 🔥 prevents logout
+
+        user.save()
+
+        messages.success(request, "Profile updated successfully.")
+        return redirect("vvip_profile")
+
+    return render(request, "vvip_panel/edit_vvip_profile.html")
+
+@role_required(["vvip"])
+def vvip_profile(request):
+    return render(request, "vvip_panel/vvip_profile.html")
+
+@role_required(["vvip"])
+def vvip_assigned_duty(request):
+    return render(request, "vvip_panel/vvip_assigned_duty.html")
+
+@role_required(["vvip"])
+def vvip_request_history(request):
+    return render(request, "vvip_panel/vvip_request_history.html")
+
+@role_required(["vvip"])
+def vvip_request_application_box(request):
+    return render(request, "vvip_panel/vvip_request_application_box.html")
 
 
 
@@ -2227,6 +2281,9 @@ def centrelize_Notifications(request):
 
     elif user.role == "master_admin":
         template = "admin_panel/centrelize_Notifications.html"
+
+    elif user.role == "vvip":
+        template = "vvip_panel/centrelize_Notifications.html"
 
     else:
         template = "user_panel/centrelize_Notifications.html"

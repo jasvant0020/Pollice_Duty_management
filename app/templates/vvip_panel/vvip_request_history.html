@@ -1,0 +1,131 @@
+{% extends "vvip_panel/vvip_base.html" %}
+{% block page_title %}Request History{% endblock %}
+{% block content %}
+{% include "error_message/error_message.html" %}
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+        Request History
+    </h2>
+
+    <div class="space-y-4">
+
+        {% for req in requests %}
+
+        <div x-data="{ open: false }"
+            class="bg-white rounded-xl shadow border-l-4
+            {% if req.status == 'approved' %}
+                border-green-500
+            {% elif req.status == 'rejected' %}
+                border-red-500
+            {% else %}
+                border-yellow-500
+            {% endif %}
+        ">
+
+            <!-- HEADER -->
+            <div @click="open = !open"
+                class="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition">
+
+                <div class="flex items-center space-x-4">
+
+                    <img src="{{ request.user.profile_photo.url }}"
+                        class="w-12 h-12 rounded-full object-cover">
+
+                    <div>
+
+                        <p class="text-sm font-semibold text-gray-800">
+                            Your request has been
+
+                            {% if req.status == 'approved' %}
+                                <span class="text-green-600">APPROVED</span>
+                            {% elif req.status == 'rejected' %}
+                                <span class="text-red-600">REJECTED</span>
+                            {% else %}
+                                <span class="text-yellow-600">PENDING</span>
+                            {% endif %}
+                        </p>
+
+                        <p class="text-xs text-gray-500">
+                            {{ req.created_at|date:"d M Y h:i A" }}
+                        </p>
+
+                        <p class="text-xs text-gray-500">
+                            Request ID: {{ req.request_number  }}
+                        </p>
+
+                    </div>
+                </div>
+
+                <!-- Arrow -->
+                <svg :class="open ? 'rotate-180' : ''"
+                    class="w-5 h-5 text-gray-500 transition-transform"
+                    fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19 9l-7 7-7-7"/>
+                </svg>
+
+            </div>
+
+            <!-- DETAILS -->
+            <div x-show="open"
+                x-transition
+                class="px-6 pb-6 text-sm text-gray-700 space-y-3 border-t bg-gray-50">
+
+                <div>
+                    <strong>Request ID:</strong>
+                    {{ req.request_number  }}
+                </div>
+
+                <div>
+                    <strong>Subject Submitted:</strong>
+                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
+                        {{ req.subject }}
+                    </div>
+                </div>
+
+                <div>
+                    <strong>Reason Submitted:</strong>
+                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
+                        {{ req.message }}
+                    </div>
+                </div>
+
+                <div>
+                    <strong>Submitted On:</strong>
+                    <div class="bg-white p-3 rounded-lg shadow-sm mt-1">
+                        {{ req.submitted_at|date:"d M Y h:i A" }}
+                    </div>
+                </div>
+
+                <div>
+                    <strong>Status:</strong>
+
+                    {% if req.status == 'approved' %}
+                        <span class="text-green-600 font-semibold">Approved</span>
+                    {% elif req.status == 'rejected' %}
+                        <span class="text-red-600 font-semibold">Rejected</span>
+                    {% else %}
+                        <span class="text-yellow-600 font-semibold">Pending</span>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <p class="text-gray-500">No requests found.</p>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

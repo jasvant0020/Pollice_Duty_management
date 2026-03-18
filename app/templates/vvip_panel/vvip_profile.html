@@ -1,4 +1,4 @@
-{% extends "user_panel/user_base.html" %}
+{% extends "vvip_panel/vvip_base.html" %}
 {% block page_title %}Profile{% endblock %}
 {% block content %}
 {% include "error_message/error_message.html" %}
@@ -184,7 +184,7 @@
 
             <!-- Actions -->
             <div class="flex justify-end">
-                <a href="{% url 'edit_user_profile' %}"
+                <a href="{% url 'edit_vvip_profile' %}"
                    class="group relative inline-flex items-center gap-2 bg-linear-to-r from-teal-600 to-cyan-600 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 font-semibold text-base overflow-hidden">
                     <span class="absolute inset-0 w-full h-full bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
                     <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">

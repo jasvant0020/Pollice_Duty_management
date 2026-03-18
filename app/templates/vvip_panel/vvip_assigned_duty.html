@@ -1,0 +1,220 @@
+{% extends "vvip_panel/vvip_base.html" %}
+{% block page_title %}Assigned Duty{% endblock %}
+{% block content %}
+{% include "error_message/error_message.html" %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900">My Active Duties</h2>
+        <p class="text-gray-600">All duties currently assigned to you</p>
+    </div>
+
+    {% if duties %}
+    <div class="space-y-6">
+
+        {% for duty in duties %}
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6"
+             id="duty-{{ duty.id }}"
+             data-start="{{ duty.start_datetime|date:'U' }}"
+             data-end="{{ duty.end_datetime|date:'U' }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- VVIP -->
+                <div>
+                    <p class="text-sm text-gray-500">VVIP</p>
+                    <p class="font-semibold text-gray-900">
+                        {{ duty.vvip.get_full_name|default:duty.vvip.username|title }}
+                    </p>
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <p class="text-sm text-gray-500">Category</p>
+                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        {{ duty.category.name|default:"No Category" }}
+                    </span>
+                </div>
+
+                <!-- Duty Type -->
+                <div>
+                    <p class="text-sm text-gray-500">Duty Type</p>
+                    <p class="font-medium text-gray-800">
+                        {{ duty.get_duty_type_display }}
+                    </p>
+                </div>
+
+                <!-- Place -->
+                <div>
+                    <p class="text-sm text-gray-500">Place</p>
+                    <p class="text-gray-800">
+                        {{ duty.duty_place|default:"—" }}
+                    </p>
+                </div>
+
+                <!-- Vehicle -->
+                <div>
+                    <p class="text-sm text-gray-500">Vehicle</p>
+                    <p class="text-gray-800">
+                        {{ duty.vehicle|default:"—" }}
+                    </p>
+                </div>
+
+                <!-- Start Time -->
+                <div>
+                    <p class="text-sm text-gray-500">Start Time</p>
+                    <p class="text-gray-800">
+                        {{ duty.start_datetime|date:"d M Y, h:i A"|default:"—" }}
+                    </p>
+                </div>
+
+                <!-- Estimate End Time -->
+                <div>
+                    <p class="text-sm text-gray-500">Estimate End Time</p>
+                    <p class="text-gray-800">
+                        {{ duty.end_datetime|date:"d M Y, h:i A"|default:"—" }}
+                    </p>
+                </div>
+
+                {% if duty.end_datetime %}
+                <div class="md:col-span-3 mt-6 bg-gray-50 border border-gray-200 rounded-2xl p-5">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <!-- Countdown -->
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Time Remaining</p>
+                            <div id="countdown-{{ duty.id }}"
+                                class="text-lg font-bold text-red-600 tracking-wide">
+                                Loading...
+                            </div>
+                        </div>
+
+                        <!-- Duration -->
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Duty Duration</p>
+                            <div id="duration-{{ duty.id }}"
+                                class="text-lg font-bold text-blue-600 tracking-wide">
+                                Loading...
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            {% if duty.special_instructions %}
+            <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800">
+                <span class="font-semibold">Special Instructions:</span><br>
+                {{ duty.special_instructions }}
+            </div>
+            {% endif %}
+
+            <!-- Active Pulse -->
+            <div class="mt-6 flex justify-end">
+                <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-100 text-green-700 text-sm font-semibold">
+
+                    <!-- Pulse Dot -->
+                    <span class="relative flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                    </span>
+
+                    Active
+                </span>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-10 text-center">
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No Active Duties</h3>
+        <p class="text-gray-600">You currently have no assigned duties.</p>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+function formatTime(days, hours, minutes, seconds) {
+    return `${days}d ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;
+}
+
+function startTimers() {
+    document.querySelectorAll("[id^='duty-']").forEach(div => {
+
+        const dutyId = div.id.split('-')[1];
+        const start = parseInt(div.dataset.start) * 1000;
+        const end   = parseInt(div.dataset.end) * 1000;
+
+        const totalDuration = end - start; // total duty time
+
+        setInterval(() => {
+
+            const now = new Date().getTime();
+
+            const countdownEl = document.getElementById(`countdown-${dutyId}`);
+            const durationEl  = document.getElementById(`duration-${dutyId}`);
+
+            // 🔹 BEFORE START
+            if (now < start) {
+                const remainingToStart = start - now;
+
+                const days = Math.floor(remainingToStart / (1000*60*60*24));
+                const hours = Math.floor((remainingToStart % (1000*60*60*24)) / (1000*60*60));
+                const minutes = Math.floor((remainingToStart % (1000*60*60)) / (1000*60));
+                const seconds = Math.floor((remainingToStart % (1000*60)) / 1000);
+
+                countdownEl.innerText = "Starts in: " + formatTime(days,hours,minutes,seconds);
+                durationEl.innerText = "Not started";
+
+                return;
+            }
+
+            // 🔹 AFTER END
+            if (now >= end) {
+                countdownEl.innerText = "Duty Time Completed";
+                durationEl.innerText = formatTime(
+                    Math.floor(totalDuration / (1000*60*60*24)),
+                    Math.floor((totalDuration % (1000*60*60*24)) / (1000*60*60)),
+                    Math.floor((totalDuration % (1000*60*60)) / (1000*60)),
+                    Math.floor((totalDuration % (1000*60)) / 1000)
+                );
+                return;
+            }
+
+            // 🔹 DURING DUTY (This is what you want)
+            const remaining = end - now;
+
+            const days = Math.floor(remaining / (1000*60*60*24));
+            const hours = Math.floor((remaining % (1000*60*60*24)) / (1000*60*60));
+            const minutes = Math.floor((remaining % (1000*60*60)) / (1000*60));
+            const seconds = Math.floor((remaining % (1000*60)) / 1000);
+
+            countdownEl.innerText = formatTime(days,hours,minutes,seconds);
+
+            // elapsed duration
+            const elapsed = now - start;
+
+            const edays = Math.floor(elapsed / (1000*60*60*24));
+            const ehours = Math.floor((elapsed % (1000*60*60*24)) / (1000*60*60));
+            const eminutes = Math.floor((elapsed % (1000*60*60)) / (1000*60));
+            const eseconds = Math.floor((elapsed % (1000*60)) / 1000);
+
+            durationEl.innerText = formatTime(edays, ehours, eminutes, eseconds);
+
+        }, 1000);
+    });
+}
+
+document.addEventListener("DOMContentLoaded", startTimers);
+</script>
+{% endblock %}
