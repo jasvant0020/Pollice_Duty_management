@@ -1227,14 +1227,27 @@ def admin_dashboard(request):
     super_admin_data = []
     admin_data = []
 
-    if user.role == "master_admin":
+    # ✅ ADMIN LOGIC
+    active_duty = 0
+
+    if user.role == "admin":
+        active_duty = VVIPDuty.objects.filter(
+            assigned_by__role="gd_munsi",
+            assigned_by__admin=user,
+            is_active=True
+        ).values("vvip").distinct().count()
+
+    # ✅ MASTER ADMIN
+    elif user.role == "master_admin":
         super_admin_data = get_super_admin_dashboard_data(user)
 
+    # ✅ SUPER ADMIN
     elif user.role == "super_admin":
         admin_data = get_admin_dashboard_data(user)
 
     context = {
         **get_admin_staff_counts(user),
+        "active_duty": active_duty,  # ✅ override correct value
         "super_admin_data": super_admin_data,
         "admin_data": admin_data,
     }

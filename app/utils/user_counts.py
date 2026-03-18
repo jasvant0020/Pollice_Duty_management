@@ -85,7 +85,6 @@ def get_super_admin_dashboard_data(master_admin):
     return data
 
 
-
 def get_admin_dashboard_data(super_admin):
     admins = User.objects.filter(
         role="admin",
@@ -104,11 +103,12 @@ def get_admin_dashboard_data(super_admin):
             vvip=Count("id", filter=Q(role="vvip")),
         )
 
-        # ✅ ACTIVE DUTIES UNDER THIS ADMIN
+        # ✅ FIXED: ACTIVE DUTY (ONLY GD MUNSI BASED)
         active_duty_count = VVIPDuty.objects.filter(
-            field_staff__admin=admin,
+            assigned_by__role="gd_munsi",
+            assigned_by__admin=admin,
             is_active=True
-        ).count()
+        ).values("vvip").distinct().count()   # 👈 UNIQUE VVIP (same as munsi)
 
         # ✅ GD MUNSI DUTY COUNTS
         gd_users = staff.filter(role="gd_munsi")
@@ -117,7 +117,7 @@ def get_admin_dashboard_data(super_admin):
         for gd in gd_users:
             gd_active_duty = gd.gd_assigned_duties.filter(
                 is_active=True
-            ).count()
+            ).values("vvip").distinct().count()  # 👈 match logic
 
             gd_data.append({
                 "id": gd.id,
@@ -132,8 +132,8 @@ def get_admin_dashboard_data(super_admin):
             "gd_munsi_count": staff_counts["gd_munsi"] or 0,
             "field_staff_count": staff_counts["field_staff"] or 0,
             "vvip_count": staff_counts["vvip"] or 0,
-            "active_duty_count": active_duty_count,  # admin total duty
-            "gd_users": gd_data,  # 🔥 NEW
+            "active_duty_count": active_duty_count,  # ✅ FIXED
+            "gd_users": gd_data,
             "staff": list(
                 staff.values("id", "username", "email", "role")
             )
