@@ -266,6 +266,59 @@ class FieldStaffRequest(models.Model):
     def __str__(self):
         return f"Request {self.request_number} - {self.staff.username}"
 
+
+class VVIPRequest(models.Model):
+
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    )
+
+    vvip = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='vvip_requests'
+    )
+
+    receiver = models.ForeignKey(   # 🔥 NEW (admin or munsi)
+        User,
+        on_delete=models.CASCADE,
+        related_name='received_vvip_requests'
+    )
+
+    request_number = models.PositiveIntegerField(null=True, blank=True, editable=False)
+
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+
+    class Meta:
+        unique_together = ('vvip', 'request_number')
+        ordering = ['-submitted_at']
+
+    def save(self, *args, **kwargs):
+
+        if not self.request_number:
+            last_request = VVIPRequest.objects.filter(
+                vvip=self.vvip
+            ).aggregate(Max('request_number'))
+
+            last_number = last_request['request_number__max'] or 0
+            self.request_number = last_number + 1
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Request {self.request_number} - {self.vvip.username}"
+    
+
+
+    
+
 class FCMToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fcm_tokens")
 

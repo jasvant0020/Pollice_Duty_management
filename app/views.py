@@ -36,7 +36,7 @@ from .models import VVIPDuty
 from django.contrib.auth import get_user_model
 import uuid
 from django.utils import timezone
-from .models import FieldStaffRequest
+from .models import FieldStaffRequest,VVIPRequest
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.utils import timezone
@@ -2239,7 +2239,94 @@ def vvip_request_history(request):
 
 @role_required(["vvip"])
 def vvip_request_application_box(request):
-    return render(request, "vvip_panel/vvip_request_application_box.html")
+
+    user = request.user
+    admin = user.admin
+
+    receivers = User.objects.filter(
+        Q(id=admin.id, role="admin") |
+        Q(admin=admin, role="gd_munsi")
+    )
+
+    if request.method == "POST":
+        subject = request.POST.get("subject")
+        message = request.POST.get("message")
+        receiver_id = request.POST.get("receiver")
+
+        # 🔴 validations
+        if not subject or not message or not receiver_id:
+            messages.error(request, "All fields are required.")
+            return redirect("vvip_request_application_box")
+
+        receiver = User.objects.get(id=receiver_id)
+
+        # 🚫 Safety check
+        if receiver not in receivers:
+            messages.error(request, "Invalid receiver selected.")
+            return redirect("vvip_request_application_box")
+
+        # ✅ Create request
+        request_obj = VVIPRequest.objects.create(
+            vvip=user,
+            receiver=receiver,
+            subject=subject,
+            message=message
+        )
+
+        # =====================================================
+        # 🔔 1. IN-APP NOTIFICATION
+        # =====================================================
+        notification = Notification.objects.create(
+            receiver=receiver,
+            sender=user,
+            title="New VVIP Request",
+            message=f"{user.get_full_name() or user.username} sent a new request.",
+            notification_type="request",
+            priority="high",
+            metadata={
+                "vvip": user.username,
+                "request_id": request_obj.request_number,
+                "subject": request_obj.subject,
+                "note": "Open VVIP Requests panel"
+            }
+        )
+
+        # =====================================================
+        # 🔥 2. REAL-TIME (WebSocket)
+        # =====================================================
+        channel_layer = get_channel_layer()
+
+        async_to_sync(channel_layer.group_send)(
+            f"user_{receiver.id}",
+            {
+                "type": "send_status_update",
+                "data": {
+                    "title": notification.title,
+                    "message": notification.message,
+                    "request_id": request_obj.request_number
+                }
+            }
+        )
+
+        # =====================================================
+        # 🔥 3. FIREBASE PUSH
+        # =====================================================
+        send_push_notification(
+            id=request_obj.request_number,
+            user=receiver,
+            title="New Request From VVIP",
+            body=request_obj.subject,
+            sender=user,
+            url=reverse("centrelize_Notifications"),  # 🔥 create this page
+            notification_type="request"
+        )
+
+        messages.success(request, "Request sent successfully.")
+        return redirect("vvip_request_history")
+
+    return render(request, "vvip_panel/vvip_request_application_box.html", {
+        "receivers": receivers
+    })
 
 
 
