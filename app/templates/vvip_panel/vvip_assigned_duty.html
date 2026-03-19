@@ -115,7 +115,20 @@
                         </div>
                     {% endfor %}
                 </div>
+                {% if duty.latitude and duty.longitude %}
+                <div class="mt-6 text-gray-700">
+                    <p class="text-sm text-gray-500 mb-2">Live Security Tracking</p>
 
+                    <div id="map-{{ duty.batch_id }}"
+                        class="rounded-xl border"
+                        style="height: 300px;"
+                        data-lat="{{ duty.latitude }}"
+                        data-lng="{{ duty.longitude }}"
+                        data-radius="{{ duty.radius }}"
+                        data-batch="{{ duty.batch_id }}">
+                    </div>
+                </div>
+                {% endif %}
             {% endwith %}
 
         {% endfor %}
@@ -132,6 +145,85 @@
 </div>
 
 <!-- Timer Script -->
+ <script>
+let staffMarkers = {}; // store staff markers per map
+
+function initVVIPMaps() {
+    document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+        const lat = parseFloat(mapDiv.dataset.lat);
+        const lng = parseFloat(mapDiv.dataset.lng);
+        const radius = parseFloat(mapDiv.dataset.radius) || 100;
+
+        const map = L.map(mapDiv.id).setView([lat, lng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // 📍 Duty location
+        L.marker([lat, lng]).addTo(map).bindPopup("Duty Location");
+
+        // 🔵 Geo-fence
+        L.circle([lat, lng], {
+            radius: radius,
+            color: 'blue',
+            fillOpacity: 0.2
+        }).addTo(map);
+
+        mapDiv._leaflet_map = map;
+        staffMarkers[mapDiv.id] = {};
+    });
+}
+
+document.addEventListener("DOMContentLoaded", initVVIPMaps);
+</script>
+<script>
+setInterval(() => {
+
+    document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+        const map = mapDiv._leaflet_map;
+        if (!map) return;
+
+        const batchId = mapDiv.dataset.batch;
+
+        fetch(`/api/staff-locations/${batchId}/`, {
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("access")
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            const markers = staffMarkers[mapDiv.id];
+
+            data.forEach(staff => {
+
+                // Remove old marker
+                if (markers[staff.id]) {
+                    map.removeLayer(markers[staff.id]);
+                }
+
+                // Add new marker
+                const marker = L.marker([staff.lat, staff.lng], {
+                    icon: L.icon({
+                        iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149059.png",
+                        iconSize: [30, 30]
+                    })
+                }).addTo(map);
+
+                marker.bindPopup(`👮 ${staff.name}`);
+
+                markers[staff.id] = marker;
+            });
+
+        });
+
+    });
+
+}, 5000); // every 5 sec
+</script>
 <script>
 function formatTime(days, hours, minutes, seconds) {
     return `${days}d ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;

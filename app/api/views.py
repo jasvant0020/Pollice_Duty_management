@@ -112,6 +112,10 @@ def update_staff_location(request):
             duty=duty
         )
 
+        # ✅ FIXED HERE
+        attendance.last_location_lat = lat
+        attendance.last_location_lng = lng
+
         # ✅ ENTER
         if distance <= duty.radius:
             if not attendance.is_inside:
@@ -127,3 +131,33 @@ def update_staff_location(request):
         attendance.save()
 
     return Response({"status": "updated"})
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_staff_locations(request, batch_id):
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        is_active=True
+    ).select_related("field_staff")
+
+    data = []
+
+    for duty in duties:
+        attendance = DutyAttendance.objects.filter(
+            staff=duty.field_staff,
+            duty=duty
+        ).first()
+
+        if attendance and attendance.last_location_lat and attendance.last_location_lng:
+            data.append({
+                "id": duty.field_staff.id,
+                "name": duty.field_staff.get_full_name() or duty.field_staff.username,
+                "lat": attendance.last_location_lat,
+                "lng": attendance.last_location_lng,
+                "inside": attendance.is_inside
+            })
+
+    return Response(data)
