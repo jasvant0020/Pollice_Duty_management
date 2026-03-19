@@ -395,8 +395,14 @@ def munsi_assign_duty(request):
         end_datetime = parse_datetime(request.POST.get("end_datetime"))
         vehicle = request.POST.get("vehicle") or None
 
-        latitude = request.POST.get("latitude")
-        longitude = request.POST.get("longitude")
+        latitude = request.POST.get("latitude") or None
+        longitude = request.POST.get("longitude") or None
+
+        if latitude:
+            latitude = float(latitude)
+        if longitude:
+            longitude = float(longitude)
+            
         radius = request.POST.get("radius") or 100
         geo_enabled = request.POST.get("geo_enabled") == "on"
         

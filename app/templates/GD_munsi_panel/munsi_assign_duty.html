@@ -91,27 +91,29 @@
                                 required>
                         </div>
                         <div class="text-gray-700 grid grid-cols-3 gap-4 mt-4">
-                            <input type="text" name="latitude" placeholder="Latitude"
-                                class="border px-3 py-2 rounded-lg">
+                            <input type="text" name="latitude"
+                                value="{{ request.POST.latitude }}"
+                                class="border px-3 py-2 rounded-lg" required>
 
-                            <input type="text" name="longitude" placeholder="Longitude"
-                                class="border px-3 py-2 rounded-lg">
+                            <input type="text" name="longitude"
+                                value="{{ request.POST.longitude }}"
+                                class="border px-3 py-2 rounded-lg" required>
 
                             <input type="number" name="radius" placeholder="Radius (meters)"
                                 value="100"
                                 class="border px-3 py-2 rounded-lg">
                         </div>
 
-                        <div class="text-gray-700 mt-2 flex items-center gap-2">
+                        {% comment %} <div class="text-gray-700 mt-2 flex items-center gap-2">
                             <input type="checkbox" name="geo_enabled" id="geo_enabled">
                             <label for="geo_enabled" class="text-sm">Enable Geo-Fencing</label>
-                        </div>
+                        </div> {% endcomment %}
                         <button type="button" onclick="getLocation()" class="text-sm text-blue-600">
                         📍 Auto Detect Location
                         </button>
 
                         <!-- Map area -->
-                        <div class="mt-4 text-gray-700">
+                        <div class="mt-4 text-gray-700 relative z-0">
                             <label class="block text-sm font-semibold mb-2">Select Location from Map</label>
 
                             <div id="map" style="height: 300px;" class="rounded-lg border"></div>
@@ -214,6 +216,10 @@
                     <input type="hidden" name="confirm_partial" value="1">
                     <input type="hidden" name="vvip" value="{{ selected_vvip }}">
                     <input type="hidden" name="category" value="{{ selected_category }}">
+                    <input type="hidden" name="latitude" value="{{ request.POST.latitude }}">
+                    <input type="hidden" name="longitude" value="{{ request.POST.longitude }}">
+                    <input type="hidden" name="duty_place" value="{{ request.POST.duty_place }}">
+                    <input type="hidden" name="radius" value="{{ request.POST.radius }}">
 
                     <div class="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-6">
                         
@@ -467,6 +473,9 @@ function getLocation() {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
 
+        document.querySelector('[name="latitude"]').value = lat;
+        document.querySelector('[name="longitude"]').value = lng;
+
         const radius = document.querySelector('[name="radius"]').value || 100;
 
         map.setView([lat, lng], 15);
@@ -481,8 +490,16 @@ function getLocation() {
             color: 'blue'
         }).addTo(map);
 
-        document.querySelector('[name="latitude"]').value = lat;
-        document.querySelector('[name="longitude"]').value = lng;
+        // 🔥 GET ADDRESS FROM LAT/LNG
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                document.querySelector('[name="duty_place"]').value = data.display_name;
+            })
+            .catch(() => {
+                document.querySelector('[name="duty_place"]').value = lat + ", " + lng;
+            });
+
     });
 }
 </script>
