@@ -1,6 +1,7 @@
 {% extends "user_panel/user_base.html" %}
 {% block page_title %}Assigned Duty{% endblock %}
 {% block content %}
+{% csrf_token %}
 {% include "error_message/error_message.html" %}
 <div class="max-w-6xl mx-auto px-4 py-8">
 
@@ -50,6 +51,19 @@
                     <p class="text-sm text-gray-500">Place</p>
                     <p class="text-gray-800">
                         {{ duty.duty_place|default:"—" }}
+                    </p>
+                </div>
+
+                <div>
+                    <p class="text-sm text-gray-500">Latitude</p>
+                    <p class="text-gray-800">
+                        {{ duty.latitude|default:"—" }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">lognitude</p>
+                    <p class="text-gray-800">
+                        {{ duty.longitude|default:"—" }}
                     </p>
                 </div>
 
@@ -126,7 +140,19 @@
                     Active
                 </span>
             </div>
+            {% if duty.latitude and duty.longitude %}
+            <div class="mt-6 text-gray-700">
+                <p class="text-sm text-gray-500 mb-2">Duty Location Map</p>
 
+                <div id="map-{{ duty.id }}"
+                    class="rounded-xl border"
+                    style="height: 250px;"
+                    data-lat="{{ duty.latitude }}"
+                    data-lng="{{ duty.longitude }}"
+                    data-radius="{{ duty.radius }}">
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
 
@@ -143,23 +169,136 @@
 
 </div>
 <script>
-setInterval(() => {
-    navigator.geolocation.getCurrentPosition((pos) => {
+document.addEventListener("DOMContentLoaded", () => {
+    initMaps();
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-        fetch("/api/update-location/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({
-                lat: pos.coords.latitude,
-                lng: pos.coords.longitude
-            })
+    let lastLat = null;
+    let lastLng = null;
+    let userMarkerMap = {};
+
+    function getCSRFToken() {
+        let cookieValue = null;
+
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+
+                if (cookie.startsWith("csrftoken=")) {
+                    cookieValue = cookie.substring("csrftoken=".length);
+                    break;
+                }
+            }
+        }
+
+        return cookieValue;
+    }
+
+    // 🔥 START TRACKING AFTER MAP LOAD
+    setInterval(() => {
+        navigator.geolocation.getCurrentPosition((pos) => {
+
+            const userLat = pos.coords.latitude;
+            const userLng = pos.coords.longitude;
+
+            document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+                const map = mapDiv._leaflet_map;
+                if (!map) return; // ✅ prevents crash
+
+                const dutyId = mapDiv.id.split('-')[1];
+
+                if (userMarkerMap[dutyId]) {
+                    map.removeLayer(userMarkerMap[dutyId]);
+                }
+
+                const marker = L.marker([userLat, userLng], {
+                    icon: L.icon({
+                        iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
+                        iconSize: [25, 25]
+                    })
+                }).addTo(map);
+
+                userMarkerMap[dutyId] = marker;
+
+                const dutyLat = parseFloat(mapDiv.dataset.lat);
+                const dutyLng = parseFloat(mapDiv.dataset.lng);
+                const radius = parseFloat(mapDiv.dataset.radius) || 100;
+
+                const distance = map.distance([userLat, userLng], [dutyLat, dutyLng]);
+
+                if (distance <= radius) {
+                    marker.bindPopup("✅ Inside Duty Area").openPopup();
+                } else {
+                    marker.bindPopup("❌ Outside Duty Area").openPopup();
+                }
+            });
+
+            // 🔥 SEND ONLY IF MOVED
+            if (
+                lastLat === null ||
+                lastLng === null ||
+                L.latLng(userLat, userLng).distanceTo(L.latLng(lastLat, lastLng)) > 10
+            ) {
+                fetch("/api/update-location/", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        lat: userLat,
+                        lng: userLng
+                    })
+                });
+
+                lastLat = userLat;
+                lastLng = userLng;
+            }
+
         });
+    }, 5000);
 
+});
+</script>
+<script>
+let userMarkerMap = {}; // store markers per duty
+
+function initMaps() {
+    document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+        const dutyId = mapDiv.id.split('-')[1];
+
+        const lat = parseFloat(mapDiv.dataset.lat);
+        const lng = parseFloat(mapDiv.dataset.lng);
+        const radius = parseFloat(mapDiv.dataset.radius) || 100;
+
+        const map = L.map(mapDiv.id).setView([lat, lng], 15);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Duty marker
+        L.marker([lat, lng]).addTo(map);
+
+        // Geo-fence circle
+        L.circle([lat, lng], {
+            radius: radius,
+            color: 'blue',
+            fillOpacity: 0.2
+        }).addTo(map);
+
+        // Store map reference
+        mapDiv._leaflet_map = map;
     });
-}, 15000); // every 15 sec
+}
 </script>
 <script>
 function formatTime(days, hours, minutes, seconds) {
