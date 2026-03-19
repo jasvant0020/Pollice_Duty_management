@@ -90,6 +90,32 @@
                                 {% if confirm_partial %}readonly{% endif %}
                                 required>
                         </div>
+                        <div class="text-gray-700 grid grid-cols-3 gap-4 mt-4">
+                            <input type="text" name="latitude" placeholder="Latitude"
+                                class="border px-3 py-2 rounded-lg">
+
+                            <input type="text" name="longitude" placeholder="Longitude"
+                                class="border px-3 py-2 rounded-lg">
+
+                            <input type="number" name="radius" placeholder="Radius (meters)"
+                                value="100"
+                                class="border px-3 py-2 rounded-lg">
+                        </div>
+
+                        <div class="text-gray-700 mt-2 flex items-center gap-2">
+                            <input type="checkbox" name="geo_enabled" id="geo_enabled">
+                            <label for="geo_enabled" class="text-sm">Enable Geo-Fencing</label>
+                        </div>
+                        <button type="button" onclick="getLocation()" class="text-sm text-blue-600">
+                        📍 Auto Detect Location
+                        </button>
+
+                        <!-- Map area -->
+                        <div class="mt-4 text-gray-700">
+                            <label class="block text-sm font-semibold mb-2">Select Location from Map</label>
+
+                            <div id="map" style="height: 300px;" class="rounded-lg border"></div>
+                        </div>
 
                         <!-- Date & Time Row -->
                         <div class="grid grid-cols-2 gap-6">
@@ -362,6 +388,104 @@
     </div>
 
 </div>
+<script>
+let map = L.map('map').setView([28.6139, 77.2090], 13); // Delhi default
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+let marker;
+let circle;
+
+// 🔍 ADD SEARCH CONTROL
+const geocoder = L.Control.geocoder({
+    placeholder: "Search location...",
+    errorMessage: "Location not found"
+})
+.addTo(map);
+
+// 🎯 When user selects a location
+geocoder.on('markgeocode', function(e) {
+    const lat = e.geocode.center.lat;
+    const lng = e.geocode.center.lng;
+
+    const radius = document.querySelector('[name="radius"]').value || 100;
+
+    map.setView([lat, lng], 15);
+
+    if (marker) map.removeLayer(marker);
+    if (circle) map.removeLayer(circle);
+
+    marker = L.marker([lat, lng]).addTo(map);
+
+    circle = L.circle([lat, lng], {
+        radius: radius,
+        color: 'blue'
+    }).addTo(map);
+
+    // Fill form
+    document.querySelector('[name="latitude"]').value = lat;
+    document.querySelector('[name="longitude"]').value = lng;
+    document.querySelector('[name="duty_place"]').value = e.geocode.name;
+});
+
+
+// 📍 CLICK MAP
+map.on('click', function(e) {
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+
+    const radius = document.querySelector('[name="radius"]').value || 100;
+
+    if (marker) map.removeLayer(marker);
+    if (circle) map.removeLayer(circle);
+
+    marker = L.marker([lat, lng]).addTo(map);
+
+    circle = L.circle([lat, lng], {
+        radius: radius,
+        color: 'blue'
+    }).addTo(map);
+
+    document.querySelector('[name="latitude"]').value = lat;
+    document.querySelector('[name="longitude"]').value = lng;
+});
+
+
+// 🎯 RADIUS LIVE UPDATE
+document.querySelector('[name="radius"]').addEventListener('input', function() {
+    if (circle) {
+        circle.setRadius(this.value);
+    }
+});
+
+
+// 📍 AUTO LOCATION
+function getLocation() {
+    navigator.geolocation.getCurrentPosition((pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        const radius = document.querySelector('[name="radius"]').value || 100;
+
+        map.setView([lat, lng], 15);
+
+        if (marker) map.removeLayer(marker);
+        if (circle) map.removeLayer(circle);
+
+        marker = L.marker([lat, lng]).addTo(map);
+
+        circle = L.circle([lat, lng], {
+            radius: radius,
+            color: 'blue'
+        }).addTo(map);
+
+        document.querySelector('[name="latitude"]').value = lat;
+        document.querySelector('[name="longitude"]').value = lng;
+    });
+}
+</script>
 <script>
     const dutyType = document.getElementById("duty_type");
     const otherContainer = document.getElementById("otherDutyTypeContainer");

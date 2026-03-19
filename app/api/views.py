@@ -78,3 +78,52 @@ def logout_api(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
+from app.models import VVIPDuty, DutyAttendance
+from app.utils.geo import calculate_distance  # or paste function here
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def update_staff_location(request):
+    user = request.user
+
+    lat = float(request.data.get("lat"))
+    lng = float(request.data.get("lng"))
+
+    active_duties = VVIPDuty.objects.filter(
+        field_staff=user,
+        is_active=True,
+        geo_enabled=True
+    )
+
+    for duty in active_duties:
+
+        distance = calculate_distance(
+            lat, lng,
+            duty.latitude,
+            duty.longitude
+        )
+
+        attendance, _ = DutyAttendance.objects.get_or_create(
+            staff=user,
+            duty=duty
+        )
+
+        # ✅ ENTER
+        if distance <= duty.radius:
+            if not attendance.is_inside:
+                attendance.is_inside = True
+                attendance.check_in_time = timezone.now()
+
+        # ❌ EXIT
+        else:
+            if attendance.is_inside:
+                attendance.is_inside = False
+                attendance.check_out_time = timezone.now()
+
+        attendance.save()
+
+    return Response({"status": "updated"})

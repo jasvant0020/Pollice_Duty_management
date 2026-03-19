@@ -199,7 +199,12 @@ class VVIPDuty(models.Model):
         related_name="ended_duties"
     )
 
+    #geofence applied
     ended_at = models.DateTimeField(null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    radius = models.IntegerField(default=100)  # meters
+    geo_enabled = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -212,6 +217,40 @@ class VVIPDuty(models.Model):
 
     def __str__(self):
         return f"{self.vvip} → {self.field_staff} ({self.category})"
+
+
+class DutyAttendance(models.Model):
+    staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={"role": "field_staff"},
+        related_name="duty_attendance"
+    )
+
+    duty = models.ForeignKey(
+        VVIPDuty,
+        on_delete=models.CASCADE,
+        related_name="attendance_records"
+    )
+
+    check_in_time = models.DateTimeField(null=True, blank=True)
+    check_out_time = models.DateTimeField(null=True, blank=True)
+
+    is_inside = models.BooleanField(default=False)
+
+    last_location_lat = models.FloatField(null=True, blank=True)
+    last_location_lng = models.FloatField(null=True, blank=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("staff", "duty")
+
+    def __str__(self):
+        return f"{self.staff} - {self.duty}"
+
+
+
 
 from django.db.models import Max    
 class FieldStaffRequest(models.Model):

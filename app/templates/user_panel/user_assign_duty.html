@@ -142,7 +142,25 @@
     {% endif %}
 
 </div>
+<script>
+setInterval(() => {
+    navigator.geolocation.getCurrentPosition((pos) => {
 
+        fetch("/api/update-location/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude
+            })
+        });
+
+    });
+}, 15000); // every 15 sec
+</script>
 <script>
 function formatTime(days, hours, minutes, seconds) {
     return `${days}d ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;

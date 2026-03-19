@@ -394,6 +394,11 @@ def munsi_assign_duty(request):
         start_datetime = parse_datetime(request.POST.get("start_datetime"))
         end_datetime = parse_datetime(request.POST.get("end_datetime"))
         vehicle = request.POST.get("vehicle") or None
+
+        latitude = request.POST.get("latitude")
+        longitude = request.POST.get("longitude")
+        radius = request.POST.get("radius") or 100
+        geo_enabled = request.POST.get("geo_enabled") == "on"
         
         duty_type = request.POST.get("duty_type") or "static"
         if duty_type == "other":
@@ -578,7 +583,12 @@ def munsi_assign_duty(request):
                             duty_type=duty_type,
                             special_instructions=special_instructions,
                             is_active=True,
-                            batch_id=batch_id   # 🔥 CRITICAL LINE
+                            batch_id=batch_id,   # 🔥 CRITICAL LINE
+
+                            latitude=latitude,
+                            longitude=longitude,
+                            radius=radius,
+                            geo_enabled=geo_enabled
                         )
 
                         assigned_count += 1
