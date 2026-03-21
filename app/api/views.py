@@ -96,7 +96,6 @@ def update_staff_location(request):
     active_duties = VVIPDuty.objects.filter(
         field_staff=user,
         is_active=True,
-        geo_enabled=True
     )
 
     for duty in active_duties:

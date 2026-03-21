@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 lastLng === null ||
                 L.latLng(userLat, userLng).distanceTo(L.latLng(lastLat, lastLng)) > 10
             ) {
-                fetch("/api/update-location/", {
+                fetch("/api/update_staff_location/", {
                     method: "POST",
                     credentials: "same-origin",
                     headers: {
