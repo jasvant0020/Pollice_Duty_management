@@ -146,8 +146,12 @@
 
 <!-- Timer Script -->
  <script>
-let staffMarkers = {}; // store staff markers per map
+let staffMarkers = {}; 
+let vvipMarkers = {}; 
 
+/* ---------------------------
+   INIT MAPS
+----------------------------*/
 function initVVIPMaps() {
     document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
 
@@ -162,7 +166,7 @@ function initVVIPMaps() {
         }).addTo(map);
 
         // 📍 Duty location
-        L.marker([lat, lng]).addTo(map).bindPopup("Duty Location");
+        L.marker([lat, lng]).addTo(map).bindPopup("📍 Duty Location");
 
         // 🔵 Geo-fence
         L.circle([lat, lng], {
@@ -176,60 +180,154 @@ function initVVIPMaps() {
     });
 }
 
-document.addEventListener("DOMContentLoaded", initVVIPMaps);
-</script>
-<script>
-setInterval(() => {
+/* ---------------------------
+   👑 TRACK VVIP LOCATION
+----------------------------*/
+function trackVVIPLocation() {
 
-    document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+    if (!navigator.geolocation) {
+        console.log("Geolocation not supported");
+        return;
+    }
 
-        const map = mapDiv._leaflet_map;
-        if (!map) return;
+    navigator.geolocation.watchPosition(position => {
 
-        const batchId = mapDiv.dataset.batch;
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
 
-        fetch(`/api/staff-locations/${batchId}/`, {
-            headers: {
-                "Authorization": "Bearer " + localStorage.getItem("access")
+        document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+            const map = mapDiv._leaflet_map;
+            if (!map) return;
+
+            const mapId = mapDiv.id;
+            const batchId = mapDiv.dataset.batch;
+
+            // Remove old marker
+            if (vvipMarkers[mapId]) {
+                map.removeLayer(vvipMarkers[mapId]);
             }
-        })
-        .then(res => res.json())
-        .then(data => {
 
-            const markers = staffMarkers[mapDiv.id];
+            // 👑 Add new marker
+            const marker = L.marker([lat, lng], {
+                icon: L.icon({
+                    iconUrl: "https://cdn-icons-png.flaticon.com/512/1946/1946429.png",
+                    iconSize: [35, 35]
+                })
+            }).addTo(map);
 
-            data.forEach(staff => {
+            marker.bindPopup("👑 You (VVIP)");
 
-                // Remove old marker
-                if (markers[staff.id]) {
-                    map.removeLayer(markers[staff.id]);
-                }
+            vvipMarkers[mapId] = marker;
 
-                // Add new marker
-                const marker = L.marker([staff.lat, staff.lng], {
-                    icon: L.icon({
-                        iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149059.png",
-                        iconSize: [30, 30]
-                    })
-                }).addTo(map);
-
-                marker.bindPopup(`👮 ${staff.name}`);
-
-                markers[staff.id] = marker;
-            });
+            // 🔁 OPTIONAL: Send to backend
+            sendVVIPLocation(lat, lng, batchId);
 
         });
 
+    }, error => {
+        console.log("Location error:", error);
+    }, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000
     });
+}
 
-}, 5000); // every 5 sec
-</script>
-<script>
+/* ---------------------------
+   📡 SEND VVIP LOCATION TO API
+----------------------------*/
+function sendVVIPLocation(lat, lng, batchId) {
+    fetch(`/api/update-vvip-location/`, {
+        method: "POST",
+        credentials: "same-origin",   // ✅ IMPORTANT
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()  // ✅ ADD THIS
+        },
+        body: JSON.stringify({
+            latitude: lat,
+            longitude: lng,
+            batch_id: batchId
+        })
+    });
+}
+
+/* ---------------------------
+   👮 FETCH STAFF LOCATIONS
+----------------------------*/
+function startStaffTracking() {
+
+    setInterval(() => {
+
+        document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+            const map = mapDiv._leaflet_map;
+            if (!map) return;
+
+            const batchId = mapDiv.dataset.batch;
+            const markers = staffMarkers[mapDiv.id];
+
+            fetch(`/api/staff-locations/${batchId}/`, {
+                credentials: "same-origin"
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                data.forEach(staff => {
+
+                    // Remove old marker
+                    if (markers[staff.id]) {
+                        markers[staff.id].setLatLng([staff.lat, staff.lng]);
+                    } else {
+                        const marker = L.marker([staff.lat, staff.lng], {
+                            icon: L.icon({
+                                iconUrl: staff.id === "vvip"
+                                    ? "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
+                                    : "https://cdn-icons-png.flaticon.com/512/149/149059.png",
+                                iconSize: staff.id === "vvip" ? [35,35] : [30,30]
+                            })
+                        }).addTo(map);
+
+                        marker.bindPopup(
+                            staff.id === "vvip"
+                                ? "👑 VVIP"
+                                : `👮 ${staff.name}`
+                        );
+
+                        markers[staff.id] = marker;
+                    }
+
+                    // 👮 Add new marker
+                    const marker = L.marker([staff.lat, staff.lng], {
+                        icon: L.icon({
+                            iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149059.png",
+                            iconSize: [30, 30]
+                        })
+                    }).addTo(map);
+
+                    marker.bindPopup(`👮 ${staff.name}`);
+
+                    markers[staff.id] = marker;
+                });
+
+            })
+            .catch(err => console.log("Staff fetch error:", err));
+
+        });
+
+    }, 5000);
+}
+
+/* ---------------------------
+   ⏱ TIMER LOGIC
+----------------------------*/
 function formatTime(days, hours, minutes, seconds) {
     return `${days}d ${hours.toString().padStart(2,'0')}h : ${minutes.toString().padStart(2,'0')}m : ${seconds.toString().padStart(2,'0')}s`;
 }
 
 function startTimers() {
+
     document.querySelectorAll("[id^='duty-']").forEach(div => {
 
         const dutyId = div.id.split('-')[1];
@@ -243,8 +341,9 @@ function startTimers() {
             const countdownEl = document.getElementById(`countdown-${dutyId}`);
             const durationEl  = document.getElementById(`duration-${dutyId}`);
 
+            if (!countdownEl || !durationEl) return;
+
             if (now < start) {
-                const diff = start - now;
                 countdownEl.innerText = "Starts Soon";
                 durationEl.innerText = "-";
                 return;
@@ -276,8 +375,68 @@ function startTimers() {
         }, 1000);
     });
 }
+let liveMarkers = {};
 
-document.addEventListener("DOMContentLoaded", startTimers);
+function fetchLiveLocations() {
+    setInterval(() => {
+
+        document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
+
+            const map = mapDiv._leaflet_map;
+            if (!map) return;
+
+            const batchId = mapDiv.dataset.batch;
+
+            fetch(`/api/staff-locations/${batchId}/`, {
+                credentials: "same-origin"
+            })
+            .then(res => res.json())
+            .then(data => {
+
+                data.forEach(person => {
+
+                    const key = mapDiv.id + "_" + person.id;
+
+                    if (liveMarkers[key]) {
+                        // ✅ MOVE marker
+                        liveMarkers[key].setLatLng([person.lat, person.lng]);
+                    } else {
+                        // ✅ CREATE marker
+                        const marker = L.marker([person.lat, person.lng], {
+                            icon: L.icon({
+                                iconUrl: person.id === "vvip"
+                                    ? "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
+                                    : "https://cdn-icons-png.flaticon.com/512/149/149059.png",
+                                iconSize: person.id === "vvip" ? [35,35] : [30,30]
+                            })
+                        }).addTo(map);
+
+                        marker.bindPopup(
+                            person.id === "vvip"
+                                ? "👑 VVIP"
+                                : `👮 ${person.name}`
+                        );
+
+                        liveMarkers[key] = marker;
+                    }
+
+                });
+
+            });
+
+        });
+
+    }, 5000);
+}
+/* ---------------------------
+   🚀 INIT ALL
+----------------------------*/
+document.addEventListener("DOMContentLoaded", () => {
+    initVVIPMaps();
+    trackVVIPLocation();
+    fetchLiveLocations();
+    startTimers();
+});
 </script>
 
 {% endblock %}

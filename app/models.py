@@ -205,6 +205,8 @@ class VVIPDuty(models.Model):
     longitude = models.FloatField(null=True, blank=True)
     radius = models.IntegerField(default=100)  # meters
     geo_enabled = models.BooleanField(default=False)
+    vvip_lat = models.FloatField(null=True, blank=True)
+    vvip_lng = models.FloatField(null=True, blank=True)
 
     class Meta:
         constraints = [

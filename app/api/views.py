@@ -160,4 +160,41 @@ def get_staff_locations(request, batch_id):
                 "inside": attendance.is_inside
             })
 
+    # ✅ Add VVIP location
+    vvip_duty = duties.first()
+
+    if vvip_duty and vvip_duty.vvip_lat and vvip_duty.vvip_lng:
+        data.append({
+            "id": "vvip",
+            "name": "VVIP",
+            "lat": vvip_duty.vvip_lat,
+            "lng": vvip_duty.vvip_lng,
+            "inside": True
+        })
+
     return Response(data)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def update_vvip_location(request):
+
+    if not request.user.is_authenticated:
+        return Response({"error": "Not logged in"}, status=403)
+
+    lat = float(request.data.get("latitude"))
+    lng = float(request.data.get("longitude"))
+    batch_id = request.data.get("batch_id")
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        vvip=request.user,
+        is_active=True
+    )
+
+    for duty in duties:
+        duty.vvip_lat = lat
+        duty.vvip_lng = lng
+        duty.save()
+
+    return Response({"status": "updated"})
