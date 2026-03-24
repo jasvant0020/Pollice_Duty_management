@@ -393,6 +393,36 @@ def munsi_assign_duty(request):
         duty_place = request.POST.get("duty_place")
         start_datetime = parse_datetime(request.POST.get("start_datetime"))
         end_datetime = parse_datetime(request.POST.get("end_datetime"))
+
+        # ❗ Check if datetime parsed properly
+        if not start_datetime or not end_datetime:
+            messages.error(request, "Invalid date/time format.")
+            return redirect("munsi_assign_duty")
+
+        # 🔥 Convert to aware datetime (IMPORTANT if USE_TZ=True)
+        if timezone.is_naive(start_datetime):
+            start_datetime = timezone.make_aware(start_datetime)
+
+        if timezone.is_naive(end_datetime):
+            end_datetime = timezone.make_aware(end_datetime)
+
+        now = timezone.now()
+
+        # 🚫 Block past start time
+        if start_datetime < now:
+            messages.error(request, "Start time cannot be in the past.")
+            return redirect("munsi_assign_duty")
+
+        # 🚫 Block past end time
+        if end_datetime < now:
+            messages.error(request, "End time cannot be in the past.")
+            return redirect("munsi_assign_duty")
+
+        # 🚫 End must be after start
+        if end_datetime <= start_datetime:
+            messages.error(request, "End time must be after start time.")
+            return redirect("munsi_assign_duty")
+
         vehicle = request.POST.get("vehicle") or None
 
         latitude = request.POST.get("latitude") or None
@@ -416,9 +446,9 @@ def munsi_assign_duty(request):
         confirm_reassign = request.POST.get("confirm_reassign")
 
 
-        if end_datetime <= start_datetime:
-            messages.error(request, "End time must be after start time.")
-            return redirect("munsi_assign_duty")
+        # if end_datetime <= start_datetime:
+        #     messages.error(request, "End time must be after start time.")
+        #     return redirect("munsi_assign_duty")
 
 
         if not vvip_id or not category_id:

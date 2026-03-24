@@ -520,4 +520,34 @@ function getLocation() {
     // Run on load (important for edit/reload cases)
     toggleOtherField();
 </script>
+<script>
+function setMinDateTime() {
+    const now = new Date();
+
+    // Format to YYYY-MM-DDTHH:MM
+    const pad = (n) => n.toString().padStart(2, '0');
+
+    const formatted =
+        now.getFullYear() + '-' +
+        pad(now.getMonth() + 1) + '-' +
+        pad(now.getDate()) + 'T' +
+        pad(now.getHours()) + ':' +
+        pad(now.getMinutes());
+
+    // Apply min
+    document.querySelector('[name="start_datetime"]').min = formatted;
+    document.querySelector('[name="end_datetime"]').min = formatted;
+}
+
+// Run on load
+setMinDateTime();
+</script>
+<script>
+const startInput = document.querySelector('[name="start_datetime"]');
+const endInput = document.querySelector('[name="end_datetime"]');
+
+startInput.addEventListener("change", function () {
+    endInput.min = this.value;
+});
+</script>
 {% endblock %}
