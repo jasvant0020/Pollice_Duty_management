@@ -154,8 +154,11 @@ let vvipMarkers = {};
 function initVVIPMaps() {
     document.querySelectorAll("[id^='map-']").forEach(mapDiv => {
 
+
         const lat = parseFloat(mapDiv.dataset.lat);
         const lng = parseFloat(mapDiv.dataset.lng);
+        mapDiv._dutyLat = lat;
+        mapDiv._dutyLng = lng;
         const radius = parseFloat(mapDiv.dataset.radius) || 100;
 
         const map = L.map(mapDiv.id).setView([lat, lng], 15);
@@ -218,6 +221,39 @@ function trackVVIPLocation() {
             marker.bindPopup("👑 You (VVIP)");
 
             vvipMarkers[mapId] = marker;
+            /* ===========================
+            👑 DRAW VVIP LINE (ADD HERE)
+            =========================== */
+
+            const dutyLat = mapDiv._dutyLat;
+            const dutyLng = mapDiv._dutyLng;
+
+            const dutyLatLng = [dutyLat, dutyLng];
+            const vvipLatLng = [lat, lng];
+
+            const lineKey = mapId + "_vvip_line";
+
+            // distance
+            const distance = map.distance(dutyLatLng, vvipLatLng);
+
+            if (liveLines[lineKey]) {
+                // update line
+                liveLines[lineKey].setLatLngs([dutyLatLng, vvipLatLng]);
+                liveLines[lineKey].setTooltipContent(`${Math.round(distance)} m`);
+            } else {
+                // create line
+                const line = L.polyline([dutyLatLng, vvipLatLng], {
+                    color: "#FFD700",   // gold
+                    weight: 4,
+                    dashArray: "5,5"
+                }).addTo(map);
+
+                line.bindTooltip(`${Math.round(distance)} m`, {
+                    permanent: false
+                });
+
+                liveLines[lineKey] = line;
+            }
 
             // 🔁 OPTIONAL: Send to backend
             sendVVIPLocation(lat, lng, batchId);
@@ -375,6 +411,7 @@ function startTimers() {
     });
 }
 let liveMarkers = {};
+let liveLines = {};
 
 function fetchLiveLocations() {
     setInterval(() => {
@@ -395,13 +432,21 @@ function fetchLiveLocations() {
                 data.forEach(person => {
 
                     const key = mapDiv.id + "_" + person.id;
+                    const lineKey = key + "_line";
 
+                    const dutyLat = mapDiv._dutyLat;
+                    const dutyLng = mapDiv._dutyLng;
+
+                    const personLatLng = [person.lat, person.lng];
+                    const dutyLatLng   = [dutyLat, dutyLng];
+
+                    /* ---------------------------
+                    ✅ MARKER UPDATE
+                    ----------------------------*/
                     if (liveMarkers[key]) {
-                        // ✅ MOVE marker
-                        liveMarkers[key].setLatLng([person.lat, person.lng]);
+                        liveMarkers[key].setLatLng(personLatLng);
                     } else {
-                        // ✅ CREATE marker
-                        const marker = L.marker([person.lat, person.lng], {
+                        const marker = L.marker(personLatLng, {
                             icon: L.icon({
                                 iconUrl: person.id === "vvip"
                                     ? "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
@@ -417,6 +462,35 @@ function fetchLiveLocations() {
                         );
 
                         liveMarkers[key] = marker;
+                    }
+
+                    /* ---------------------------
+                    🎯 DRAW / UPDATE LINE
+                    ----------------------------*/
+                    let color = "green";
+
+                    // Optional: distance-based color
+                    const distance = map.distance(dutyLatLng, personLatLng);
+
+                    if (distance > 200) color = "red";
+                    else if (distance > 100) color = "orange";
+                    else if (distance > 10) color = "yellow";
+
+                    if (liveLines[lineKey]) {
+                        // update line
+                        liveLines[lineKey].setLatLngs([dutyLatLng, personLatLng]);
+                        liveLines[lineKey].setStyle({ color: color });
+                    } else {
+                        // create line
+                        const line = L.polyline([dutyLatLng, personLatLng], {
+                            color: person.id === "vvip" ? "gold" : color,
+                            weight: 2,
+                            dashArray: person.id === "vvip" ? "5, 5" : null
+                        }).addTo(map);
+                        line.bindTooltip(`${Math.round(distance)} m`, {
+                            permanent: false
+                        });
+                        liveLines[lineKey] = line;
                     }
 
                 });
