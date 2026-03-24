@@ -102,14 +102,14 @@
                     id: '{{ req.id }}',
                     request_number: '{{ req.request_number }}',
                     name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
-                    image: '{{ req.staff.profile_photo.url }}',
+                    image: '{{ req.staff.photo_url }}',
                     subject: `{{ req.subject|escapejs }}`,
                     message: `{{ req.message|escapejs }}`,
                     date: '{{ req.submitted_at }}'
                 })"
                 class="cursor-pointer bg-indigo-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center">
 
-                <img src="{{ req.staff.profile_photo.url }}"
+                <img src="{{ req.staff.photo_url }}"
                     class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-500">
 
                 <h3 class="mt-2 text-sm font-semibold text-gray-800">
@@ -133,14 +133,14 @@
                 id: '{{ req.id }}',
                 request_number: '{{ req.request_number }}',
                 name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
-                image: '{{ req.staff.profile_photo.url }}',
+                image: '{{ req.staff.photo_url }}',
                 subject: `{{ req.subject|escapejs }}`,
                 message: `{{ req.message|escapejs }}`,
                 date: '{{ req.submitted_at }}',
                 status: 'approved'
             })"
             class="cursor-pointer bg-green-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center">
-            <img src="{{ req.staff.profile_photo.url }}"
+            <img src="{{ req.staff.photo_url }}"
                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-green-500">
 
             <h3 class="mt-2 text-sm font-semibold text-gray-800">
@@ -166,7 +166,7 @@
                 id: '{{ req.id }}',
                 request_number: '{{ req.request_number }}',
                 name: '{{ req.staff.first_name }} {{ req.staff.last_name }}',
-                image: '{{ req.staff.profile_photo.url }}',
+                image: '{{ req.staff.photo_url }}',
                 subject: `{{ req.subject|escapejs }}`,
                 message: `{{ req.message|escapejs }}`,
                 date: '{{ req.submitted_at }}',
@@ -174,7 +174,7 @@
             })"
             class="cursor-pointer bg-red-50 p-4 rounded-xl shadow hover:shadow-lg transition text-center"
         >
-            <img src="{{ req.staff.profile_photo.url }}"
+            <img src="{{ req.staff.photo_url }}"
                 class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-red-500">
 
             <h3 class="mt-2 text-sm font-semibold text-gray-800">

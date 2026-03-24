@@ -42,6 +42,12 @@ class User(AbstractUser):
         blank=True
     )
 
+    @property
+    def photo_url(self):
+        if self.profile_photo and hasattr(self.profile_photo, 'url'):
+            return self.profile_photo.url
+        return '/media/default_dp/default.png'
+
     created_by = models.ForeignKey(
         "self",
         on_delete=models.SET_NULL,
