@@ -95,7 +95,7 @@
                                 {% for d in group.list %}
                                 <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 px-4 py-2 rounded-xl">
 
-                                    <img src="{% if d.field_staff.profile_photo %}{{ d.field_staff.profile_photo.url }}{% else %}/static/images/default-user.png{% endif %}"
+                                    <img src="{{ d.field_staff.photo_url }}"
                                         class="w-10 h-10 rounded-full object-cover">
 
                                     <div>

@@ -156,19 +156,24 @@ def get_staff_locations(request, batch_id):
                 "name": duty.field_staff.get_full_name() or duty.field_staff.username,
                 "lat": attendance.last_location_lat,
                 "lng": attendance.last_location_lng,
-                "inside": attendance.is_inside
+                "inside": attendance.is_inside,
+                "role": "staff"
             })
 
     # ✅ Add VVIP location
-    vvip_duty = duties.first()
+    vvip_duty = duties.filter(
+        vvip_lat__isnull=False,
+        vvip_lng__isnull=False
+    ).first()
 
-    if vvip_duty and vvip_duty.vvip_lat and vvip_duty.vvip_lng:
+    if vvip_duty:
         data.append({
             "id": "vvip",
-            "name": "VVIP",
+            "name": vvip_duty.vvip.get_full_name() if vvip_duty.vvip else "VVIP",
             "lat": vvip_duty.vvip_lat,
             "lng": vvip_duty.vvip_lng,
-            "inside": True
+            "inside": True,
+            "role": "vvip"
         })
 
     return Response(data)
@@ -187,13 +192,13 @@ def update_vvip_location(request):
 
     duties = VVIPDuty.objects.filter(
         batch_id=batch_id,
-        vvip=request.user,
         is_active=True
     )
 
-    for duty in duties:
-        duty.vvip_lat = lat
-        duty.vvip_lng = lng
-        duty.save()
+    # ✅ UPDATE ALL ROWS IN ONE GO
+    duties.update(
+        vvip_lat=lat,
+        vvip_lng=lng
+    )
 
     return Response({"status": "updated"})

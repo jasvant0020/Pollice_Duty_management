@@ -125,11 +125,6 @@
 
                             </div>
                             <div class="relative z-0">
-
-                                <!-- EDGE INDICATORS -->
-                                <div id="edge-markers-{{ batch_id }}"
-                                    class="absolute inset-0 pointer-events-none z-50">
-                                </div>
                                 <p class="text-sm text-gray-500 mb-3 mt-3">Duty Location Map</p>
                                 <!-- MAP -->
                                 <div id="map-{{ batch_id }}"
@@ -191,7 +186,8 @@
 
                                 <div class="flex items-center">
                                     <div class="h-10 w-10 rounded-full bg-linear-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white font-bold text-sm mr-3">
-                                        {{ duty.field_staff.get_full_name|default:duty.field_staff.username|first|upper }}
+                                        <img src="{{ duty.field_staff.photo_url }}"
+                                            class="w-10 h-10 rounded-full object-cover">
                                     </div>
                                     <div>
                                         <div class="font-semibold text-gray-900">
@@ -278,6 +274,7 @@ function toggleRow(id) {
    GLOBAL STORAGE
 =========================== */
 let liveMarkers = {};
+let liveLines = {};
 let mapsInitialized = {};
 let latestMapData = {};
 let edgeMarkers = {};
@@ -332,74 +329,6 @@ function initVVIPMaps() {
 }
 
 /* ===========================
-   EDGE MARKERS (ALWAYS VISIBLE)
-=========================== */
-function updateEdgeMarkers(mapDiv, data) {
-
-    const map = mapDiv._leaflet_map;
-    if (!map) return;
-
-    const container = document.getElementById(`edge-markers-${mapDiv.dataset.batch}`);
-    if (!container) return;
-
-    const bounds = map.getBounds();
-    const size = map.getSize();
-
-    data.forEach(person => {
-
-        const key = mapDiv.id + "_" + person.id;
-        const latlng = L.latLng(person.lat, person.lng);
-
-        // ✅ CREATE ONCE
-        if (!edgeMarkers[key]) {
-            const arrow = document.createElement("div");
-
-            arrow.style.position = "absolute";
-            arrow.style.transition = "all 0.2s linear";
-            arrow.style.zIndex = "1000";
-
-            arrow.innerHTML = `
-                <div style="
-                    background: white;
-                    padding: 4px 6px;
-                    border-radius: 50%;
-                    box-shadow: 0 0 6px rgba(0,0,0,0.3);
-                    font-size: 14px;
-                ">
-                    ${person.id === "vvip" || person.role === "vvip" ? "👑" : "👮"}
-                </div>
-            `;
-
-            container.appendChild(arrow);
-            edgeMarkers[key] = arrow;
-        }
-
-        const arrow = edgeMarkers[key];
-
-        const point = map.latLngToContainerPoint(latlng);
-
-        const center = size.divideBy(2);
-        const angle = Math.atan2(point.y - center.y, point.x - center.x) * (180 / Math.PI);
-
-        let x = Math.max(20, Math.min(size.x - 20, point.x));
-        let y = Math.max(20, Math.min(size.y - 20, point.y));
-
-        if (bounds.contains(latlng)) {
-            // 🟢 Inside map (faded)
-            arrow.style.opacity = "0.4";
-            arrow.style.transform = `translate(-50%, -50%) scale(0.7)`;
-        } else {
-            // 🔴 Outside map (full + rotated)
-            arrow.style.opacity = "1";
-            arrow.style.transform = `translate(-50%, -50%) rotate(${angle}deg) scale(1)`;
-        }
-
-        arrow.style.left = x + "px";
-        arrow.style.top = y + "px";
-    });
-}
-
-/* ===========================
    LIVE TRACKING
 =========================== */
 function fetchLiveLocations() {
@@ -413,44 +342,77 @@ function fetchLiveLocations() {
 
             const batchId = mapDiv.dataset.batch;
 
+            const dutyLat = parseFloat(mapDiv.dataset.lat);
+            const dutyLng = parseFloat(mapDiv.dataset.lng);
+
             fetch(`/api/staff-locations/${batchId}/`, {
                 credentials: "same-origin"
             })
             .then(res => res.json())
             .then(data => {
 
-                // ✅ STORE DATA
-                latestMapData[mapDiv.id] = data;
-
                 data.forEach(person => {
 
                     const key = mapDiv.id + "_" + person.id;
+                    const lineKey = key + "_line";
+
+                    const personLatLng = [person.lat, person.lng];
+                    const dutyLatLng   = [dutyLat, dutyLng];
 
                     const isVVIP = person.id === "vvip" || person.role === "vvip";
 
-                    const icon = L.icon({
-                        iconUrl: isVVIP
-                            ? "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
-                            : "https://cdn-icons-png.flaticon.com/512/149/149059.png",
-                        iconSize: isVVIP ? [35,35] : [30,30]
-                    });
-
+                    /* ---------------------------
+                    ✅ MARKER UPDATE
+                    ----------------------------*/
                     if (liveMarkers[key]) {
-                        liveMarkers[key].setLatLng([person.lat, person.lng]);
+                        liveMarkers[key].setLatLng(personLatLng);
                     } else {
-                        const marker = L.marker([person.lat, person.lng], { icon })
-                            .addTo(map)
-                            .bindPopup(
-                                isVVIP ? "👑 VVIP" : `👮 ${person.name}`
-                            );
+                        const marker = L.marker(personLatLng, {
+                            icon: L.icon({
+                                iconUrl: isVVIP
+                                    ? "https://cdn-icons-png.flaticon.com/512/1946/1946429.png"
+                                    : "https://cdn-icons-png.flaticon.com/512/149/149059.png",
+                                iconSize: isVVIP ? [35,35] : [30,30]
+                            })
+                        }).addTo(map);
+
+                        marker.bindPopup(
+                            isVVIP ? "👑 VVIP" : `👮 ${person.name}`
+                        );
 
                         liveMarkers[key] = marker;
                     }
 
-                });
+                    /* ---------------------------
+                    🎯 LINE DIRECTION
+                    ----------------------------*/
+                    const distance = map.distance(dutyLatLng, personLatLng);
 
-                // 🔥 UPDATE EDGE MARKERS
-                updateEdgeMarkers(mapDiv, data);
+                    let color = "green";
+                    if (distance > 200) color = "red";
+                    else if (distance > 100) color = "orange";
+                    else if (distance > 30) color = "yellow";
+
+                    if (liveLines[lineKey]) {
+                        liveLines[lineKey].setLatLngs([dutyLatLng, personLatLng]);
+                        liveLines[lineKey].setStyle({
+                            color: isVVIP ? "gold" : color
+                        });
+                    } else {
+                        const line = L.polyline([dutyLatLng, personLatLng], {
+                            color: isVVIP ? "gold" : color,
+                            weight: 2,
+                            dashArray: isVVIP ? "5,5" : null
+                        }).addTo(map);
+
+                        line.bindTooltip(`${Math.round(distance)} m`, {
+                            permanent: false
+                        });
+
+                        liveLines[lineKey] = line;
+                    }
+
+                });
 
             })
             .catch(err => console.log("Live location error:", err));
