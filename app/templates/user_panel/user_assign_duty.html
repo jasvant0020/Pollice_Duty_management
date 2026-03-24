@@ -338,7 +338,7 @@ function startTimers() {
 
             // 🔹 AFTER END
             if (now >= end) {
-                countdownEl.innerText = "Duty Time Completed";
+                countdownEl.innerText = "Duty will be complete in";
                 durationEl.innerText = formatTime(
                     Math.floor(totalDuration / (1000*60*60*24)),
                     Math.floor((totalDuration % (1000*60*60*24)) / (1000*60*60)),
