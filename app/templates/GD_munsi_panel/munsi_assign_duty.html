@@ -91,11 +91,11 @@
                                 required>
                         </div>
                         <div class="text-gray-700 grid grid-cols-3 gap-4 mt-4">
-                            <input type="text" name="latitude"
+                            <input type="text" name="latitude" placeholder="latitude"
                                 value="{{ request.POST.latitude }}"
                                 class="border px-3 py-2 rounded-lg" required>
 
-                            <input type="text" name="longitude"
+                            <input type="text" name="longitude" placeholder="longitude"
                                 value="{{ request.POST.longitude }}"
                                 class="border px-3 py-2 rounded-lg" required>
 
@@ -454,8 +454,23 @@ map.on('click', function(e) {
         color: 'blue'
     }).addTo(map);
 
+    // ✅ Fill lat/lng
     document.querySelector('[name="latitude"]').value = lat;
     document.querySelector('[name="longitude"]').value = lng;
+
+    // 🔥 ADD THIS (IMPORTANT)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.display_name) {
+                document.querySelector('[name="duty_place"]').value = data.display_name;
+            } else {
+                document.querySelector('[name="duty_place"]').value = lat + ", " + lng;
+            }
+        })
+        .catch(() => {
+            document.querySelector('[name="duty_place"]').value = lat + ", " + lng;
+        });
 });
 
 
