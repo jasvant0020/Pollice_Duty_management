@@ -462,6 +462,7 @@ function fetchLiveLocations() {
 
                 data.forEach(person => {
 
+                    if (person.id === "vvip") return;
                     const key = mapDiv.id + "_" + person.id;
                     const lineKey = key + "_line";
 
