@@ -248,8 +248,26 @@ function trackVVIPLocation() {
                     dashArray: "5,5"
                 }).addTo(map);
 
-                line.bindTooltip(`${Math.round(distance)} m`, {
-                    permanent: false
+                line.on("mousemove", function(e) {
+                    if (!line._tooltip) {
+                        line._tooltip = L.tooltip({
+                            permanent: false,
+                            direction: "top",
+                            offset: [0, -10]
+                        });
+                    }
+
+                    line._tooltip
+                        .setContent(`${Math.round(distance)} m`)
+                        .setLatLng(e.latlng);
+
+                    map.openTooltip(line._tooltip);
+                });
+
+                line.on("mouseout", function() {
+                    if (line._tooltip) {
+                        map.closeTooltip(line._tooltip);
+                    }
                 });
 
                 liveLines[lineKey] = line;
@@ -500,8 +518,26 @@ function fetchLiveLocations() {
                             weight: 2,
                             dashArray: person.id === "vvip" ? "5, 5" : null
                         }).addTo(map);
-                        line.bindTooltip(`${Math.round(distance)} m`, {
-                            permanent: false
+                        line.on("mousemove", function(e) {
+                            if (!line._tooltip) {
+                                line._tooltip = L.tooltip({
+                                    permanent: false,
+                                    direction: "top",
+                                    offset: [0, -10]
+                                });
+                            }
+
+                            line._tooltip
+                                .setContent(`${Math.round(distance)} m`)
+                                .setLatLng(e.latlng);
+
+                            map.openTooltip(line._tooltip);
+                        });
+
+                        line.on("mouseout", function() {
+                            if (line._tooltip) {
+                                map.closeTooltip(line._tooltip);
+                            }
                         });
                         liveLines[lineKey] = line;
                     }

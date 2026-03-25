@@ -92,8 +92,8 @@
                                 </h4>
 
                                 <button onclick="toggleEdit('{{ batch_id }}')" 
-                                    class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                                    ✏️ Edit
+                                        class="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 text-xs font-semibold uppercase tracking-wider rounded shadow-sm hover:bg-slate-50 hover:border-slate-400 focus:ring-2 focus:ring-blue-500 transition-all">
+                                    Edit
                                 </button>
                             </div>
 
@@ -132,79 +132,93 @@
 
                             </div>
                             <form method="POST" action="{% url 'munsi_edit_vvip_duty' batch_id %}">
-                            {% csrf_token %}
+                                {% csrf_token %}
 
-                            <div id="edit-form-{{ batch_id }}" class="hidden text-gray-700 mt-6 grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+                                <div id="edit-form-{{ batch_id }}" class="hidden mt-8 p-6 bg-slate-100 rounded-xl border border-slate-300 shadow-inner">
+                                    
+                                    <div class="mb-6 border-b border-slate-200 pb-4">
+                                        <h3 class="text-lg font-bold text-slate-800">Edit Duty Details</h3>
+                                        <p class="text-xs text-slate-500 uppercase tracking-wider">Batch ID: {{ batch_id }}</p>
+                                    </div>
 
-                                <!-- Place -->
-                                <div class="col-span-2 mb-2">
-                                    <label class="font-semibold">Duty Location</label>
-                                    <input type="text" name="duty_place" value="{{ duty.duty_place }}" class="w-full border p-2 rounded">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
+                                        
+                                        <div class="md:col-span-3">
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Duty Location</label>
+                                            <input type="text" name="duty_place" value="{{ duty.duty_place }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                placeholder="Enter full address...">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Latitude</label>
+                                            <input type="text" name="latitude" value="{{ duty.latitude }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Longitude</label>
+                                            <input type="text" name="longitude" value="{{ duty.longitude }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Radius (m)</label>
+                                            <input type="number" name="radius" value="{{ duty.radius|default:100 }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm">
+                                        </div>
+
+                                        <div class="md:col-span-3 z-0">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <label class="text-xs font-bold text-slate-600 uppercase">Geofence Map</label>
+                                                <button type="button" onclick="getEditLocation('{{ batch_id }}')" 
+                                                        class="inline-flex items-center gap-1.5 text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+                                                    <span class="text-base">target</span> 
+                                                    <span class="text-xs">Auto Detect Location</span>
+                                                </button>
+                                            </div>
+                                            <div id="edit-map-{{ batch_id }}" class="h-[300px] rounded-xl border-2 border-slate-200 shadow-md bg-slate-100 overflow-hidden"></div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Start Time</label>
+                                            <input type="datetime-local" name="start_datetime" value="{{ duty.start_datetime|date:'Y-m-d\\TH:i' }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">End Time</label>
+                                            <input type="datetime-local" name="end_datetime" value="{{ duty.end_datetime|date:'Y-m-d\\TH:i' }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Vehicle Info</label>
+                                            <input type="text" name="vehicle" value="{{ duty.vehicle }}" 
+                                                class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm"
+                                                placeholder="E.g. UP 32 XX 1234">
+                                        </div>
+
+                                        <div class="md:col-span-3">
+                                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1.5">Special Instructions</label>
+                                            <textarea name="special_instructions" rows="3"
+                                                    class="text-gray-700 w-full bg-white border border-slate-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none shadow-sm transition-all"
+                                                    placeholder="Provide specific notes for the duty officers...">{{ duty.special_instructions }}</textarea>
+                                        </div>
+
+                                        <div class="md:col-span-3 pt-4 flex gap-3">
+                                            <button type="submit" 
+                                                    class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 shadow-md active:transform active:scale-95 transition-all">
+                                                Update Duty
+                                            </button>
+                                            <button type="button" onclick="toggleEdit('{{ batch_id }}')"
+                                                    class="px-6 py-2.5 bg-white border border-slate-300 text-slate-600 text-sm font-bold rounded-lg hover:bg-slate-50 transition-all">
+                                                Cancel
+                                            </button>
+                                        </div>
+
+                                    </div>
                                 </div>
-
-                                <!-- Lat/Lng/Radius -->
-                                <div class='mb-2'>
-                                    <label>Latitude</label>
-                                    <input type="text" name="latitude" value="{{ duty.latitude }}" class="w-full border p-2 rounded">
-                                </div>
-
-                                <div class='mb-2'>
-                                    <label>Longitude</label>
-                                    <input type="text" name="longitude" value="{{ duty.longitude }}" class="w-full border p-2 rounded">
-                                </div>
-
-                                <div class='mb-2'>
-                                    <label>Radius</label>
-                                    <input type="number" name="radius" value="{{ duty.radius|default:100 }}" class="w-full border p-2 rounded">
-                                </div>
-
-                                <!-- Auto detect -->
-                                <div class="col-span-2 mb-3 mt-3">
-                                    <button type="button" onclick="getEditLocation('{{ batch_id }}')" class="text-blue-600 text-sm">
-                                        📍 Auto Detect Location
-                                    </button>
-                                </div>
-
-                                <!-- MAP -->
-                                <div class="col-span-2">
-                                    <div id="edit-map-{{ batch_id }}" class="h-[300px] rounded-lg border"></div>
-                                </div>
-
-                                <!-- Time -->
-                                <div>
-                                    <label class="font-semibold">Start Time</label>
-                                    <input type="datetime-local" name="start_datetime"
-                                        value="{{ duty.start_datetime|date:'Y-m-d\\TH:i' }}"
-                                        class="w-full border p-2 rounded">
-                                </div>
-
-                                <div>
-                                    <label class="font-semibold">End Time</label>
-                                    <input type="datetime-local" name="end_datetime"
-                                        value="{{ duty.end_datetime|date:'Y-m-d\\TH:i' }}"
-                                        class="w-full border p-2 rounded">
-                                </div>
-
-                                <!-- Vehicle -->
-                                <div>
-                                    <label class="font-semibold">Vehicle</label>
-                                    <input type="text" name="vehicle" value="{{ duty.vehicle }}" class="w-full border p-2 rounded">
-                                </div>
-
-                                <!-- Instructions -->
-                                <div class="col-span-2">
-                                    <label class="font-semibold">Instructions</label>
-                                    <textarea name="special_instructions"
-                                            class="w-full border p-2 rounded">{{ duty.special_instructions }}</textarea>
-                                </div>
-
-                                <div class="col-span-2">
-                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg">
-                                        Save Changes
-                                    </button>
-                                </div>
-
-                            </div>
                             </form>
                             <div class="relative z-0">
                                 <p class="text-sm text-gray-500 mb-3 mt-3">Duty Location Map</p>
@@ -487,10 +501,27 @@ function fetchLiveLocations() {
                             dashArray: isVVIP ? "5,5" : null
                         }).addTo(map);
 
-                        line.bindTooltip(`${Math.round(distance)} m`, {
-                            permanent: false
+                        line.on("mousemove", function(e) {
+                            if (!line._tooltip) {
+                                line._tooltip = L.tooltip({
+                                    permanent: false,
+                                    direction: "top",
+                                    offset: [0, -10]
+                                });
+                            }
+
+                            line._tooltip
+                                .setContent(`${Math.round(distance)} m`)
+                                .setLatLng(e.latlng);
+
+                            map.openTooltip(line._tooltip);
                         });
 
+                        line.on("mouseout", function() {
+                            if (line._tooltip) {
+                                map.closeTooltip(line._tooltip);
+                            }
+                        });
                         liveLines[lineKey] = line;
                     }
 
@@ -544,6 +575,25 @@ function initEditMap(batchId) {
     let radius = parseFloat(radiusInput.value) || 100;
 
     const map = L.map(mapDiv).setView([lat, lng], 15);
+    // 🔍 Search Control
+    const geocoder = L.Control.geocoder({   
+        defaultMarkGeocode: false
+    })
+    .on('markgeocode', function(e) {
+
+        const center = e.geocode.center;
+
+        map.setView(center, 16);
+
+        marker.setLatLng(center);
+        circle.setLatLng(center);
+
+        latInput.value = center.lat;
+        lngInput.value = center.lng;
+        placeInput.value = e.geocode.name;
+
+    })
+    .addTo(map);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
