@@ -25,6 +25,7 @@ urlpatterns = [
     path('edit_munsi_profile/', views.edit_munsi_profile, name='edit_munsi_profile'),
     path('munsi_assign_duty/', views.munsi_assign_duty, name='munsi_assign_duty'),
     path("munsi_reassign_duty/<uuid:batch_id>/", views.munsi_reassign_duty, name="munsi_reassign_duty"),
+    path("munsi_edit_vvip_duty/<uuid:batch_id>/", views.munsi_edit_vvip_duty, name="munsi_edit_vvip_duty"),
     path('munsi_active_duty/', views.munsi_active_duty, name='munsi_active_duty'),
     path('munsi_deactivate_duty_individual/<int:duty_id>/', views.munsi_deactivate_duty_individual, name='munsi_deactivate_duty_individual'),
     path("end-vvip-duty/<uuid:batch_id>/", views.munsi_end_vvip_duty, name="munsi_end_vvip_duty"),

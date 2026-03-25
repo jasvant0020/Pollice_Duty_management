@@ -694,6 +694,83 @@ def munsi_assign_duty(request):
 
 
 @role_required(["gd_munsi"])
+def munsi_edit_vvip_duty(request, batch_id):
+
+    gd = request.user
+
+    duties = VVIPDuty.objects.filter(
+        batch_id=batch_id,
+        assigned_by=gd,
+        is_active=True
+    )
+
+    if not duties.exists():
+        messages.error(request, "No active duty found for this batch.")
+        return redirect("munsi_active_duty")
+
+    duty = duties.first()  # common data for batch
+
+    if request.method == "POST":
+
+        from django.utils.dateparse import parse_datetime
+
+        duty_place = request.POST.get("duty_place")
+        vehicle = request.POST.get("vehicle")
+
+        start_datetime = parse_datetime(request.POST.get("start_datetime"))
+        end_datetime = parse_datetime(request.POST.get("end_datetime"))
+
+        special_instructions = request.POST.get("special_instructions")
+        latitude = request.POST.get("latitude")
+        longitude = request.POST.get("longitude")
+        radius = request.POST.get("radius") or 100
+
+        # ❗ Validate datetime
+        if not start_datetime or not end_datetime:
+            messages.error(request, "Invalid date/time format.")
+            return redirect("munsi_active_duty")
+
+        # 🔥 Make timezone aware
+        if timezone.is_naive(start_datetime):
+            start_datetime = timezone.make_aware(start_datetime)
+
+        if timezone.is_naive(end_datetime):
+            end_datetime = timezone.make_aware(end_datetime)
+
+        now = timezone.now()
+
+        # 🚫 Validation rules (same as assign)
+        if start_datetime < now:
+            messages.error(request, "Start time cannot be in the past.")
+            return redirect("munsi_active_duty")
+
+        if end_datetime < now:
+            messages.error(request, "End time cannot be in the past.")
+            return redirect("munsi_active_duty")
+
+        if end_datetime <= start_datetime:
+            messages.error(request, "End time must be after start time.")
+            return redirect("munsi_active_duty")
+
+        # ✅ UPDATE ALL DUTIES IN BATCH
+        duties.update(
+            duty_place=duty_place,
+            vehicle=vehicle,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            special_instructions=special_instructions,
+            latitude=latitude,
+            longitude=longitude,
+            radius=radius
+        )
+
+        messages.success(request, "Duty updated successfully.")
+
+        return redirect("munsi_active_duty")
+
+    return redirect("munsi_active_duty")
+
+@role_required(["gd_munsi"])
 def munsi_reassign_duty(request, batch_id):
 
     gd = request.user

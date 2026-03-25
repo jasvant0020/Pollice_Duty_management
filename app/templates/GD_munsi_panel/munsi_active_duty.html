@@ -86,9 +86,16 @@
                         <!-- 🔵 VVIP Duty Details (ONLY ONCE) -->
                         <div class="bg-white p-6 rounded-2xl shadow-sm border mb-6">
 
-                            <h4 class="text-lg font-semibold text-gray-800 mb-4">
-                                Duty Details
-                            </h4>
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="text-lg font-semibold text-gray-800">
+                                    Duty Details
+                                </h4>
+
+                                <button onclick="toggleEdit('{{ batch_id }}')" 
+                                    class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                                    ✏️ Edit
+                                </button>
+                            </div>
 
                             {% with duty=duties.0 %}
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm text-gray-700">
@@ -124,6 +131,81 @@
                                 </div>
 
                             </div>
+                            <form method="POST" action="{% url 'munsi_edit_vvip_duty' batch_id %}">
+                            {% csrf_token %}
+
+                            <div id="edit-form-{{ batch_id }}" class="hidden text-gray-700 mt-6 grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+
+                                <!-- Place -->
+                                <div class="col-span-2 mb-2">
+                                    <label class="font-semibold">Duty Location</label>
+                                    <input type="text" name="duty_place" value="{{ duty.duty_place }}" class="w-full border p-2 rounded">
+                                </div>
+
+                                <!-- Lat/Lng/Radius -->
+                                <div class='mb-2'>
+                                    <label>Latitude</label>
+                                    <input type="text" name="latitude" value="{{ duty.latitude }}" class="w-full border p-2 rounded">
+                                </div>
+
+                                <div class='mb-2'>
+                                    <label>Longitude</label>
+                                    <input type="text" name="longitude" value="{{ duty.longitude }}" class="w-full border p-2 rounded">
+                                </div>
+
+                                <div class='mb-2'>
+                                    <label>Radius</label>
+                                    <input type="number" name="radius" value="{{ duty.radius|default:100 }}" class="w-full border p-2 rounded">
+                                </div>
+
+                                <!-- Auto detect -->
+                                <div class="col-span-2 mb-3 mt-3">
+                                    <button type="button" onclick="getEditLocation('{{ batch_id }}')" class="text-blue-600 text-sm">
+                                        📍 Auto Detect Location
+                                    </button>
+                                </div>
+
+                                <!-- MAP -->
+                                <div class="col-span-2">
+                                    <div id="edit-map-{{ batch_id }}" class="h-[300px] rounded-lg border"></div>
+                                </div>
+
+                                <!-- Time -->
+                                <div>
+                                    <label class="font-semibold">Start Time</label>
+                                    <input type="datetime-local" name="start_datetime"
+                                        value="{{ duty.start_datetime|date:'Y-m-d\\TH:i' }}"
+                                        class="w-full border p-2 rounded">
+                                </div>
+
+                                <div>
+                                    <label class="font-semibold">End Time</label>
+                                    <input type="datetime-local" name="end_datetime"
+                                        value="{{ duty.end_datetime|date:'Y-m-d\\TH:i' }}"
+                                        class="w-full border p-2 rounded">
+                                </div>
+
+                                <!-- Vehicle -->
+                                <div>
+                                    <label class="font-semibold">Vehicle</label>
+                                    <input type="text" name="vehicle" value="{{ duty.vehicle }}" class="w-full border p-2 rounded">
+                                </div>
+
+                                <!-- Instructions -->
+                                <div class="col-span-2">
+                                    <label class="font-semibold">Instructions</label>
+                                    <textarea name="special_instructions"
+                                            class="w-full border p-2 rounded">{{ duty.special_instructions }}</textarea>
+                                </div>
+
+                                <div class="col-span-2">
+                                    <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                                        Save Changes
+                                    </button>
+                                </div>
+
+                            </div>
+                            </form>
                             <div class="relative z-0">
                                 <p class="text-sm text-gray-500 mb-3 mt-3">Duty Location Map</p>
                                 <!-- MAP -->
@@ -442,6 +524,112 @@ function toggleRow(id) {
 document.addEventListener("DOMContentLoaded", () => {
     fetchLiveLocations();
 });
+
+let editMaps = {};
+let editMarkers = {};
+let editCircles = {};
+
+function initEditMap(batchId) {
+
+    const mapDiv = document.getElementById("edit-map-" + batchId);
+    if (!mapDiv || editMaps[batchId]) return;
+
+    const latInput = document.querySelector(`#edit-form-${batchId} [name="latitude"]`);
+    const lngInput = document.querySelector(`#edit-form-${batchId} [name="longitude"]`);
+    const radiusInput = document.querySelector(`#edit-form-${batchId} [name="radius"]`);
+    const placeInput = document.querySelector(`#edit-form-${batchId} [name="duty_place"]`);
+
+    let lat = parseFloat(latInput.value) || 28.6139;
+    let lng = parseFloat(lngInput.value) || 77.2090;
+    let radius = parseFloat(radiusInput.value) || 100;
+
+    const map = L.map(mapDiv).setView([lat, lng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = L.marker([lat, lng]).addTo(map);
+    let circle = L.circle([lat, lng], { radius: radius }).addTo(map);
+
+    editMaps[batchId] = map;
+    editMarkers[batchId] = marker;
+    editCircles[batchId] = circle;
+
+    // Click map
+    map.on("click", function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        marker.setLatLng([lat, lng]);
+        circle.setLatLng([lat, lng]);
+
+        latInput.value = lat;
+        lngInput.value = lng;
+
+        // 🔥 Reverse Geocoding (AUTO PLACE UPDATE)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    placeInput.value = data.display_name;
+                } else {
+                    placeInput.value = lat + ", " + lng;
+                }
+            })
+            .catch(() => {
+                placeInput.value = lat + ", " + lng;
+            });
+    });
+
+    // Radius change
+    radiusInput.addEventListener("input", function() {
+        circle.setRadius(this.value);
+    });
+}
+
+
+function toggleEdit(batchId) {
+    const form = document.getElementById("edit-form-" + batchId);
+    form.classList.toggle("hidden");
+
+    if (!form.classList.contains("hidden")) {
+        setTimeout(() => {
+            initEditMap(batchId); // 🔥 INIT MAP WHEN OPEN
+        }, 200);
+    }
+}
+
+function getEditLocation(batchId) {
+
+    const latInput = document.querySelector(`#edit-form-${batchId} [name="latitude"]`);
+    const lngInput = document.querySelector(`#edit-form-${batchId} [name="longitude"]`);
+    const placeInput = document.querySelector(`#edit-form-${batchId} [name="duty_place"]`);
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        latInput.value = lat;
+        lngInput.value = lng;
+
+        const map = editMaps[batchId];
+        const marker = editMarkers[batchId];
+        const circle = editCircles[batchId];
+
+        map.setView([lat, lng], 15);
+        marker.setLatLng([lat, lng]);
+        circle.setLatLng([lat, lng]);
+
+        // Reverse geocode
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                placeInput.value = data.display_name;
+            });
+    });
+}
 </script>
 
 {% endblock %}
