@@ -1124,7 +1124,12 @@ def munsi_vvip_duty_print(request, batch_id):
     duties = VVIPDuty.objects.filter(
         batch_id=batch_id,
         is_active=True
-    ).select_related("vvip", "field_staff", "category")
+    ).select_related(
+        "vvip",
+        "field_staff",
+        "category",
+        "assigned_by"
+    )
 
     duty = duties.first()
 
