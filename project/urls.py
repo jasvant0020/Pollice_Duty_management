@@ -89,6 +89,7 @@ urlpatterns = [
 
     #centralized notification sending panel
     path("centrelize_notify/",views.centrelize_notify,name="centrelize_notify"),
+    path("centrelize-notify-history/", views.centrelize_notify_history, name="centrelize_notify_history"),
 
 
 

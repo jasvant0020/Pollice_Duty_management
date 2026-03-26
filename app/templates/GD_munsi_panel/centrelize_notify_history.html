@@ -1,0 +1,109 @@
+{% extends "admin_panel/admin_base.html" %}
+{% block page_title %}Notification History{% endblock %}
+
+{% block content %}
+
+<div class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-900">
+            📜 Centralized Notification History
+        </h2>
+
+        <a href="{% url 'centrelize_notify' %}"
+           class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-md">
+            ➕ New Notification
+        </a>
+    </div>
+
+    <!-- Logs -->
+    <div class="space-y-6">
+
+        {% for log in logs %}
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+
+            <!-- Top Info -->
+            <div class="flex justify-between items-start mb-4">
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        {{ log.title }}
+                    </h3>
+                    <p class="text-sm text-gray-500">
+                        Sent by <strong>{{ log.sender.username }}</strong>
+                        • {{ log.created_at|date:"d M Y, H:i" }}
+                    </p>
+                </div>
+
+                <!-- Type Badge -->
+                <div>
+                    {% if log.notify_type == "sos" %}
+                        <span class="bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full font-semibold">
+                            🚨 SOS
+                        </span>
+                    {% else %}
+                        <span class="bg-green-100 text-green-600 text-xs px-3 py-1 rounded-full">
+                            Normal
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Message -->
+            <div class="mb-4">
+                <p class="text-gray-700">
+                    {{ log.message }}
+                </p>
+            </div>
+
+            <!-- Scope + Target -->
+            <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+
+                <div>
+                    <span class="font-semibold text-gray-600">Scope:</span>
+                    <span class="text-gray-800 capitalize">
+                        {{ log.scope|cut:"_"|title }}
+                    </span>
+                </div>
+
+                {% if log.target_user_id %}
+                <div>
+                    <span class="font-semibold text-gray-600">Target User ID:</span>
+                    <span class="text-gray-800">
+                        {{ log.target_user_id }}
+                    </span>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- Recipients -->
+            <div>
+                <p class="font-semibold text-gray-700 mb-2">
+                    👥 Recipients ({{ log.recipients.count }})
+                </p>
+
+                <div class="max-h-40 overflow-y-auto border rounded-md p-3 bg-gray-50">
+                    {% for user in log.recipients.users %}
+                        <div class="text-sm text-gray-800 py-1 border-b last:border-none">
+                            {{ user.username }} 
+                            <span class="text-gray-500">({{ user.role }})</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+
+        <div class="text-center py-10 text-gray-500">
+            No notification history found.
+        </div>
+
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

@@ -2868,6 +2868,27 @@ def centrelize_notify(request):
     return render(request, template, {"users": users})
 
 
+@role_required(["gd_munsi","admin","super_admin","master_admin"])
+def centrelize_notify_history(request):
+
+    current_user = request.user
+
+    # ✅ Everyone sees only their own logs
+    logs = CentralizedNotifyLog.objects.filter(
+        sender=current_user
+    ).order_by("-created_at")
+
+    # -------- choose template --------
+    if current_user.role == "gd_munsi":
+        template = "GD_munsi_panel/centrelize_notify_history.html"
+    else:
+        template = "admin_panel/centrelize_notify_history.html"
+
+    return render(request, template, {
+        "logs": logs
+    })
+
+
 #---- this section for email verification otp setup -----
 from django.conf import settings
 @login_required
