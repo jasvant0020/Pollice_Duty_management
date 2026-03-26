@@ -35,9 +35,16 @@
 
                 <div class="flex items-center gap-6">
                     <div class="relative group shrink-0">
-                        <img id="preview"
-                            src="{% if user.profile_photo %}{{ user.profile_photo.url }}{% endif %}"
-                            class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-teal-200 group-hover:ring-teal-400 transition-all duration-300">
+                        {% if user.profile_photo %}
+                            <img id="preview"
+                                src="{{ user.profile_photo.url }}"
+                                class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-teal-200">
+                        {% else %}
+                            <div id="preview"
+                                class="w-24 h-24 rounded-full bg-teal-500 text-white flex items-center justify-center text-2xl font-bold border-4 border-white shadow-lg ring-2 ring-teal-200">
+                                {{ user.get_full_name|default:user.username|slice:":1"|upper }}
+                            </div>
+                        {% endif %}
                         <div class="absolute inset-0 w-24 h-24 rounded-full bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
                             <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
@@ -58,6 +65,19 @@
                                 accept="image/*"
                                 onchange="previewImage(this)">
                         </label>
+                        <button type="button"
+                            onclick="removePhoto()"
+                            class="mt-3 inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                            
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+
+                            Remove Photo
+                        </button>
+
+                        <input type="hidden" name="remove_photo" id="remove_photo" value="0">
                         <p class="text-xs text-gray-500 mt-2 ml-1">JPG, PNG or GIF. Max size 2MB</p>
                     </div>
                 </div>
@@ -264,10 +284,29 @@
 <script>
 function previewImage(input) {
     if (input.files && input.files[0]) {
+
         const reader = new FileReader();
+
         reader.onload = function (e) {
-            document.getElementById("preview").src = e.target.result;
+
+            let preview = document.getElementById("preview");
+
+            // 🔥 If preview is NOT an image (it's a div), convert it
+            if (preview.tagName.toLowerCase() !== "img") {
+
+                const img = document.createElement("img");
+
+                img.id = "preview";
+                img.className = preview.className;
+
+                preview.replaceWith(img);
+                preview = img;
+            }
+
+            // ✅ Now safely set src
+            preview.src = e.target.result;
         };
+
         reader.readAsDataURL(input.files[0]);
     }
 }
@@ -283,6 +322,22 @@ function togglePassword(id, btn) {
         input.type = "password";
         btn.innerText = "👁";
     }
+}
+function removePhoto() {
+
+    document.getElementById("remove_photo").value = "1";
+
+    // Replace preview with letter avatar
+    const preview = document.getElementById("preview");
+
+    const div = document.createElement("div");
+    div.id = "preview";
+    div.className = preview.className.replace("object-cover", "") + 
+        " bg-teal-500 text-white flex items-center justify-center text-2xl font-bold";
+
+    div.innerText = "{{ user.get_full_name|default:user.username|slice:':1'|upper }}";
+
+    preview.replaceWith(div);
 }
 </script>
 {% endblock %}

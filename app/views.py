@@ -1171,7 +1171,14 @@ def edit_munsi_profile(request):
         user.phone = phone
 
         # Profile photo update
-        if request.FILES.get("profile_photo"):
+        # REMOVE PHOTO FIRST
+        if request.POST.get("remove_photo") == "1":
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = None
+
+        # THEN HANDLE NEW UPLOAD
+        elif request.FILES.get("profile_photo"):
             user.profile_photo = request.FILES.get("profile_photo")
 
         # Password change (only if provided)
@@ -1400,8 +1407,15 @@ def edit_profile(request):
             user.username = new_email  # if email-based login
 
         # PROFILE PHOTO
-        if request.FILES.get("profile_photo"):
-            user.profile_photo = request.FILES["profile_photo"]
+        # REMOVE PHOTO FIRST
+        if request.POST.get("remove_photo") == "1":
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = None
+
+        # THEN HANDLE NEW UPLOAD
+        elif request.FILES.get("profile_photo"):
+            user.profile_photo = request.FILES.get("profile_photo")
 
         # PASSWORD CHANGE
         password = request.POST.get("password")
@@ -1800,7 +1814,14 @@ def edit_user_profile(request):
         user.phone = request.POST.get("phone")
 
         # -------- PROFILE PHOTO --------
-        if request.FILES.get("profile_photo"):
+        # REMOVE PHOTO FIRST
+        if request.POST.get("remove_photo") == "1":
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = None
+
+        # THEN HANDLE NEW UPLOAD
+        elif request.FILES.get("profile_photo"):
             user.profile_photo = request.FILES.get("profile_photo")
 
         # -------- PASSWORD CHANGE --------
@@ -2322,7 +2343,14 @@ def edit_vvip_profile(request):
         user.phone = request.POST.get("phone")
 
         # -------- PROFILE PHOTO --------
-        if request.FILES.get("profile_photo"):
+        # REMOVE PHOTO FIRST
+        if request.POST.get("remove_photo") == "1":
+            if user.profile_photo:
+                user.profile_photo.delete(save=False)
+            user.profile_photo = None
+
+        # THEN HANDLE NEW UPLOAD
+        elif request.FILES.get("profile_photo"):
             user.profile_photo = request.FILES.get("profile_photo")
 
         # -------- PASSWORD CHANGE --------
