@@ -93,10 +93,32 @@
                     </div>
 
                     <div class="group">
-                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">Email Address</p>
-                        <p class="font-semibold text-gray-900 text-lg group-hover:text-teal-600 transition-colors break-all">
-                            {{ request.user.email }}
+                        <p class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-1">
+                            Email Address
                         </p>
+
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+
+                            <!-- EMAIL -->
+                            <p class="font-semibold text-gray-900 text-sm sm:text-base md:text-lg 
+                                    group-hover:text-teal-600 transition-colors break-all">
+                                {{ request.user.email }}
+                            </p>
+
+                            <!-- STATUS BADGE -->
+                            {% if user.email_verified %}
+                                <span class="inline-flex w-fit text-green-600 text-xs sm:text-sm font-semibold 
+                                            px-2 sm:px-3 py-1 bg-green-100 rounded-md sm:rounded-lg">
+                                    ✓ Verified
+                                </span>
+                            {% else %}
+                                <span class="inline-flex w-fit text-red-600 text-xs sm:text-sm font-semibold 
+                                            px-2 sm:px-3 py-1 bg-red-100 rounded-md sm:rounded-lg">
+                                    ✕ Not Verified
+                                </span>
+                            {% endif %}
+
+                        </div>
                     </div>
 
                     <div class="group">

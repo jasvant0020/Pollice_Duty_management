@@ -36,7 +36,7 @@ from .models import VVIPDuty
 from django.contrib.auth import get_user_model
 import uuid
 from django.utils import timezone
-from .models import FieldStaffRequest,VVIPRequest
+from .models import FieldStaffRequest,VVIPRequest,VerifyEmailOtp
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.utils import timezone
@@ -2863,52 +2863,102 @@ def centrelize_notify(request):
     return render(request, template, {"users": users})
 
 
+#---- this section for email verification otp setup -----
 from django.conf import settings
-import random
+@login_required
 def send_email_otp(request):
 
-    otp = random.randint(100000, 999999)
+    user = request.user
 
-    request.session["email_otp"] = otp
+    # ❌ Prevent spam → check recent OTP
+    recent_otp = VerifyEmailOtp.objects.filter(
+        user=user,
+        created_at__gte=timezone.now() - timedelta(minutes=1)
+    ).first()
+
+    if recent_otp:
+        return JsonResponse({
+            "status": "error",
+            "message": "Please wait before requesting another OTP"
+        })
+
+    otp = VerifyEmailOtp.generate_otp()
+
+    VerifyEmailOtp.objects.create(
+        user=user,
+        otp=otp,
+        created_by=user
+    )
 
     send_mail(
         "Email Verification OTP",
-        f"Your OTP is {otp}",
+        f"Your OTP is {otp}. Valid for 5 minutes.",
         settings.EMAIL_HOST_USER,
-        [request.user.email]
+        [user.email]
     )
 
     return JsonResponse({"status": "success"})
-
 
 @login_required
 def verify_email_otp(request):
 
     data = json.loads(request.body)
-    otp = data.get("otp")
+    otp_input = data.get("otp")
 
-    session_otp = request.session.get("email_otp")
+    user = request.user
 
-    if session_otp and str(session_otp) == str(otp):
+    otp_obj = VerifyEmailOtp.objects.filter(
+        user=user,
+        is_verified=False
+    ).order_by("-created_at").first()
 
-        user = request.user
-        user.email_verified = True
-        user.email_verified_at = timezone.now()
-        user.save()
+    if not otp_obj:
+        return JsonResponse({"status": "error", "message": "No OTP found"})
 
-        # remove OTP after success
-        del request.session["email_otp"]
+    # 🔓 Unlock if time passed
+    otp_obj.unlock_if_time_passed()
 
+    # ❌ If locked
+    if otp_obj.is_locked:
         return JsonResponse({
-            "status": "success",
-            "message": "Email verified successfully"
+            "status": "error",
+            "message": "Too many attempts. Try later."
         })
 
-    return JsonResponse({
-        "status": "error",
-        "message": "Invalid OTP"
-    })
+    # ❌ Expired
+    if otp_obj.is_expired():
+        return JsonResponse({
+            "status": "error",
+            "message": "OTP expired"
+        })
 
+    # ❌ Wrong OTP
+    if otp_obj.otp != str(otp_input):
+
+        otp_obj.attempts += 1
+
+        if otp_obj.attempts >= 5:
+            otp_obj.lock()
+
+        otp_obj.save()
+
+        return JsonResponse({
+            "status": "error",
+            "message": f"Invalid OTP. Attempts left: {otp_obj.remaining_attempts()}"
+        })
+
+    # ✅ SUCCESS
+    otp_obj.is_verified = True
+    otp_obj.save()
+
+    user.email_verified = True
+    user.email_verified_at = timezone.now()
+    user.save()
+
+    return JsonResponse({
+        "status": "success",
+        "message": "Email verified successfully"
+    })
 
 
 

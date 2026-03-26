@@ -196,20 +196,20 @@
 
 
                         <!-- OTP SECTION (ONLY IF EMAIL NOT VERIFIED) -->
+                        <!-- OTP SECTION (ONLY IF EMAIL NOT VERIFIED) -->
                         {% if not user.email_verified %}
-                        <div id="otpSection" class="hidden mt-3 gap-2">
-
+                        <div id="otpSection" class="hidden mt-3 items-center gap-2">
                             <input type="text"
                                 id="emailOTP"
                                 placeholder="Enter OTP"
-                                class="border-2 text-green-600 border-gray-200 rounded-lg px-4 py-2 w-40">
-
+                                maxlength="6"
+                                class="text-green-700 border-2 border-green-300 focus:border-green-500 focus:outline-none focus:shadow-[0_0_6px_rgba(34,197,94,0.6)] rounded-lg px-4 py-2.5 w-40 text-center text-lg tracking-widest">
+                            
                             <button type="button"
                                 onclick="verifyEmailOTP()"
-                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                                class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg font-medium transition">
                                 Confirm
                             </button>
-
                         </div>
 
                         <div id="otpMessage" class="hidden mt-2 text-sm font-semibold"></div>
@@ -345,84 +345,121 @@
     </form>
 </div>
 <script>
+/* ---------------- CSRF TOKEN (GLOBAL - REQUIRED) ---------------- */
+function getCSRFToken() {
+    let cookieValue = null;
+    const name = "csrftoken";
 
-function sendEmailOTP() {
+    if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
 
-    fetch("{% url 'send_email_otp' %}", {
-        method: "POST",
-        headers: {
-            "X-CSRFToken": "{{ csrf_token }}"
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
         }
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        const messageBox = document.getElementById("otpMessage");
-
-        if (data.status === "success") {
-
-            document.getElementById("otpSection").classList.remove("hidden");
-
-            messageBox.classList.remove("hidden");
-            messageBox.classList.remove("text-red-600");
-            messageBox.classList.add("text-green-600");
-
-            messageBox.innerText = "✔ OTP has been sent to your email.";
-
-        } else {
-
-            messageBox.classList.remove("hidden");
-            messageBox.classList.remove("text-green-600");
-            messageBox.classList.add("text-red-600");
-
-            messageBox.innerText = data.message;
-
-        }
-
-    });
-
+    }
+    return cookieValue;
 }
 
 
-function verifyEmailOTP(){
+/* ---------------- SEND OTP ---------------- */
+function sendEmailOTP() {
+    const btn = event.currentTarget;
+    const originalText = btn.innerText;
+    
+    btn.disabled = true;
+    btn.innerText = "Sending...";
 
+    fetch("{% url 'send_email_otp' %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCSRFToken()
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(`HTTP ${response.status}: ${text}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const messageBox = document.getElementById("otpMessage");
+        const otpSection = document.getElementById("otpSection");
+
+        if (data.status === "success") {
+            otpSection.classList.remove("hidden");
+            otpSection.classList.add("flex");   // ✅ FIXED UI
+
+            messageBox.classList.remove("hidden", "text-red-600");
+            messageBox.classList.add("text-green-600");
+            messageBox.innerText = "✔ OTP has been sent to your email.";
+        } else {
+            messageBox.classList.remove("hidden", "text-green-600");
+            messageBox.classList.add("text-red-600");
+            messageBox.innerText = data.message || "Failed to send OTP";
+        }
+    })
+    .catch(err => {
+        console.error("Send OTP Error:", err);
+        
+        const messageBox = document.getElementById("otpMessage");
+        messageBox.classList.remove("hidden", "text-green-600");
+        messageBox.classList.add("text-red-600");
+        
+        if (err.message.includes("403") || err.message.includes("CSRF")) {
+            messageBox.innerText = "CSRF Error. Please refresh the page.";
+        } else if (err.message.includes("500")) {
+            messageBox.innerText = "Server Error. Please try again later.";
+        } else {
+            messageBox.innerText = "Failed to send OTP. Check console (F12) for details.";
+        }
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerText = originalText;
+    });
+}
+
+
+/* ---------------- VERIFY OTP ---------------- */
+function verifyEmailOTP() {
     const otp = document.getElementById("emailOTP").value;
 
     fetch("{% url 'verify_email_otp' %}", {
         method: "POST",
+        credentials: "same-origin",
         headers: {
             "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
+            "X-CSRFToken": getCSRFToken()
         },
-        body: JSON.stringify({
-            otp: otp
-        })
+        body: JSON.stringify({ otp: otp })
     })
     .then(res => res.json())
     .then(data => {
+        const messageBox = document.getElementById("otpMessage");
 
         if (data.status === "success") {
-
-            const messageBox = document.getElementById("otpMessage");
-
             messageBox.classList.remove("text-red-600");
             messageBox.classList.add("text-green-600");
-
-            messageBox.innerText = "✔ Email verified successfully.";
-
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            messageBox.innerText = "✔ Email verified successfully!";
+            setTimeout(() => location.reload(), 1500);
         } else {
-
-            alert("Invalid OTP");
-
+            messageBox.classList.add("text-red-600");
+            messageBox.innerText = data.message || "Invalid OTP";
         }
-
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Something went wrong. Please try again.");
     });
-
 }
-
 </script>
 <script>
 function previewImage(input) {

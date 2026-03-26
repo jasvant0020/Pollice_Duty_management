@@ -604,3 +604,56 @@ class CentralizedNotifyLog(models.Model):
 
     def __str__(self):
         return f"{self.sender} -> {self.scope} ({self.notify_type})"
+    
+
+class VerifyEmailOtp(models.Model):
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="email_otps"
+    )
+
+    otp = models.CharField(max_length=6)
+
+    created_by = models.ForeignKey(   # 🔥 who generated OTP
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_email_otps"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    is_verified = models.BooleanField(default=False)
+
+    # 🔐 SECURITY FIELDS
+    attempts = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    locked_until = models.DateTimeField(null=True, blank=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=5)
+
+    def remaining_attempts(self):
+        return max(0, 5 - self.attempts)
+
+    def lock(self):
+        self.is_locked = True
+        self.locked_until = timezone.now() + timedelta(minutes=10)
+        self.save()
+
+    def unlock_if_time_passed(self):
+        if self.is_locked and self.locked_until and timezone.now() > self.locked_until:
+            self.is_locked = False
+            self.attempts = 0
+            self.locked_until = None
+            self.save()
+
+    @staticmethod
+    def generate_otp():
+        return str(random.randint(100000, 999999))
+
+    def __str__(self):
+        return f"{self.user.email} - {self.otp}"
