@@ -114,7 +114,7 @@ class FCMTokenAdmin(admin.ModelAdmin):
         'token'
     )
 
-    list_filter = ('browser', 'os', 'created_at')
+    list_filter = ('browser', 'os', 'created_at','is_active')
 
 
 # ================= SIMPLE MODELS =================
