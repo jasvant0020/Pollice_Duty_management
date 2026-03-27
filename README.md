@@ -491,12 +491,12 @@ D --> E[Field Staff]
 
 C --> F[VVIP]
 
-style A fill:#ffccbc
-style B fill:#ffe0b2
-style C fill:#fff9c4
-style D fill:#c8e6c9
-style E fill:#bbdefb
-style F fill:#d1c4e9
+style A 
+style B 
+style C 
+style D 
+style E 
+style F 
 ```
 
 ### 5. DATABASE ER DIAGRAM
