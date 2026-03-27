@@ -414,25 +414,20 @@ Receive Duty → Share Location → Execute Task
 ```mermaid
 flowchart TD
 
-A[Client Browser / Mobile] --> B[Frontend UI\n(HTML + Tailwind + JS)]
+A[Client Browser Mobile] --> B[Frontend UI HTML Tailwind JS]
 
-B --> C[Django Backend\n(Views, Models, Business Logic)]
+B --> C[Django Backend Views Models Logic]
 
-C --> D[(Database\nPostgreSQL / SQLite)]
+C --> D[Database PostgreSQL SQLite]
 
-C --> E[Django Channels\n(WebSocket Layer)]
-E --> F[Redis\nChannel Layer]
+C --> E[Django Channels WebSocket]
+E --> F[Redis Channel Layer]
 
 C --> G[Firebase Cloud Messaging]
 G --> H[Mobile Push Notifications]
 
-E --> I[Real-time Events]
+E --> I[Realtime Events]
 I --> B
-
-style C fill:#e3f2fd
-style E fill:#fff3e0
-style F fill:#ffebee
-style G fill:#e8f5e9
 ```
 
 ### 2. CENTRALIZED NOTIFICATION FLOW
