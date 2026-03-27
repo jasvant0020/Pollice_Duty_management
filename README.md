@@ -490,13 +490,6 @@ C --> D[GD Munsi]
 D --> E[Field Staff]
 
 C --> F[VVIP]
-
-style A 
-style B 
-style C 
-style D 
-style E 
-style F 
 ```
 
 ### 5. DATABASE ER DIAGRAM
