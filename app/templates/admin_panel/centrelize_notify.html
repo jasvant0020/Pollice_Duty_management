@@ -223,7 +223,9 @@ function updatePreview(){
     previewBox.classList.add("hidden");
 
     const scope = scopeSelect.value;
+    let usersToShow = [];
 
+    // 🔹 Specific user
     if(scope.includes("specific")){
 
         const selectedId = targetUser.value;
@@ -232,57 +234,57 @@ function updatePreview(){
             const user = allUsers.find(u => u.id === selectedId);
 
             if(user){
-                previewBox.classList.remove("hidden");
-
-                const li = document.createElement("li");
-                li.textContent = user.username + " (" + user.role + ")";
-                receiverList.appendChild(li);
+                usersToShow.push(user);
             }
         }
     }
 
+    // 🔹 Role-based scopes
     else if(scope === "staff"){
-        const staffUsers = allUsers.filter(u => u.role === "field_staff");
-
-        if(staffUsers.length){
-            previewBox.classList.remove("hidden");
-
-            staffUsers.forEach(user => {
-                const li = document.createElement("li");
-                li.textContent = user.username + " (Staff)";
-                receiverList.appendChild(li);
-            });
-        }
+        usersToShow = allUsers.filter(u => u.role === "field_staff");
     }
 
     else if(scope === "all_vvip"){
-        const vvipUsers = allUsers.filter(u => u.role === "vvip");
+        usersToShow = allUsers.filter(u => u.role === "vvip");
+    }
 
-        if(vvipUsers.length){
-            previewBox.classList.remove("hidden");
-
-            vvipUsers.forEach(user => {
-                const li = document.createElement("li");
-                li.textContent = user.username + " (VVIP)";
-                receiverList.appendChild(li);
-            });
-        }
+    else if(scope === "gd_munsi"){
+        usersToShow = allUsers.filter(u => u.role === "gd_munsi");
     }
 
     else if(scope === "admin"){
-        const adminUsers = allUsers.filter(u =>
-            ["admin","super_admin","master_admin"].includes(u.role)
-        );
+        usersToShow = allUsers.filter(u => u.role === "admin");
+    }
 
-        if(adminUsers.length){
-            previewBox.classList.remove("hidden");
+    else if(scope === "all_admin"){
+        usersToShow = allUsers.filter(u => u.role === "admin");
+    }
 
-            adminUsers.forEach(user => {
-                const li = document.createElement("li");
-                li.textContent = user.username + " (" + user.role + ")";
-                receiverList.appendChild(li);
-            });
-        }
+    else if(scope === "super_admin"){
+        usersToShow = allUsers.filter(u => u.role === "super_admin");
+    }
+
+    else if(scope === "all_super_admin"){
+        usersToShow = allUsers.filter(u => u.role === "super_admin");
+    }
+
+    else if(scope === "master_admin"){
+        usersToShow = allUsers.filter(u => u.role === "master_admin");
+    }
+
+    else if(scope === "developer"){
+        usersToShow = allUsers.filter(u => u.role === "developer");
+    }
+
+    // 🔹 Show preview
+    if(usersToShow.length){
+        previewBox.classList.remove("hidden");
+
+        usersToShow.forEach(user => {
+            const li = document.createElement("li");
+            li.textContent = user.username + " (" + user.role + ")";
+            receiverList.appendChild(li);
+        });
     }
 }
 
