@@ -103,7 +103,7 @@ class CentralizedNotifyLogAdmin(admin.ModelAdmin):
 
 @admin.register(FCMToken)
 class FCMTokenAdmin(admin.ModelAdmin):
-    list_display = ('user', 'device_name', 'browser', 'os', 'created_at')
+    list_display = ('user', 'device_name', 'browser', 'os', 'created_at','is_active')
 
     search_fields = (
         'user__username',

@@ -3051,6 +3051,10 @@ def save_fcm_token(request):
             except Exception:
                 pass  # Never crash if library missing
 
+            # 1. Deactivate all previous tokens of this user
+            FCMToken.objects.filter(user=request.user).update(is_active=False)
+
+            # 2. Create or update current token as active
             FCMToken.objects.update_or_create(
                 token=token,
                 defaults={
@@ -3059,7 +3063,8 @@ def save_fcm_token(request):
                     "browser": browser,
                     "os": os,
                     "user_agent": user_agent,
-                    "ip_address": ip
+                    "ip_address": ip,
+                    "is_active": True  # ✅ mark active
                 }
             )
 

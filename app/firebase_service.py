@@ -14,7 +14,7 @@ def initialize_firebase():
 initialize_firebase()
 
 def send_push_notification(user, title, body,id, url=None, sender=None, notification_type="request"):
-    tokens = list(user.fcm_tokens.values_list("token", flat=True))
+    tokens = list(user.fcm_tokens.filter(is_active=True).values_list("token", flat=True))
 
     if not tokens:
         return
