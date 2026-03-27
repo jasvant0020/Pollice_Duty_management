@@ -414,14 +414,14 @@ Receive Duty → Share Location → Execute Task
 ```mermaid
 flowchart TD
 
-A[Client Browser / Mobile] --> B[Frontend UI<br>(HTML + Tailwind + JS)]
+A[Client Browser / Mobile] --> B[Frontend UI\n(HTML + Tailwind + JS)]
 
-B --> C[Django Backend<br>(Views, Models, Business Logic)]
+B --> C[Django Backend\n(Views, Models, Business Logic)]
 
-C --> D[(Database<br>PostgreSQL / SQLite)]
+C --> D[(Database\nPostgreSQL / SQLite)]
 
-C --> E[Django Channels<br>(WebSocket Layer)]
-E --> F[Redis<br>Channel Layer]
+C --> E[Django Channels\n(WebSocket Layer)]
+E --> F[Redis\nChannel Layer]
 
 C --> G[Firebase Cloud Messaging]
 G --> H[Mobile Push Notifications]
