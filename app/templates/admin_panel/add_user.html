@@ -314,6 +314,7 @@ document.getElementById('upload_btn').addEventListener('click', function() {
 
     const formData = new FormData();
     formData.append('excel_file', file);
+    formData.append('action', 'preview');
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
     
     const gdSelect = document.getElementById('gd_munsi_id');
@@ -385,72 +386,135 @@ document.getElementById('upload_btn').addEventListener('click', function() {
 
 // ==================== NEW: AUDIT / PREVIEW SECTION ====================
 function showAuditSection(response) {
+    let rows = response.preview;
+
     let html = `
-        <div class="mt-6 bg-white border border-gray-300 rounded-2xl p-6 shadow">
-            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                📋 Upload Audit Report
-            </h4>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-green-50 p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-green-600">${response.success_count || 0}</div>
-                    <div class="text-sm text-green-700">Successfully Created</div>
-                </div>
-                <div class="bg-red-50 p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-red-600">${response.error_count || 0}</div>
-                    <div class="text-sm text-red-700">Rows with Errors</div>
-                </div>
-                <div class="bg-blue-50 p-4 rounded-xl text-center">
-                    <div class="text-3xl font-bold text-blue-600">${response.total_processed || 0}</div>
-                    <div class="text-sm text-blue-700">Total Rows Processed</div>
-                </div>
-            </div>`;
+    <div class="mt-6 bg-white p-6 border rounded-xl">
+        <h3 class="text-blue-600 text-lg font-semibold mb-4">📋 Preview Users</h3>
 
-    // Show Errors
-    if (response.errors && response.errors.length > 0) {
-        html += `
-            <div class="mb-6">
-                <h5 class="font-medium text-red-700 mb-3 flex items-center gap-2">
-                    ❌ Errors (${response.error_count} total)
-                </h5>
-                <div class="text-red-700 max-h-80 overflow-auto bg-red-50 border border-red-200 rounded-lg p-4 text-sm font-mono divide-y">`;
-        
-        response.errors.forEach(err => {
-            html += `<div class="py-2">${err}</div>`;
-        });
+        <div class="max-h-96 overflow-auto border rounded">
+            <table class="text-blue-500 w-full text-sm">
+                <thead class="bg-gray-100 sticky top-0">
+                    <tr>
+                        <th class="text-left px-3 py-2">Select</th>
+                        <th class="text-left px-3 py-2">Email</th>
+                        <th class="text-left px-3 py-2">Rank</th>
+                        <th class="text-left px-3 py-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
 
-        if (response.has_more_errors) {
-            html += `<div class="py-3 text-red-600 font-medium text-center">
-                        ... and ${response.error_count - 50} more errors
-                     </div>`;
-        }
-        
-        html += `</div></div>`;
-    } else if (response.success_count > 0) {
+    rows.forEach((row, index) => {
+        const checked = row.is_valid ? "checked" : "";
+        const disabled = row.is_valid ? "" : "disabled";
+
         html += `
-            <div class="bg-green-50 border border-green-200 rounded-xl p-6 text-center mb-6">
-                <span class="text-5xl">🎉</span>
-                <p class="text-green-700 font-semibold mt-2">All rows processed successfully!</p>
-            </div>`;
-    }
+            <tr class="border-b">
+                <td class="text-center">
+                    <input type="checkbox" class="row-check" 
+                        data-index="${index}" ${checked} ${disabled}>
+                </td>
+                <td>${row.email || '-'}</td>
+                <td>${row.rank || '-'}</td>
+                <td>
+                    ${row.is_valid 
+                        ? '<span class="text-green-600">Valid</span>' 
+                        : '<span class="text-red-600">' + row.errors.join(", ") + '</span>'}
+                </td>
+            </tr>
+        `;
+    });
 
     html += `
-            <div class="flex gap-3">
-                <button onclick="window.location.href = '{% url 'manage_users' %}'" 
-                        class="flex-1 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition">
-                    ✅ View All Users
-                </button>
-                
-                <button onclick="this.closest('.border').remove()" 
-                        class="flex-1 py-3.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition">
-                    Close Report
-                </button>
-            </div>
-        </div>`;
+                </tbody>
+            </table>
+        </div>
 
-    const auditDiv = document.createElement('div');
-    auditDiv.innerHTML = html;
-    document.getElementById('progress_container').after(auditDiv);
+        <button onclick="confirmCreate()" 
+            class="mt-4 w-full bg-green-600 text-white py-3 rounded-lg">
+            ✅ Create Selected Users
+        </button>
+    </div>
+    `;
+
+    window.previewRows = rows;
+
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    document.getElementById('progress_container').after(div);
+}
+
+function confirmCreate() {
+    const selected = [];
+
+    document.querySelectorAll(".row-check:checked").forEach(cb => {
+        const index = cb.dataset.index;
+        selected.push(window.previewRows[index]);
+    });
+
+    if (selected.length === 0) {
+        alert("No valid users selected.");
+        return;
+    }
+
+    if (!confirm(`Create ${selected.length} users?`)) return;
+
+    const formData = new FormData();
+    formData.append("action", "create_users");
+    formData.append("rows", JSON.stringify(selected));
+
+    const gdSelect = document.getElementById('gd_munsi_id');
+    if (gdSelect) {
+        formData.append('gd_munsi_id', gdSelect.value);
+    }
+
+    fetch(window.location.href, {
+        method: "POST",
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+    })
+    .then(res => res.json())   // ✅ FIXED
+    .then(data => {            // ✅ FIXED (THIS WAS MISSING)
+
+        if (data.success) {
+
+            const statusText = document.getElementById('status_text');
+
+            statusText.innerHTML = `
+                <span class="text-green-600 font-semibold">
+                    ✅ ${data.created} users created successfully
+                </span>
+            `;
+
+            // ✅ redirect
+            setTimeout(() => {
+                window.location.href = data.redirect_url;
+            }, 1200);
+
+        } else {
+            document.getElementById('status_text').innerHTML = `
+                <span class="text-red-600 font-semibold">
+                    ❌ Something went wrong
+                </span>
+            `;
+        }
+
+    })
+    .catch(err => {
+        document.getElementById('status_text').innerHTML = `
+            <span class="text-red-600 font-semibold">
+                ❌ Server error
+            </span>
+        `;
+        console.error(err);
+    });
+    const btn = document.querySelector("button[onclick='confirmCreate()']");
+    btn.disabled = true;
+    btn.innerText = "Creating...";
 }
 </script>
 {% endblock %}

@@ -1,4 +1,6 @@
 # Create your views here.
+from argparse import Action
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
@@ -1863,7 +1865,7 @@ def add_user(request):
     context = {
         'police_rank': police_rank,
     }
-
+    action = request.POST.get("action")
     # ==================== YOUR ORIGINAL CODE STARTS HERE (UNCHANGED) ====================
     # 1️⃣ Determine allowed roles...
     if user.role == "developer":
@@ -1896,134 +1898,132 @@ def add_user(request):
 
     # ====================== NEW: EXCEL BULK UPLOAD LOGIC ======================
         # ====================== EXCEL BULK UPLOAD LOGIC ======================
-    if request.method == "POST" and request.FILES.get('excel_file'):
-        excel_file = request.FILES['excel_file']
-        
-        if not excel_file.name.endswith(('.xlsx', '.xls')):
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': 'Only .xlsx or .xls files are allowed.'}, status=400)
-            messages.error(request, "Only .xlsx or .xls files are allowed.")
-            return render(request, "admin_panel/add_user.html", context)
-
+    if request.method == "POST" and request.FILES.get('excel_file') and action == "preview":
         try:
+            excel_file = request.FILES['excel_file']
+
+            import openpyxl
             wb = openpyxl.load_workbook(excel_file)
             ws = wb.active
 
-            success_count = 0
-            errors = []
+            rank_map = {}
+
+            for r in police_rank:
+                full = r["police_rank"]
+                short = None
+
+                if "(" in full and ")" in full:
+                    short = full.split("(")[-1].replace(")", "").strip()
+
+                rank_map[full.lower()] = full
+
+                if short:
+                    rank_map[short.lower()] = full
+
+            preview_data = []
 
             for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-                try:
-                    email = str(row[0]).strip() if row[0] else None
-                    password = str(row[1]).strip() if len(row) > 1 and row[1] else "temp@123"
-                    rank_name = str(row[2]).strip() if len(row) > 2 and row[2] else None
 
-                    if not email or str(email).lower() in ['email', 'none', '', 'nan']:
-                        continue
+                email = str(row[0]).strip() if row[0] else None
+                password = str(row[1]).strip() if len(row) > 1 and row[1] else "temp@123"
+                rank_name = str(row[2]).strip() if len(row) > 2 and row[2] else None
 
-                    # Force role for bulk upload
-                    if user.role in ["admin", "gd_munsi"]:
-                        role = "field_staff"
-                    else:
-                        return JsonResponse({
-                            'success': False, 
-                            'message': 'Bulk upload is only supported for Field Staff.'
-                        }, status=403)
+                row_errors = []
 
-                    if User.objects.filter(email=email).exists():
-                        errors.append(f"Row {row_num}: Email '{email}' already exists")
-                        continue
+                # ✅ Email validation
+                if not email:
+                    row_errors.append("Email is required")
 
-                    # Rank lookup (your existing logic - kept as is)
-                    rank_value = None
-                    if rank_name:
-                        rank_name_lower = rank_name.strip().lower()
-                        for r in police_rank:
-                            if isinstance(r, dict) and str(r.get('police_rank', '')).strip().lower() == rank_name_lower:
-                                rank_value = r.get('police_rank')
-                                break
-                            elif hasattr(r, 'police_rank') and str(r.police_rank).strip().lower() == rank_name_lower:
-                                rank_value = r.police_rank
-                                break
+                if email and User.objects.filter(email=email).exists():
+                    row_errors.append("Email already exists")
 
-                    # Create user
-                    new_user = User(
-                        username=email,
-                        email=email,
-                        first_name=email.split('@')[0].replace('.', ' ').title(),
-                        role=role,
-                        rank=rank_value,
-                        created_by=request.user,
-                        is_active=True,
-                    )
+                # ✅ Rank mapping
+                rank_value = None
 
-                    # Hierarchy
-                    if user.role == "admin" and role == "field_staff":
-                        gd_id = request.POST.get("gd_munsi_id")
-                        if gd_id:
-                            try:
-                                gm = User.objects.get(id=gd_id)
-                                new_user.gd_munsi = gm
-                                new_user.admin = user
-                            except User.DoesNotExist:
-                                errors.append(f"Row {row_num}: GD Munsi with ID {gd_id} not found")
-                                continue
+                if rank_name:
+                    key = rank_name.strip().lower()
+                    rank_value = rank_map.get(key)
 
-                    elif user.role == "gd_munsi" and role == "field_staff":
-                        new_user.gd_munsi = user
-                        new_user.admin = user.admin if user.admin else None
+                    if not rank_value:
+                        row_errors.append("Invalid rank")
 
-                    new_user.set_password(password)
-                    new_user.save()
+                # ✅ Append preview
+                preview_data.append({
+                    "row": row_num,
+                    "email": email,
+                    "password": password,
+                    "rank": rank_value,
+                    "errors": row_errors,
+                    "is_valid": len(row_errors) == 0
+                })
 
-                    success_count += 1
-
-                except Exception as e:
-                    errors.append(f"Row {row_num}: {str(e)}")
-
-            # Prepare response
-            message = f"✅ Successfully created {success_count} Field Staff from Excel."
-            if errors:
-                message += f" ({len(errors)} rows had errors)"
-
-                        # After processing all rows...
-                        # After the for loop (after processing all rows)
-            total_processed = success_count + len(errors)
-
-            # Limit errors shown to user (but keep full count)
-            errors_to_show = errors[:50]   # Show maximum 50 errors (you can increase)
-
-            response_data = {
-                'success': True,
-                'message': f'Successfully created {success_count} users. '
-                          f'{len(errors)} rows had errors.',
-                'success_count': success_count,
-                'error_count': len(errors),
-                'total_processed': total_processed,
-                'errors': errors_to_show,           # Limited for frontend
-                'has_more_errors': len(errors) > 50
-            }
-
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse(response_data)
-
-            # ... rest of your fallback code
-
-            # Fallback for non-AJAX
-            if success_count > 0:
-                messages.success(request, message)
-            if errors:
-                messages.warning(request, f"Some rows failed:\n" + "\n".join(errors[:10]))
-
-            return redirect("manage_users")
+            return JsonResponse({
+                "success": True,
+                "preview": preview_data
+            })
 
         except Exception as e:
-            error_msg = f"Failed to process Excel file: {str(e)}"
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'success': False, 'message': error_msg}, status=500)
-            messages.error(request, error_msg)
-            return render(request, "admin_panel/add_user.html", context)
+            return JsonResponse({
+                "success": False,
+                "error": str(e)
+            }, status=500)
 
+    if request.method == "POST" and action == "create_users":
+        import json
+
+        selected_rows = json.loads(request.POST.get("rows"))
+
+        success_count = 0
+        errors = []
+
+        for row in selected_rows:
+            try:
+                email = row["email"]
+                password = row["password"]
+                rank = row["rank"]
+
+                new_user = User(
+                    username=email,
+                    email=email,
+                    first_name=email.split('@')[0].title(),
+                    role="field_staff",
+                    rank=rank,
+                    created_by=request.user,
+                    is_active=True,
+                )
+
+                # hierarchy (same as your code)
+                if request.user.role == "admin":
+                    gm_id = request.POST.get("gd_munsi_id")
+                    if gm_id:
+                        gm = User.objects.get(id=gm_id)
+                        new_user.gd_munsi = gm
+                        new_user.admin = request.user
+
+                elif request.user.role == "gd_munsi":
+                    new_user.gd_munsi = request.user
+                    new_user.admin = request.user.admin
+
+                new_user.set_password(password)
+                new_user.save()
+
+                success_count += 1
+
+            except Exception as e:
+                errors.append(f"{email}: {str(e)}")
+
+        if success_count > 0:
+            messages.success(request, f"{success_count} users created successfully.")
+
+        if errors:
+            messages.error(request, f"{len(errors)} users failed to create.")
+
+        return JsonResponse({
+            "success": True,
+            "created": success_count,
+            "errors": errors,
+            "redirect_url": reverse("manage_users")   # 👈 ADD THIS
+        })
     # ====================== ORIGINAL POST HANDLING (UNCHANGED) ======================
     if request.method == "POST" and not request.FILES.get('excel_file'):
         # ... [Your entire original POST logic remains EXACTLY the same] ...
