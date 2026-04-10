@@ -1490,10 +1490,14 @@ def police_hierarchy_table(request):
     return render(request, "admin_panel/police_hierarchy_table.html", context)
 
 
+from django.core.paginator import Paginator  # ✅ ADD THIS
+from django.db.models import Q
+
 @role_required(["admin", "master_admin","super_admin"])
 def manage_users(request):
     admin_user = request.user
 
+    # 🔒 ORIGINAL LOGIC (UNCHANGED)
     officers = User.objects.filter(
         (
             Q(role="gd_munsi", admin=admin_user) |
@@ -1504,21 +1508,51 @@ def manage_users(request):
      .distinct() \
      .order_by("role", "username")
 
+    # 🔒 ORIGINAL FILTERING (UNCHANGED)
     suspended_officers = officers.filter(is_active=False)
     active_officers = officers.filter(is_active=True)
     gd_munsi = officers.filter(role="gd_munsi")
+    field_staff = officers.filter(role="field_staff", is_active=True)
+
+    # =======================
+    # ✅ PAGINATION START
+    # =======================
+
+    # Field Staff Pagination
+    field_paginator = Paginator(field_staff, 10)
+    field_page = request.GET.get("users_page")
+    field_staff = field_paginator.get_page(field_page)
+
+    # All Staff Pagination
+    all_paginator = Paginator(active_officers, 10)
+    all_page = request.GET.get("page")
+    officers = all_paginator.get_page(all_page)
+
+    # GD Munshi Pagination
+    gd_paginator = Paginator(gd_munsi, 10)
+    gd_page = request.GET.get("gd_page")
+    gd_munsi = gd_paginator.get_page(gd_page)
+
+    # Suspended Pagination
+    suspended_paginator = Paginator(suspended_officers, 10)
+    suspended_page = request.GET.get("suspended_page")
+    suspended_officers = suspended_paginator.get_page(suspended_page)
+
+    # =======================
+    # ✅ PAGINATION END
+    # =======================
 
     return render(
         request,
         "admin_panel/manage_users.html",
         {
-            "officers": officers,
-            "active_officers": active_officers,
+            "officers": officers,  # now paginated active users
+            "active_officers": active_officers,  # untouched if needed elsewhere
             "suspended_officers": suspended_officers,
-            "gd_munsi" : gd_munsi,
+            "gd_munsi": gd_munsi,
+            "field_staff": field_staff,
         }
     )
-
 
 
 @role_required(["admin"])

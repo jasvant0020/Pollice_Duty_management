@@ -16,7 +16,7 @@
         </div>
 
         <!-- Alpine Tabs -->
-        <div x-data="{ activeTab: 'all' }">
+        <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || 'all' }">
 
             <!-- TAB BUTTONS -->
             <div class="border-b border-gray-200 mb-6">
@@ -70,8 +70,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for officer in officers %}
-                            {% if officer.is_active and officer.role == "field_staff" %}
+                        {% for officer in field_staff %}
                             <tr class="border-b hover:bg-gray-50">
                                 <td class="p-3 text-gray-800">{{ officer.first_name }} {{ officer.last_name }}</td>
                                 <td class="p-3 text-gray-800 whitespace-nowrap">{{ officer.email }}</td>
@@ -107,7 +106,7 @@
                                 </td>
                             </tr>
                             {% comment %} {% endif %} {% endcomment %}
-                            {% endif %}
+                            
                             {% empty %}
                             <tr>
                                 <td colspan="7" class="p-4 text-center text-gray-500">
@@ -117,6 +116,31 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center">
+                {% if field_staff.has_other_pages %}
+                    <div class="flex gap-2 items-center">
+
+                        {% if field_staff.has_previous %}
+                            <a href="?users_page={{ field_staff.previous_page_number }}&tab=users"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Previous
+                            </a>
+                        {% endif %}
+
+                        <span class="px-3 py-1 bg-indigo-600 text-white rounded">
+                            {{ field_staff.number }} / {{ field_staff.paginator.num_pages }}
+                        </span>
+
+                        {% if field_staff.has_next %}
+                            <a href="?users_page={{ field_staff.next_page_number }}&tab=users"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Next
+                            </a>
+                        {% endif %}
+
+                    </div>
+                {% endif %}
+            </div>
                 </div>
             </div>
 
@@ -190,6 +214,31 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center">
+                {% if gd_munsi.has_other_pages %}
+                    <div class="flex gap-2 items-center">
+
+                        {% if gd_munsi.has_previous %}
+                            <a href="?gd_page={{ gd_munsi.previous_page_number }}&tab=gd"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Previous
+                            </a>
+                        {% endif %}
+
+                        <span class="px-3 py-1 bg-indigo-600 text-white rounded">
+                            {{ gd_munsi.number }} / {{ gd_munsi.paginator.num_pages }}
+                        </span>
+
+                        {% if gd_munsi.has_next %}
+                            <a href="?gd_page={{ gd_munsi.next_page_number }}&tab=gd"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Next
+                            </a>
+                        {% endif %}
+
+                    </div>
+                {% endif %}
+            </div>
                 </div>
             </div>
 
@@ -251,6 +300,31 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center">
+                {% if officers.has_other_pages %}
+                    <div class="flex gap-2 items-center">
+
+                        {% if officers.has_previous %}
+                            <a href="?page={{ officers.previous_page_number }}&tab=all"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Previous
+                            </a>
+                        {% endif %}
+
+                        <span class="px-3 py-1 bg-indigo-600 text-white rounded">
+                            {{ officers.number }} / {{ officers.paginator.num_pages }}
+                        </span>
+
+                        {% if officers.has_next %}
+                            <a href="?page={{ officers.next_page_number }}&tab=all"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Next
+                            </a>
+                        {% endif %}
+
+                    </div>
+                {% endif %}
+            </div>
                 </div>
             </div>
             <!-- All Suspended STAFF TAB -->
@@ -310,6 +384,31 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center">
+                {% if suspended_officers.has_other_pages %}
+                    <div class="flex gap-2 items-center">
+
+                        {% if suspended_officers.has_previous %}
+                            <a href="?suspended_page={{ suspended_officers.previous_page_number }}&tab=suspended"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Previous
+                            </a>
+                        {% endif %}
+
+                        <span class="px-3 py-1 bg-indigo-600 text-white rounded">
+                            {{ suspended_officers.number }} / {{ suspended_officers.paginator.num_pages }}
+                        </span>
+
+                        {% if suspended_officers.has_next %}
+                            <a href="?suspended_page={{ suspended_officers.next_page_number }}&tab=suspended"
+                            class="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300">
+                            Next
+                            </a>
+                        {% endif %}
+
+                    </div>
+                {% endif %}
+            </div>
                 </div>
             </div>
 
