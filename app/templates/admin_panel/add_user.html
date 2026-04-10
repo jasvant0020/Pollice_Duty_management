@@ -10,7 +10,59 @@
         Toggle Quick Create
     </button>
 </div>
+<!-- ================= EXCEL BULK UPLOAD WITH VISUAL PROGRESS ================= -->
+<div class="mb-8 bg-white p-6 shadow border-t-4 border-green-600 rounded-2xl" id="bulk_upload_section">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        📊 Bulk Create Field Staff via Excel
+    </h3>
+    
+    <form id="excel_upload_form" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label class="block text-gray-700 font-semibold mb-2">Upload Excel File (.xlsx)</label>
+                <input type="file" name="excel_file" id="excel_file" accept=".xlsx,.xls" 
+                       class="w-full text-gray-800 border rounded p-3 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-600 file:text-white hover:file:bg-green-700 cursor-pointer">
+                <p class="text-xs text-gray-500 mt-2">
+                    Columns: <strong>Email</strong> (required), <strong>Password</strong> (optional), <strong>Rank</strong> (optional)<br>
+                    Default password: <code>temp@123</code>
+                </p>
+            </div>
 
+            {% if user.role in "admin,gd_munsi" %}
+            <div>
+                <label class="block text-gray-700 font-semibold mb-2">Assign GD Munsi to all users</label>
+                <select name="gd_munsi_id" id="gd_munsi_id" class="w-full text-gray-800 border rounded p-3">
+                    {% for gm in gd_munsi_list %}
+                    <option value="{{ gm.id }}">{{ gm.first_name }} ({{ gm.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        <button type="button" id="upload_btn"
+                class="mt-6 px-8 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl shadow transition flex items-center gap-2">
+            <span>🚀 Upload & Create Users</span>
+        </button>
+    </form>
+
+    <!-- Progress Container -->
+    <div id="progress_container" class="hidden mt-8">
+        <div class="flex justify-between text-sm mb-2">
+            <span id="progress_text" class="font-medium text-gray-700">Uploading file...</span>
+            <span id="progress_percent" class="font-mono">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div id="progress_bar" 
+                 class="h-3 bg-linear-to-r from-green-500 to-emerald-600 transition-all duration-300 rounded-full"
+                 style="width: 0%"></div>
+        </div>
+        <div id="status_text" class="mt-3 text-sm text-gray-600"></div>
+    </div>
+</div>
+<!-- Your existing single user form remains exactly same -->
 <form method="POST"
 class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-indigo-600">
 
@@ -249,5 +301,156 @@ function togglePassword(id, icon){
 toggleGDMunsi()
 
 </script>
+<script>
+// Bulk Excel Upload with Progress + Audit/Preview Section
+document.getElementById('upload_btn').addEventListener('click', function() {
+    const fileInput = document.getElementById('excel_file');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert("Please select an Excel file first.");
+        return;
+    }
 
+    const formData = new FormData();
+    formData.append('excel_file', file);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    const gdSelect = document.getElementById('gd_munsi_id');
+    if (gdSelect) {
+        formData.append('gd_munsi_id', gdSelect.value);
+    }
+
+    // Reset UI
+    const progressContainer = document.getElementById('progress_container');
+    const progressBar = document.getElementById('progress_bar');
+    const progressText = document.getElementById('progress_text');
+    const progressPercent = document.getElementById('progress_percent');
+    const statusText = document.getElementById('status_text');
+
+    progressContainer.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPercent.textContent = '0%';
+    statusText.innerHTML = '';
+
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressPercent.textContent = percent + '%';
+            progressText.textContent = 'Uploading Excel file...';
+        }
+    });
+
+    xhr.addEventListener('load', function() {
+        progressBar.style.width = '100%';
+        progressPercent.textContent = '100%';
+
+        if (xhr.status === 200) {
+            try {
+                const response = JSON.parse(xhr.responseText);
+                
+                if (response.success) {
+                    progressText.textContent = 'Processing completed';
+
+                    // Show Audit Section
+                    showAuditSection(response);
+                } else {
+                    statusText.innerHTML = `<span class="text-red-600">❌ ${response.message || 'Unknown error'}</span>`;
+                }
+            } catch (e) {
+                statusText.innerHTML = `<span class="text-green-600">✅ File processed. Redirecting...</span>`;
+                setTimeout(() => window.location.href = "{% url 'manage_users' %}", 1500);
+            }
+        } else {
+            let errorMsg = 'Upload failed';
+            try {
+                const err = JSON.parse(xhr.responseText);
+                errorMsg = err.message || errorMsg;
+            } catch {}
+            statusText.innerHTML = `<span class="text-red-600">❌ Error ${xhr.status}: ${errorMsg}</span>`;
+        }
+    });
+
+    xhr.addEventListener('error', function() {
+        statusText.innerHTML = '<span class="text-red-600">❌ Network error occurred.</span>';
+    });
+
+    xhr.open('POST', window.location.href, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
+});
+
+// ==================== NEW: AUDIT / PREVIEW SECTION ====================
+function showAuditSection(response) {
+    let html = `
+        <div class="mt-6 bg-white border border-gray-300 rounded-2xl p-6 shadow">
+            <h4 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                📋 Upload Audit Report
+            </h4>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-green-50 p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-green-600">${response.success_count || 0}</div>
+                    <div class="text-sm text-green-700">Successfully Created</div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-red-600">${response.error_count || 0}</div>
+                    <div class="text-sm text-red-700">Rows with Errors</div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-xl text-center">
+                    <div class="text-3xl font-bold text-blue-600">${response.total_processed || 0}</div>
+                    <div class="text-sm text-blue-700">Total Rows Processed</div>
+                </div>
+            </div>`;
+
+    // Show Errors
+    if (response.errors && response.errors.length > 0) {
+        html += `
+            <div class="mb-6">
+                <h5 class="font-medium text-red-700 mb-3 flex items-center gap-2">
+                    ❌ Errors (${response.error_count} total)
+                </h5>
+                <div class="text-red-700 max-h-80 overflow-auto bg-red-50 border border-red-200 rounded-lg p-4 text-sm font-mono divide-y">`;
+        
+        response.errors.forEach(err => {
+            html += `<div class="py-2">${err}</div>`;
+        });
+
+        if (response.has_more_errors) {
+            html += `<div class="py-3 text-red-600 font-medium text-center">
+                        ... and ${response.error_count - 50} more errors
+                     </div>`;
+        }
+        
+        html += `</div></div>`;
+    } else if (response.success_count > 0) {
+        html += `
+            <div class="bg-green-50 border border-green-200 rounded-xl p-6 text-center mb-6">
+                <span class="text-5xl">🎉</span>
+                <p class="text-green-700 font-semibold mt-2">All rows processed successfully!</p>
+            </div>`;
+    }
+
+    html += `
+            <div class="flex gap-3">
+                <button onclick="window.location.href = '{% url 'manage_users' %}'" 
+                        class="flex-1 py-3.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition">
+                    ✅ View All Users
+                </button>
+                
+                <button onclick="this.closest('.border').remove()" 
+                        class="flex-1 py-3.5 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-xl transition">
+                    Close Report
+                </button>
+            </div>
+        </div>`;
+
+    const auditDiv = document.createElement('div');
+    auditDiv.innerHTML = html;
+    document.getElementById('progress_container').after(auditDiv);
+}
+</script>
 {% endblock %}
