@@ -4,8 +4,8 @@ from .models import User
 
 class CustomUserAdmin(UserAdmin):
     model = User
-    list_display = ('username', 'email', 'role', 'is_staff', 'is_active')
-    list_filter = ('role', 'is_staff', 'is_active')
+    list_display = ('username', 'email', 'role', 'is_staff', 'is_active','id')
+    list_filter = ('gd_munsi','admin','role', 'is_staff', 'is_active')
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name')}),
@@ -22,7 +22,7 @@ class CustomUserAdmin(UserAdmin):
             )
         }),
     )
-    search_fields = ('username', 'email')
+    search_fields = ('username', 'email','created_by__username','created_by__role','created_by__email')
     ordering = ('username',)
 
 admin.site.register(User, CustomUserAdmin)
@@ -123,6 +123,13 @@ admin.site.register(VerifyEmailOtp)
 
 
 # ================= HEADER =================
-admin.site.site_header = "Police Duty Management"
+db = settings.DATABASES['default']
+
+db_name = db['NAME']
+db_engine = db['ENGINE'].split('.')[-1]   # gets 'postgresql', 'sqlite3', etc.
+
+admin.site.site_header = f"Police Duty Management (DB: {db_name} | Engine: {db_engine})"
+
+
 admin.site.site_title = "Control Panel"
 admin.site.index_title = "Admin Dashboard"

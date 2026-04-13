@@ -1991,6 +1991,7 @@ def add_user(request):
                     "is_valid": len(row_errors) == 0
                 })
 
+            request.session["bulk_users"] = preview_data
             return JsonResponse({
                 "success": True,
                 "preview": preview_data
@@ -2004,60 +2005,87 @@ def add_user(request):
 
     if request.method == "POST" and action == "create_users":
         import json
+        from django.contrib.auth.hashers import make_password
+        from django.db import transaction
 
-        selected_rows = json.loads(request.POST.get("rows"))
+        try:
+            all_rows = request.session.get("bulk_users", [])
+            selected_indexes = json.loads(request.POST.get("rows", "[]"))
+            
+            if not selected_indexes:
+                return JsonResponse({"success": False, "message": "No rows selected"}, status=400)
 
-        success_count = 0
-        errors = []
+            selected_rows = [all_rows[int(i)] for i in selected_indexes if int(i) < len(all_rows)]
 
-        for row in selected_rows:
-            try:
-                email = row["email"]
-                password = row["password"]
-                rank = row["rank"]
+            users_to_create = []
+            success_count = 0
+            errors = []
 
-                new_user = User(
-                    username=email,
-                    email=email,
-                    first_name=email.split('@')[0].title(),
-                    role="field_staff",
-                    rank=rank,
-                    created_by=request.user,
-                    is_active=True,
-                )
+            with transaction.atomic():
+                for row in selected_rows:
+                    try:
+                        email = row.get("email")
+                        if not email or User.objects.filter(email=email).exists():
+                            continue
 
-                # hierarchy (same as your code)
-                if request.user.role == "admin":
-                    gm_id = request.POST.get("gd_munsi_id")
-                    if gm_id:
-                        gm = User.objects.get(id=gm_id)
-                        new_user.gd_munsi = gm
-                        new_user.admin = request.user
+                        password = row.get("password", "temp@123")
+                        rank = row.get("rank")
 
-                elif request.user.role == "gd_munsi":
-                    new_user.gd_munsi = request.user
-                    new_user.admin = request.user.admin
+                        new_user = User(
+                            username=email,
+                            email=email,
+                            first_name=email.split('@')[0].title() if email else "",
+                            role="field_staff",
+                            rank=rank,
+                            created_by=request.user,
+                            is_active=True,
+                            password=make_password(password),
+                        )
 
-                new_user.set_password(password)
-                new_user.save()
+                        # Hierarchy logic
+                        if request.user.role == "admin":
+                            gm_id = request.POST.get("gd_munsi_id")
+                            if gm_id:
+                                try:
+                                    gm = User.objects.get(id=gm_id)
+                                    new_user.gd_munsi = gm
+                                    new_user.admin = request.user
+                                except User.DoesNotExist:
+                                    pass
+                        elif request.user.role == "gd_munsi":
+                            new_user.gd_munsi = request.user
+                            new_user.admin = request.user.admin if hasattr(request.user, 'admin') else None
 
-                success_count += 1
+                        users_to_create.append(new_user)
 
-            except Exception as e:
-                errors.append(f"{email}: {str(e)}")
+                    except Exception as e:
+                        errors.append(f"{email}: {str(e)}")
 
-        if success_count > 0:
-            messages.success(request, f"{success_count} users created successfully.")
+                # Bulk create in smaller batches to avoid memory issues
+                batch_size = 2000   # Safe batch size for most servers
+                created_count = 0
 
-        if errors:
-            messages.error(request, f"{len(errors)} users failed to create.")
+                for i in range(0, len(users_to_create), batch_size):
+                    batch = users_to_create[i:i + batch_size]
+                    User.objects.bulk_create(batch, batch_size=1000, ignore_conflicts=True)
+                    created_count += len(batch)
 
-        return JsonResponse({
-            "success": True,
-            "created": success_count,
-            "errors": errors,
-            "redirect_url": reverse("manage_users")   # 👈 ADD THIS
-        })
+            # Clean up session
+            if "bulk_users" in request.session:
+                del request.session["bulk_users"]
+
+            return JsonResponse({
+                "success": True,
+                "created": created_count,
+                "errors": len(errors),
+                "redirect_url": reverse("manage_users")
+            })
+
+        except Exception as e:
+            return JsonResponse({
+                "success": False,
+                "message": f"Server error: {str(e)}"
+            }, status=500)
     # ====================== ORIGINAL POST HANDLING (UNCHANGED) ======================
     if request.method == "POST" and not request.FILES.get('excel_file'):
         # ... [Your entire original POST logic remains EXACTLY the same] ...

@@ -278,7 +278,7 @@ class FieldStaffRequest(models.Model):
     # USER BASED REQUEST NUMBER
     request_number = models.PositiveIntegerField(null=True, blank=True,editable=False)
 
-    subject = models.CharField(max_length=255)
+    subject = models.TextField()
     message = models.TextField()
 
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -336,7 +336,7 @@ class VVIPRequest(models.Model):
 
     request_number = models.PositiveIntegerField(null=True, blank=True, editable=False)
 
-    subject = models.CharField(max_length=255)
+    subject = models.TextField()
     message = models.TextField()
 
     submitted_at = models.DateTimeField(auto_now_add=True)
@@ -469,7 +469,7 @@ class Notification(models.Model):
         db_index=True
     )
 
-    title = models.CharField(max_length=255)
+    title = models.TextField()
 
     message = models.TextField()
 
@@ -585,9 +585,7 @@ class CentralizedNotifyLog(models.Model):
         blank=True
     )
 
-    title = models.CharField(
-        max_length=255
-    )
+    title = models.TextField()
 
     message = models.TextField()
 

@@ -447,10 +447,8 @@ function showAuditSection(response) {
 
 function confirmCreate() {
     const selected = [];
-
     document.querySelectorAll(".row-check:checked").forEach(cb => {
-        const index = cb.dataset.index;
-        selected.push(window.previewRows[index]);
+        selected.push(parseInt(cb.dataset.index));
     });
 
     if (selected.length === 0) {
@@ -458,63 +456,72 @@ function confirmCreate() {
         return;
     }
 
-    if (!confirm(`Create ${selected.length} users?`)) return;
+    if (!confirm(`Create ${selected.length} users?\nThis can take 5–15 minutes for large files. Do not close the tab!`)) {
+        return;
+    }
+
+    const btn = document.querySelector("button[onclick='confirmCreate()']");
+    const originalText = btn.innerText;
+    
+    btn.disabled = true;
+    btn.innerText = `Creating ${selected.length} users... (this may take a while)`;
 
     const formData = new FormData();
     formData.append("action", "create_users");
     formData.append("rows", JSON.stringify(selected));
 
     const gdSelect = document.getElementById('gd_munsi_id');
-    if (gdSelect) {
-        formData.append('gd_munsi_id', gdSelect.value);
-    }
+    if (gdSelect) formData.append('gd_munsi_id', gdSelect.value);
 
+    // Increased to 10 minutes (600000 ms)
     fetch(window.location.href, {
         method: "POST",
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: formData
+        body: formData,
+        signal: AbortSignal.timeout(600000)   // ← Changed from 300000
     })
-    .then(res => res.json())   // ✅ FIXED
-    .then(data => {            // ✅ FIXED (THIS WAS MISSING)
-
+    .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        return res.json();
+    })
+    .then(data => {
         if (data.success) {
-
-            const statusText = document.getElementById('status_text');
-
-            statusText.innerHTML = `
-                <span class="text-green-600 font-semibold">
-                    ✅ ${data.created} users created successfully
-                </span>
-            `;
-
-            // ✅ redirect
-            setTimeout(() => {
-                window.location.href = data.redirect_url;
-            }, 1200);
-
-        } else {
             document.getElementById('status_text').innerHTML = `
-                <span class="text-red-600 font-semibold">
-                    ❌ Something went wrong
+                <span class="text-green-600 font-semibold">
+                    ✅ ${data.created} users created successfully!
                 </span>
             `;
+            setTimeout(() => {
+                window.location.href = data.redirect_url || "{% url 'manage_users' %}";
+            }, 2000);
+        } else {
+            throw new Error(data.message || "Creation failed");
         }
-
     })
     .catch(err => {
-        document.getElementById('status_text').innerHTML = `
-            <span class="text-red-600 font-semibold">
-                ❌ Server error
-            </span>
-        `;
         console.error(err);
+        let msg = "Failed to create users.";
+        
+        if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('abort')) {
+            msg = "⏳ Request timed out. The process is likely still running on the server.<br>Check the manage_users page later or look at server logs.";
+        } else if (err.message.includes('HTTP')) {
+            msg = `Server error: ${err.message}`;
+        }
+
+        document.getElementById('status_text').innerHTML = `
+            <span class="text-red-600 font-semibold">${msg}</span>
+        `;
+    })
+    .finally(() => {
+        // Only re-enable on error (creation may still be happening)
+        if (btn && document.getElementById('status_text').textContent.includes('timed out')) {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
     });
-    const btn = document.querySelector("button[onclick='confirmCreate()']");
-    btn.disabled = true;
-    btn.innerText = "Creating...";
 }
 </script>
 {% endblock %}
