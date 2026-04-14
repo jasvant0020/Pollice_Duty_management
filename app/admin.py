@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User
+import os
 
 class CustomUserAdmin(UserAdmin):
     model = User
@@ -125,11 +126,15 @@ admin.site.register(VerifyEmailOtp)
 # ================= HEADER =================
 db = settings.DATABASES['default']
 
-db_name = db['NAME']
-db_engine = db['ENGINE'].split('.')[-1]   # gets 'postgresql', 'sqlite3', etc.
+db_engine = db['ENGINE'].split('.')[-1]
+
+# Handle SQLite path
+if db_engine == "sqlite3":
+    db_name = os.path.basename(db['NAME'])
+else:
+    db_name = db['NAME']
+
 
 admin.site.site_header = f"Police Duty Management (DB: {db_name} | Engine: {db_engine})"
-
-
 admin.site.site_title = "Control Panel"
 admin.site.index_title = "Admin Dashboard"
