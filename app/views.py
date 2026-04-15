@@ -1935,10 +1935,38 @@ def add_user(request):
     if request.method == "POST" and request.FILES.get('excel_file') and action == "preview":
         try:
             excel_file = request.FILES['excel_file']
+            file_name = excel_file.name.lower()
 
             import openpyxl
-            wb = openpyxl.load_workbook(excel_file)
-            ws = wb.active
+            import csv
+            import io
+
+            rows_data = []
+
+            # ================= CSV SUPPORT =================
+            if file_name.endswith('.csv'):
+                decoded_file = excel_file.read().decode('utf-8-sig')
+                reader = csv.reader(io.StringIO(decoded_file))
+
+                for i, row in enumerate(reader):
+                    if i == 0:  # skip header
+                        continue
+                    rows_data.append(row)
+
+            # ================= EXCEL SUPPORT =================
+            elif file_name.endswith('.xlsx') or file_name.endswith('.xls'):
+                wb = openpyxl.load_workbook(excel_file)
+                ws = wb.active
+
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    rows_data.append(row)
+
+            # ================= INVALID FILE =================
+            else:
+                return JsonResponse({
+                    "success": False,
+                    "error": "Unsupported file format. Upload CSV or Excel."
+                }, status=400)
 
             rank_map = {}
 
@@ -1956,7 +1984,7 @@ def add_user(request):
 
             preview_data = []
 
-            for row_num, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            for row_num, row in enumerate(rows_data, start=2):
 
                 email = str(row[0]).strip() if row[0] else None
                 password = str(row[1]).strip() if len(row) > 1 and row[1] else "temp@123"
@@ -2005,8 +2033,8 @@ def add_user(request):
 
     if request.method == "POST" and action == "create_users":
         import json
-        from django.contrib.auth.hashers import make_password
         from django.db import transaction
+        from django.conf import settings
 
         try:
             all_rows = request.session.get("bulk_users", [])
@@ -2017,60 +2045,76 @@ def add_user(request):
 
             selected_rows = [all_rows[int(i)] for i in selected_indexes if int(i) < len(all_rows)]
 
+            # Pre-fetch existing emails (already good)
+            emails = [row.get("email") for row in selected_rows if row.get("email")]
+            existing_emails = set(
+                User.objects.filter(email__in=emails).values_list("email", flat=True)
+            )
+
+            # Hierarchy setup (once, outside loop)
+            gd_munsi_obj = None
+            admin_obj = request.user
+
+            if request.user.role == "admin":
+                gm_id = request.POST.get("gd_munsi_id")
+                if gm_id:
+                    gd_munsi_obj = User.objects.filter(id=gm_id, role="gd_munsi").first()
+            elif request.user.role == "gd_munsi":
+                gd_munsi_obj = request.user
+                admin_obj = getattr(request.user, 'admin', None)
+
             users_to_create = []
-            success_count = 0
             errors = []
 
-            with transaction.atomic():
-                for row in selected_rows:
-                    try:
-                        email = row.get("email")
-                        if not email or User.objects.filter(email=email).exists():
-                            continue
+            default_hash = getattr(settings, 'DEFAULT_BULK_PASSWORD_HASH', None)
+            if not default_hash:
+                from django.contrib.auth.hashers import make_password
+                default_hash = make_password("temp@123")
 
-                        password = row.get("password", "temp@123")
-                        rank = row.get("rank")
+            for row in selected_rows:
+                try:
+                    email = row.get("email")
+                    if not email or email in existing_emails:
+                        continue
 
-                        new_user = User(
-                            username=email,
-                            email=email,
-                            first_name=email.split('@')[0].title() if email else "",
-                            role="field_staff",
-                            rank=rank,
-                            created_by=request.user,
-                            is_active=True,
-                            password=make_password(password),
-                        )
+                    rank = row.get("rank")
 
-                        # Hierarchy logic
-                        if request.user.role == "admin":
-                            gm_id = request.POST.get("gd_munsi_id")
-                            if gm_id:
-                                try:
-                                    gm = User.objects.get(id=gm_id)
-                                    new_user.gd_munsi = gm
-                                    new_user.admin = request.user
-                                except User.DoesNotExist:
-                                    pass
-                        elif request.user.role == "gd_munsi":
-                            new_user.gd_munsi = request.user
-                            new_user.admin = request.user.admin if hasattr(request.user, 'admin') else None
+                    # Create model instance
+                    new_user = User(
+                        username=email,
+                        email=email,
+                        first_name=email.split('@')[0].title() if email else "",
+                        role="field_staff",
+                        rank=rank,
+                        created_by=request.user,
+                        is_active=True,
+                        password=default_hash,          # ← Use precomputed hash
+                        admin=admin_obj,
+                        gd_munsi=gd_munsi_obj,
+                    )
+                    users_to_create.append(new_user)
+                except Exception as e:
+                    errors.append(f"{email}: {str(e)}")
 
-                        users_to_create.append(new_user)
+            if not users_to_create:
+                return JsonResponse({"success": True, "created": 0, "message": "No new users to create"})
 
-                    except Exception as e:
-                        errors.append(f"{email}: {str(e)}")
+            # ================== OPTIMIZED BULK CREATE ==================
+            created_count = 0
+            batch_size = 400          # ← Much better for Postgres + User model
 
-                # Bulk create in smaller batches to avoid memory issues
-                batch_size = 2000   # Safe batch size for most servers
-                created_count = 0
+            # Smaller transactions per batch
+            for i in range(0, len(users_to_create), batch_size):
+                batch = users_to_create[i:i + batch_size]
+                with transaction.atomic():
+                    User.objects.bulk_create(
+                        batch, 
+                        batch_size=batch_size, 
+                        ignore_conflicts=True
+                    )
+                created_count += len(batch)
 
-                for i in range(0, len(users_to_create), batch_size):
-                    batch = users_to_create[i:i + batch_size]
-                    User.objects.bulk_create(batch, batch_size=1000, ignore_conflicts=True)
-                    created_count += len(batch)
-
-            # Clean up session
+            # Clean session
             if "bulk_users" in request.session:
                 del request.session["bulk_users"]
 

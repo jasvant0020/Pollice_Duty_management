@@ -227,3 +227,5 @@ DEFAULT_FROM_EMAIL = f"Police Duty Management <{EMAIL_HOST_USER}>"
 # 🔥 Allow large file uploads (100MB)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600
 FILE_UPLOAD_MAX_MEMORY_SIZE = 0   # store file on disk instead of RAM
+
+DEFAULT_BULK_PASSWORD_HASH = "pbkdf2_sha256$1000000$DagXT4V3ZIRqTH7Yy1j1f0$HWloMCTnbCqAgPEe6b/eHzst9vX/K9uSWWzSCxT11FM="
