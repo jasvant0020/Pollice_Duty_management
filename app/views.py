@@ -1900,7 +1900,8 @@ def add_user(request):
         'police_rank': police_rank,
     }
     action = request.POST.get("action")
-    # ==================== YOUR ORIGINAL CODE STARTS HERE (UNCHANGED) ====================
+
+    # ==================== COMMON CONTEXT SETUP (UNCHANGED) ====================
     # 1️⃣ Determine allowed roles...
     if user.role == "developer":
         allowed_roles = ["master_admin"]
@@ -1928,88 +1929,60 @@ def add_user(request):
     else:
         context["gd_munsi_list"] = []
 
-    # ==================== YOUR ORIGINAL CODE ENDS HERE ====================
-
-    # ====================== NEW: EXCEL BULK UPLOAD LOGIC ======================
-        # ====================== EXCEL BULK UPLOAD LOGIC ======================
+    # ====================== BULK UPLOAD - PREVIEW ======================
     if request.method == "POST" and request.FILES.get('excel_file') and action == "preview":
         try:
             excel_file = request.FILES['excel_file']
             file_name = excel_file.name.lower()
-
-            import openpyxl
-            import csv
-            import io
+            import openpyxl, csv, io
 
             rows_data = []
 
-            # ================= CSV SUPPORT =================
             if file_name.endswith('.csv'):
                 decoded_file = excel_file.read().decode('utf-8-sig')
                 reader = csv.reader(io.StringIO(decoded_file))
-
                 for i, row in enumerate(reader):
-                    if i == 0:  # skip header
+                    if i == 0:
                         continue
                     rows_data.append(row)
 
-            # ================= EXCEL SUPPORT =================
-            elif file_name.endswith('.xlsx') or file_name.endswith('.xls'):
+            elif file_name.endswith(('.xlsx', '.xls')):
                 wb = openpyxl.load_workbook(excel_file)
                 ws = wb.active
-
                 for row in ws.iter_rows(min_row=2, values_only=True):
                     rows_data.append(row)
-
-            # ================= INVALID FILE =================
             else:
-                return JsonResponse({
-                    "success": False,
-                    "error": "Unsupported file format. Upload CSV or Excel."
-                }, status=400)
+                return JsonResponse({"success": False, "error": "Unsupported file format."}, status=400)
 
             rank_map = {}
-
             for r in police_rank:
                 full = r["police_rank"]
                 short = None
-
                 if "(" in full and ")" in full:
                     short = full.split("(")[-1].replace(")", "").strip()
-
                 rank_map[full.lower()] = full
-
                 if short:
                     rank_map[short.lower()] = full
 
             preview_data = []
-
             for row_num, row in enumerate(rows_data, start=2):
-
                 email = str(row[0]).strip() if row[0] else None
                 password = str(row[1]).strip() if len(row) > 1 and row[1] else "temp@123"
                 rank_name = str(row[2]).strip() if len(row) > 2 and row[2] else None
 
                 row_errors = []
-
-                # ✅ Email validation
                 if not email:
                     row_errors.append("Email is required")
-
                 if email and User.objects.filter(email=email).exists():
                     row_errors.append("Email already exists")
 
-                # ✅ Rank mapping
                 rank_value = None
-
                 if rank_name:
                     key = rank_name.strip().lower()
                     rank_value = rank_map.get(key)
-
                     if not rank_value:
                         row_errors.append("Invalid rank")
 
-                # ✅ Append preview
                 preview_data.append({
                     "row": row_num,
                     "email": email,
@@ -2020,17 +1993,12 @@ def add_user(request):
                 })
 
             request.session["bulk_users"] = preview_data
-            return JsonResponse({
-                "success": True,
-                "preview": preview_data
-            })
+            return JsonResponse({"success": True, "preview": preview_data})
 
         except Exception as e:
-            return JsonResponse({
-                "success": False,
-                "error": str(e)
-            }, status=500)
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
 
+    # ====================== BULK CREATE USERS ======================
     if request.method == "POST" and action == "create_users":
         import json
         from django.db import transaction
@@ -2039,19 +2007,16 @@ def add_user(request):
         try:
             all_rows = request.session.get("bulk_users", [])
             selected_indexes = json.loads(request.POST.get("rows", "[]"))
-            
+
             if not selected_indexes:
                 return JsonResponse({"success": False, "message": "No rows selected"}, status=400)
 
             selected_rows = [all_rows[int(i)] for i in selected_indexes if int(i) < len(all_rows)]
 
-            # Pre-fetch existing emails (already good)
             emails = [row.get("email") for row in selected_rows if row.get("email")]
-            existing_emails = set(
-                User.objects.filter(email__in=emails).values_list("email", flat=True)
-            )
+            existing_emails = set(User.objects.filter(email__in=emails).values_list("email", flat=True))
 
-            # Hierarchy setup (once, outside loop)
+            # Hierarchy setup (once)
             gd_munsi_obj = None
             admin_obj = request.user
 
@@ -2079,7 +2044,6 @@ def add_user(request):
 
                     rank = row.get("rank")
 
-                    # Create model instance
                     new_user = User(
                         username=email,
                         email=email,
@@ -2088,7 +2052,7 @@ def add_user(request):
                         rank=rank,
                         created_by=request.user,
                         is_active=True,
-                        password=default_hash,          # ← Use precomputed hash
+                        password=default_hash,
                         admin=admin_obj,
                         gd_munsi=gd_munsi_obj,
                     )
@@ -2099,22 +2063,16 @@ def add_user(request):
             if not users_to_create:
                 return JsonResponse({"success": True, "created": 0, "message": "No new users to create"})
 
-            # ================== OPTIMIZED BULK CREATE ==================
+            # Optimized bulk create
             created_count = 0
-            batch_size = 400          # ← Much better for Postgres + User model
+            batch_size = 400
 
-            # Smaller transactions per batch
             for i in range(0, len(users_to_create), batch_size):
                 batch = users_to_create[i:i + batch_size]
                 with transaction.atomic():
-                    User.objects.bulk_create(
-                        batch, 
-                        batch_size=batch_size, 
-                        ignore_conflicts=True
-                    )
+                    User.objects.bulk_create(batch, batch_size=batch_size, ignore_conflicts=True)
                 created_count += len(batch)
 
-            # Clean session
             if "bulk_users" in request.session:
                 del request.session["bulk_users"]
 
@@ -2126,18 +2084,112 @@ def add_user(request):
             })
 
         except Exception as e:
-            return JsonResponse({
-                "success": False,
-                "message": f"Server error: {str(e)}"
-            }, status=500)
-    # ====================== ORIGINAL POST HANDLING (UNCHANGED) ======================
-    if request.method == "POST" and not request.FILES.get('excel_file'):
-        # ... [Your entire original POST logic remains EXACTLY the same] ...
-        name = request.POST.get("name")
-        email = request.POST.get("email")
-        # ... rest of your code unchanged ...
-        # (I kept it out for brevity - do NOT modify this block)
+            return JsonResponse({"success": False, "message": f"Server error: {str(e)}"}, status=500)
 
+    # ====================== MANUAL SINGLE USER CREATION (Old Logic Restored) ======================
+    if request.method == "POST" and not request.FILES.get('excel_file') and action != "create_users":
+        
+        # ==================== FIELD VALIDATION ====================
+        name = request.POST.get("name", "").strip()
+        email = request.POST.get("email", "").strip()
+        phone = request.POST.get("phone") or None
+        gender = request.POST.get("gender") or None
+        dob = request.POST.get("dob") or None
+        rank = request.POST.get("rank") or None
+        role = request.POST.get("role")
+        password = request.POST.get("password", "").strip()
+        confirm_password = request.POST.get("confirm_password", "").strip()
+
+        # ✅ Required Field Validation with Clear Error Messages
+        errors = []
+
+        if not name:
+            errors.append("Name is required.")
+        if not email:
+            errors.append("Email is required.")
+        if not rank:
+            errors.append("Rank is required.")
+        if not role:
+            errors.append("Role is required.")
+        if not password:
+            errors.append("Password is required.")
+        if not confirm_password:
+            errors.append("Confirm Password is required.")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err)
+            return render(request, "admin_panel/add_user.html", context)
+
+        # Password confirmation check
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return render(request, "admin_panel/add_user.html", context)
+
+        # Role permission check
+        if role not in allowed_roles:
+            messages.error(request, "You are not allowed to create this role.")
+            return redirect("manage_users")
+
+        # Block multiple GD Munsi per Admin
+        if user.role == "admin" and role == "gd_munsi":
+            if User.objects.filter(role="gd_munsi", admin=user).exists():
+                messages.error(request, "You already have a GD Munsi. Only one GD Munsi is allowed per Admin.")
+                return redirect("manage_users")
+
+        # Email uniqueness check
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "This email is already registered. Please use a different email.")
+            return render(request, "admin_panel/add_user.html", context)
+
+        # ==================== CREATE USER ====================
+        new_user = User(
+            username=email,
+            email=email,
+            first_name=name,
+            phone=phone,
+            gender=gender,
+            dob=dob,
+            role=role,
+            rank=rank,
+            created_by=request.user,
+            is_active=True,          # Good to add
+        )
+
+        # HIERARCHY LOGIC (Kept exactly as in your old code)
+        if user.role == "admin":
+            if role == "gd_munsi":
+                new_user.admin = user
+            elif role == "field_staff":
+                gd_id = request.POST.get("gd_munsi_id")
+                if gd_id:
+                    try:
+                        gm = User.objects.get(id=gd_id)
+                        new_user.gd_munsi = gm
+                        new_user.admin = user
+                    except User.DoesNotExist:
+                        pass
+
+        elif user.role == "gd_munsi":
+            if role == "field_staff":
+                new_user.gd_munsi = user
+                new_user.admin = getattr(user, 'admin', None)
+
+        # Set password for manual creation
+        new_user.set_password(password)
+        new_user.save()
+
+        # Success messages
+        if role == "field_staff":
+            messages.success(request, f"{name} has been added as Field Staff successfully!")
+        elif role == "gd_munsi":
+            messages.success(request, f"{name} has been added as GD Munsi successfully!")
+        else:
+            messages.success(request, f"{name} has been added successfully!")
+
+        return redirect("manage_users")
+
+    # Render the page for GET request or when no POST condition matches
     return render(request, "admin_panel/add_user.html", context)
 
 @role_required(["developer", "master_admin", "super_admin", "admin", "gd_munsi"])
