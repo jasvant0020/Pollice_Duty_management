@@ -2076,10 +2076,12 @@ def add_user(request):
             if "bulk_users" in request.session:
                 del request.session["bulk_users"]
 
+            messages.success(request, f"{created_count} users created successfully!")
             return JsonResponse({
                 "success": True,
                 "created": created_count,
                 "errors": len(errors),
+                "message": f"✅ {created_count} users created successfully!",
                 "redirect_url": reverse("manage_users")
             })
 

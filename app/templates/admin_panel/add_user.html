@@ -48,20 +48,63 @@
         </button>
     </form>
 
-    <!-- Progress Container -->
-    <div id="progress_container" class="hidden mt-8">
-        <div class="flex justify-between text-sm mb-2">
-            <span id="progress_text" class="font-medium text-gray-700">Uploading file...</span>
-            <span id="progress_percent" class="font-mono">0%</span>
+    <!-- ================= MULTI-STAGE PROGRESS CONTAINER ================= -->
+    <div id="progress_container" class="hidden mt-8 space-y-4">
+
+        <!-- Stage 1: File Upload -->
+        <div id="stage_upload" class="opacity-40">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="font-medium text-gray-700 flex items-center gap-1">
+                    <span id="stage_upload_icon" class="text-base">⏳</span>
+                    Step 1 — Uploading file
+                </span>
+                <span id="upload_percent" class="font-mono text-gray-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <div id="upload_bar"
+                     class="h-2.5 bg-blue-500 transition-all duration-300 rounded-full"
+                     style="width: 0%"></div>
+            </div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div id="progress_bar" 
-                 class="h-3 bg-linear-to-r from-green-500 to-emerald-600 transition-all duration-300 rounded-full"
-                 style="width: 0%"></div>
+
+        <!-- Stage 2: Preview / Parsing -->
+        <div id="stage_preview" class="opacity-40">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="font-medium text-gray-700 flex items-center gap-1">
+                    <span id="stage_preview_icon" class="text-base">⏳</span>
+                    Step 2 — Parsing &amp; building preview
+                </span>
+                <span id="preview_percent" class="font-mono text-gray-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <div id="preview_bar"
+                     class="h-2.5 bg-amber-500 transition-all duration-300 rounded-full"
+                     style="width: 0%"></div>
+            </div>
         </div>
-        <div id="status_text" class="mt-3 text-sm text-gray-600"></div>
+
+        <!-- Stage 3: Creating Users (shown only after confirmCreate) -->
+        <div id="stage_create" class="hidden opacity-40">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="font-medium text-gray-700 flex items-center gap-1">
+                    <span id="stage_create_icon" class="text-base">⏳</span>
+                    Step 3 — Creating users on server
+                </span>
+                <span id="create_percent" class="font-mono text-gray-600">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                <div id="create_bar"
+                     class="h-2.5 bg-green-500 transition-all duration-300 rounded-full"
+                     style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- General status message (errors, success, etc.) -->
+        <div id="status_text" class="mt-1 text-sm text-gray-600"></div>
     </div>
+    <!-- ================= END MULTI-STAGE PROGRESS ================= -->
 </div>
+
 <!-- Your existing single user form remains exactly same -->
 <form method="POST"
 class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-indigo-600">
@@ -151,7 +194,6 @@ class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-ind
 
 <div id="quick_form" style="display:none">
 
-```
 <!-- Email -->
 <div>
     <label class="block text-gray-700 font-semibold mb-1">Username (Email)</label>
@@ -175,7 +217,6 @@ class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-ind
     class="w-full text-gray-800 border rounded p-2 pr-10">
     <span onclick="togglePassword('confirm_quick', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
 </div>
-```
 
 </div>
 
@@ -298,12 +339,52 @@ function togglePassword(id, icon){
 toggleGDMunsi()
 
 </script>
+
 <script>
-// Bulk Excel Upload with Progress + Audit/Preview Section
+// ===== STAGE PROGRESS HELPERS =====
+
+function activateStage(stageId) {
+    document.getElementById(stageId).classList.remove('opacity-40');
+}
+
+function setStageBar(barId, percentId, pct) {
+    document.getElementById(barId).style.width = pct + '%';
+    document.getElementById(percentId).textContent = pct + '%';
+}
+
+function completeStage(stageId, iconId, barId, percentId) {
+    setStageBar(barId, percentId, 100);
+    document.getElementById(iconId).textContent = '✅';
+}
+
+function failStage(iconId) {
+    document.getElementById(iconId).textContent = '❌';
+}
+
+// Simulated progress ticker (for stages where we can't track real %)
+function simulateProgress(barId, percentId, targetPct, duration, onDone) {
+    const start = parseInt(document.getElementById(barId).style.width) || 0;
+    const steps = 30;
+    const increment = (targetPct - start) / steps;
+    const interval = duration / steps;
+    let current = start;
+    const timer = setInterval(() => {
+        current = Math.min(current + increment, targetPct);
+        setStageBar(barId, percentId, Math.round(current));
+        if (current >= targetPct) {
+            clearInterval(timer);
+            if (onDone) onDone();
+        }
+    }, interval);
+    return timer;
+}
+
+// ===== BULK EXCEL UPLOAD =====
+
 document.getElementById('upload_btn').addEventListener('click', function() {
     const fileInput = document.getElementById('excel_file');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         alert("Please select an Excel file first.");
         return;
@@ -313,67 +394,80 @@ document.getElementById('upload_btn').addEventListener('click', function() {
     formData.append('excel_file', file);
     formData.append('action', 'preview');
     formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-    
+
     const gdSelect = document.getElementById('gd_munsi_id');
     if (gdSelect) {
         formData.append('gd_munsi_id', gdSelect.value);
     }
 
-    // Reset UI
+    // Reset all stages
     const progressContainer = document.getElementById('progress_container');
-    const progressBar = document.getElementById('progress_bar');
-    const progressText = document.getElementById('progress_text');
-    const progressPercent = document.getElementById('progress_percent');
-    const statusText = document.getElementById('status_text');
-
     progressContainer.classList.remove('hidden');
-    progressBar.style.width = '0%';
-    progressPercent.textContent = '0%';
-    statusText.innerHTML = '';
+
+    setStageBar('upload_bar', 'upload_percent', 0);
+    setStageBar('preview_bar', 'preview_percent', 0);
+    document.getElementById('stage_upload_icon').textContent = '⏳';
+    document.getElementById('stage_preview_icon').textContent = '⏳';
+    document.getElementById('stage_create').classList.add('hidden');
+    document.getElementById('stage_upload').classList.add('opacity-40');
+    document.getElementById('stage_preview').classList.add('opacity-40');
+    document.getElementById('status_text').innerHTML = '';
+
+    // Activate Stage 1
+    activateStage('stage_upload');
 
     const xhr = new XMLHttpRequest();
-    
+
+    // Stage 1: Real upload progress
     xhr.upload.addEventListener('progress', function(e) {
         if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressBar.style.width = percent + '%';
-            progressPercent.textContent = percent + '%';
-            progressText.textContent = 'Uploading Excel file...';
+            const pct = Math.round((e.loaded / e.total) * 100);
+            setStageBar('upload_bar', 'upload_percent', pct);
         }
     });
 
     xhr.addEventListener('load', function() {
-        progressBar.style.width = '100%';
-        progressPercent.textContent = '100%';
+        // Complete Stage 1
+        completeStage('stage_upload', 'stage_upload_icon', 'upload_bar', 'upload_percent');
 
-        if (xhr.status === 200) {
-            try {
-                const response = JSON.parse(xhr.responseText);
-                
-                if (response.success) {
-                    progressText.textContent = 'Processing completed';
+        // Activate Stage 2 — simulate parsing progress then show result
+        activateStage('stage_preview');
+        simulateProgress('preview_bar', 'preview_percent', 90, 800, function() {
+            if (xhr.status === 200) {
+                try {
+                    const response = JSON.parse(xhr.responseText);
 
-                    // Show Audit Section
-                    showAuditSection(response);
-                } else {
-                    statusText.innerHTML = `<span class="text-red-600">❌ ${response.message || 'Unknown error'}</span>`;
+                    if (response.success) {
+                        completeStage('stage_preview', 'stage_preview_icon', 'preview_bar', 'preview_percent');
+                        showAuditSection(response);
+                    } else {
+                        failStage('stage_preview_icon');
+                        document.getElementById('status_text').innerHTML =
+                            `<span class="text-red-600">❌ ${response.message || 'Unknown error'}</span>`;
+                    }
+                } catch (e) {
+                    completeStage('stage_preview', 'stage_preview_icon', 'preview_bar', 'preview_percent');
+                    document.getElementById('status_text').innerHTML =
+                        `<span class="text-green-600">✅ File processed. Redirecting...</span>`;
+                    setTimeout(() => window.location.href = "{% url 'manage_users' %}", 1500);
                 }
-            } catch (e) {
-                statusText.innerHTML = `<span class="text-green-600">✅ File processed. Redirecting...</span>`;
-                setTimeout(() => window.location.href = "{% url 'manage_users' %}", 1500);
+            } else {
+                failStage('stage_preview_icon');
+                let errorMsg = 'Upload failed';
+                try {
+                    const err = JSON.parse(xhr.responseText);
+                    errorMsg = err.message || errorMsg;
+                } catch {}
+                document.getElementById('status_text').innerHTML =
+                    `<span class="text-red-600">❌ Error ${xhr.status}: ${errorMsg}</span>`;
             }
-        } else {
-            let errorMsg = 'Upload failed';
-            try {
-                const err = JSON.parse(xhr.responseText);
-                errorMsg = err.message || errorMsg;
-            } catch {}
-            statusText.innerHTML = `<span class="text-red-600">❌ Error ${xhr.status}: ${errorMsg}</span>`;
-        }
+        });
     });
 
     xhr.addEventListener('error', function() {
-        statusText.innerHTML = '<span class="text-red-600">❌ Network error occurred.</span>';
+        failStage('stage_upload_icon');
+        document.getElementById('status_text').innerHTML =
+            '<span class="text-red-600">❌ Network error occurred.</span>';
     });
 
     xhr.open('POST', window.location.href, true);
@@ -381,7 +475,7 @@ document.getElementById('upload_btn').addEventListener('click', function() {
     xhr.send(formData);
 });
 
-// ==================== NEW: AUDIT / PREVIEW SECTION ====================
+// ==================== AUDIT / PREVIEW SECTION ====================
 function showAuditSection(response) {
     let rows = response.preview;
 
@@ -409,14 +503,14 @@ function showAuditSection(response) {
         html += `
             <tr class="border-b">
                 <td class="text-center">
-                    <input type="checkbox" class="row-check" 
+                    <input type="checkbox" class="row-check"
                         data-index="${index}" ${checked} ${disabled}>
                 </td>
                 <td>${row.email || '-'}</td>
                 <td>${row.rank || '-'}</td>
                 <td>
-                    ${row.is_valid 
-                        ? '<span class="text-green-600">Valid</span>' 
+                    ${row.is_valid
+                        ? '<span class="text-green-600">Valid</span>'
                         : '<span class="text-red-600">' + row.errors.join(", ") + '</span>'}
                 </td>
             </tr>
@@ -428,7 +522,7 @@ function showAuditSection(response) {
             </table>
         </div>
 
-        <button onclick="confirmCreate()" 
+        <button onclick="confirmCreate()"
             class="mt-4 w-full bg-green-600 text-white py-3 rounded-lg">
             ✅ Create Selected Users
         </button>
@@ -453,15 +547,29 @@ function confirmCreate() {
         return;
     }
 
-    if (!confirm(`Create ${selected.length} users?\nThis can take 5–15 minutes for large files. Do not close the tab!`)) {
+    if (!confirm(`Create ${selected.length} users?\nThis process may take some time for large files. Please do not close the tab.`)) {
         return;
     }
 
     const btn = document.querySelector("button[onclick='confirmCreate()']");
     const originalText = btn.innerText;
-    
+
     btn.disabled = true;
     btn.innerText = `Creating ${selected.length} users... (this may take a while)`;
+
+    // Show Stage 3 progress bar
+    const stageCreate = document.getElementById('stage_create');
+    stageCreate.classList.remove('hidden');
+    stageCreate.classList.add('opacity-40');
+    setStageBar('create_bar', 'create_percent', 0);
+    document.getElementById('stage_create_icon').textContent = '⏳';
+    activateStage('stage_create');
+
+    // Scroll progress into view
+    document.getElementById('progress_container').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Simulate progress up to 85% while waiting for response
+    const ticker = simulateProgress('create_bar', 'create_percent', 85, 8000, null);
 
     const formData = new FormData();
     formData.append("action", "create_users");
@@ -470,7 +578,6 @@ function confirmCreate() {
     const gdSelect = document.getElementById('gd_munsi_id');
     if (gdSelect) formData.append('gd_munsi_id', gdSelect.value);
 
-    // Increased to 10 minutes (600000 ms)
     fetch(window.location.href, {
         method: "POST",
         headers: {
@@ -478,14 +585,16 @@ function confirmCreate() {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
         body: formData,
-        signal: AbortSignal.timeout(600000)   // ← Changed from 300000
+        signal: AbortSignal.timeout(600000)
     })
     .then(res => {
         if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
         return res.json();
     })
     .then(data => {
+        clearInterval(ticker);
         if (data.success) {
+            completeStage('stage_create', 'stage_create_icon', 'create_bar', 'create_percent');
             document.getElementById('status_text').innerHTML = `
                 <span class="text-green-600 font-semibold">
                     ✅ ${data.created} users created successfully!
@@ -499,9 +608,11 @@ function confirmCreate() {
         }
     })
     .catch(err => {
+        clearInterval(ticker);
         console.error(err);
+        failStage('stage_create_icon');
         let msg = "Failed to create users.";
-        
+
         if (err.name === 'TimeoutError' || err.message.includes('timed out') || err.message.includes('abort')) {
             msg = "⏳ Request timed out. The process is likely still running on the server.<br>Check the manage_users page later or look at server logs.";
         } else if (err.message.includes('HTTP')) {
@@ -513,7 +624,6 @@ function confirmCreate() {
         `;
     })
     .finally(() => {
-        // Only re-enable on error (creation may still be happening)
         if (btn && document.getElementById('status_text').textContent.includes('timed out')) {
             btn.disabled = false;
             btn.innerText = originalText;
