@@ -1507,6 +1507,21 @@ def manage_users(request):
     ).exclude(role="vvip") \
      .distinct() \
      .order_by("role", "username")
+    
+    # =======================
+    # 🔍 SEARCH FUNCTIONALITY
+    # =======================
+    search_query = request.GET.get("search")
+
+    if search_query:
+        officers = officers.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(email__icontains=search_query) |
+            Q(phone__icontains=search_query) |
+            Q(username__icontains=search_query) |
+            Q(rank__icontains=search_query) 
+        )
 
     # 🔒 ORIGINAL FILTERING (UNCHANGED)
     suspended_officers = officers.filter(is_active=False)
@@ -2862,7 +2877,6 @@ def centrelize_notify(request):
 
         users = User.objects.none()
 
-        # -------- determine receivers --------
         # -------- determine receivers --------
         if current_user.role == "master_admin":
 
