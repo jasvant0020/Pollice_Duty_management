@@ -1551,6 +1551,7 @@ def manage_users(request):
             "suspended_officers": suspended_officers,
             "gd_munsi": gd_munsi,
             "field_staff": field_staff,
+            # 'total_officers': officers_queryset.count(),
         }
     )
 
@@ -3025,38 +3026,7 @@ def centrelize_notify(request):
         return redirect("centrelize_notify")
 
     # -------- prepare users for dropdown --------
-    if current_user.role == "master_admin":
-
-        users = User.objects.filter(
-            role__in=["developer", "super_admin"]
-        )
-
-
-    elif current_user.role == "super_admin":
-
-        users = User.objects.filter(
-            Q(role="master_admin") |
-            Q(role="admin", created_by=current_user)
-        )
-
-
-    elif current_user.role == "admin":
-
-        users = User.objects.filter(
-            Q(id=current_user.created_by_id) |
-            Q(role="gd_munsi", admin=current_user) |
-            Q(role="field_staff", gd_munsi__admin=current_user) |
-            Q(role="vvip", created_by=current_user)
-        )
-
-
-    elif current_user.role == "gd_munsi":
-
-        users = User.objects.filter(
-            Q(id=current_user.admin_id) |
-            Q(role="field_staff", gd_munsi=current_user) |
-            Q(role="vvip", created_by=current_user.admin)   # ✅ ADD THIS
-        )
+        #check just below function 'get_users_by_scope'
 
     # -------- choose template --------
     if current_user.role == "gd_munsi":
@@ -3064,7 +3034,54 @@ def centrelize_notify(request):
     else:
         template = "admin_panel/centrelize_notify.html"
 
-    return render(request, template, {"users": users})
+    return render(request, template, {})
+
+
+
+@role_required(["gd_munsi", "admin", "super_admin", "master_admin"])
+def get_users_by_scope(request): # this is for centrelize notify fetch user
+    current_user = request.user
+    role_to_fetch = request.GET.get('role')
+
+    if not role_to_fetch:
+        return JsonResponse({'users': []}, status=400)
+
+    users = User.objects.none()
+
+    if current_user.role == "master_admin":
+        if role_to_fetch == "developer":
+            users = User.objects.filter(role="developer")
+        elif role_to_fetch == "super_admin":
+            users = User.objects.filter(role="super_admin")
+
+    elif current_user.role == "super_admin":
+        if role_to_fetch == "master_admin":
+            users = User.objects.filter(role="master_admin")
+        elif role_to_fetch == "admin":
+            users = User.objects.filter(role="admin", created_by=current_user)
+
+    elif current_user.role == "admin":
+        if role_to_fetch == "super_admin":
+            users = User.objects.filter(role="super_admin")
+        elif role_to_fetch == "gd_munsi":
+            users = User.objects.filter(role="gd_munsi", admin=current_user)
+        elif role_to_fetch == "field_staff":
+            users = User.objects.filter(role="field_staff", gd_munsi__admin=current_user)
+        elif role_to_fetch == "vvip":
+            users = User.objects.filter(role="vvip", created_by=current_user)
+
+    elif current_user.role == "gd_munsi":
+        if role_to_fetch == "admin":
+            users = User.objects.filter(id=current_user.admin_id)
+        elif role_to_fetch == "field_staff":
+            users = User.objects.filter(role="field_staff", gd_munsi=current_user)
+        elif role_to_fetch == "vvip":
+            users = User.objects.filter(role="vvip", created_by=current_user.admin)
+
+    # Return minimal data for dropdown
+    user_list = list(users.values('id', 'username', 'role'))
+
+    return JsonResponse({'users': user_list})
 
 
 @role_required(["gd_munsi","admin","super_admin","master_admin"])

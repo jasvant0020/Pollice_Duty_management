@@ -5,280 +5,221 @@
 {% include "error_message/error_message.html" %}
 
 <div class="max-w-3xl mx-auto mt-8 bg-white shadow-lg rounded-lg p-8">
-<h2 class="text-2xl font-bold text-gray-800 mb-6">
-    📢 Send Centralized Notification
-</h2>
-
-<form method="POST" class="space-y-6">
-    {% csrf_token %}
-
-    <!-- Notification Type -->
-    <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Notification Type
-        </label>
-
-        <select 
-            name="notify_type"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-            <option value="normal">Normal</option>
-            <option value="sos">SOS (Critical)</option>
-        </select>
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">📢 Send Centralized Notification</h2>
+        <a href="{% url 'centrelize_notify_history' %}"
+           class="bg-transparent border-b border-gray-400 hover:bg-gray-100 text-gray-500 text-sm px-4 py-2 rounded-md">
+            📜 View History
+        </a>
     </div>
 
+    <form method="POST" class="space-y-6">
+        {% csrf_token %}
 
-    <!-- Send To -->
-    <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Send To
-        </label>
+        <!-- Notification Type -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Notification Type</label>
+            <select name="notify_type" class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="normal">Normal</option>
+                <option value="sos">SOS (Critical)</option>
+            </select>
+        </div>
 
-        <select name="scope" id="scope"
-        class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- Send To -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Send To</label>
+            <select name="scope" id="scope"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                {% if request.user.role == "master_admin" %}
+                    <option value="developer">Developer</option>
+                    <option value="all_super_admin">All Super Admin</option>
+                    <option value="specific_super_admin">Specific Super Admin</option>
+                {% elif request.user.role == "super_admin" %}
+                    <option value="master_admin">Master Admin</option>
+                    <option value="all_admin">All Admin</option>
+                    <option value="specific_admin">Specific Admin</option>
+                {% elif request.user.role == "admin" %}
+                    <option value="super_admin">Super Admin</option>
+                    <option value="gd_munsi">GD Munsi</option>
+                    <option value="specific_staff">Specific Staff</option>
+                    <option value="specific_vvip">Specific VVIP</option>
+                    <option value="staff">All Staff</option>
+                    <option value="all_vvip">All VVIP</option>
+                {% elif request.user.role == "gd_munsi" %}
+                    <option value="admin">Admin</option>
+                    <option value="specific_vvip">Specific VVIP</option>
+                    <option value="all_vvip">All VVIP</option>
+                    <option value="staff">All Staff</option>
+                    <option value="specific_staff">Specific Staff</option>
+                {% endif %}
+            </select>
+        </div>
 
-        {% if request.user.role == "master_admin" %}
+        <!-- Select Specific User -->
+        <div id="user_select" style="display:none;">
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Select Person</label>
+            <select name="target_user" id="target_user"
+                    class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Select User</option>
+            </select>
+        </div>
 
-        <option value="developer">Developer</option>
-        <option value="all_super_admin">All Super Admin</option>
-        <option value="specific_super_admin">Specific Super Admin</option>
+        <!-- Receiver Preview -->
+        <div id="receiver_preview" class="bg-gray-50 border border-gray-200 rounded-md p-4 hidden">
+            <p class="text-sm font-semibold text-gray-700 mb-3">👥 Notification will be sent to:</p>
+            <ul id="receiver_list" class="text-sm text-gray-800 space-y-1 max-h-48 overflow-y-auto"></ul>
+        </div>
 
-        {% elif request.user.role == "super_admin" %}
+        <!-- Title -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Notification Title</label>
+            <input type="text" name="title" required
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Enter notification title">
+        </div>
 
-        <option value="master_admin">Master Admin</option>
-        <option value="all_admin">All Admin</option>
-        <option value="specific_admin">Specific Admin</option>
+        <!-- Message -->
+        <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">Notification Message</label>
+            <textarea name="message" rows="4" required
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Write your message here..."></textarea>
+        </div>
 
-        {% elif request.user.role == "admin" %}
-
-        <option value="super_admin">Super Admin</option>
-        <option value="gd_munsi">GD Munsi</option>
-        <option value="staff">All Staff</option>
-
-        {% elif request.user.role == "gd_munsi" %}
-
-        <option value="admin">Admin</option>
-        <option value="staff">All Staff</option>
-
-        {% endif %}
-
-        </select>
-    </div>
-
-
-    <!-- Select Specific User -->
-    <div id="user_select" style="display:none;">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Select Person
-        </label>
-
-        <select 
-            name="target_user"
-            id="target_user"
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-            <option value="">Select User</option>
-
-            {% for u in users %}
-            <option value="{{ u.id }}">
-                {{ u.username }} ({{ u.role }})
-            </option>
-            {% endfor %}
-
-        </select>
-    </div>
-
-
-    <!-- Receiver Preview -->
-    <div id="receiver_preview" class="bg-gray-50 border border-gray-200 rounded-md p-4 hidden">
-
-        <p class="text-sm font-semibold text-gray-700 mb-3">
-            👥 Notification will be sent to:
-        </p>
-
-        <ul id="receiver_list" class="text-sm text-gray-800 space-y-1 max-h-40 overflow-y-auto">
-        </ul>
-
-    </div>
-
-
-    <!-- Title -->
-    <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Notification Title
-        </label>
-
-        <input
-            type="text"
-            name="title"
-            required
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Enter notification title"
-        >
-    </div>
-
-
-    <!-- Message -->
-    <div>
-        <label class="block text-sm font-semibold text-gray-700 mb-2">
-            Notification Message
-        </label>
-
-        <textarea
-            name="message"
-            rows="4"
-            required
-            class="w-full border border-gray-300 rounded-md px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Write your message here..."
-        ></textarea>
-    </div>
-
-
-    <!-- Submit Button -->
-    <div class="pt-2">
-        <button
-            type="submit"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-md transition duration-200"
-        >
+        <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-md transition duration-200">
             Send Notification
         </button>
-    </div>
-
-</form>
-```
-
+    </form>
 </div>
 
-<!-- Pass Django users to JS -->
-
 <script>
-
-const allUsers = [
-{% for u in users %}
-{
-    id: "{{u.id}}",
-    username: "{{u.username}}",
-    role: "{{u.role}}"
-},
-{% endfor %}
-];
-
+// ==================== Lazy Loading via API ====================
 
 const scopeSelect = document.getElementById("scope");
 const userSelectBox = document.getElementById("user_select");
 const previewBox = document.getElementById("receiver_preview");
 const receiverList = document.getElementById("receiver_list");
-const targetUser = document.getElementById("target_user");
+const targetUserSelect = document.getElementById("target_user");
 
+let currentUsers = [];
 
-function updatePreview(){
+// Fetch users from API
+async function loadUsersByRole(role, isForDropdown = false) {
+    if (isForDropdown) {
+        targetUserSelect.innerHTML = '<option value="">Loading users...</option>';
+    } else {
+        receiverList.innerHTML = '<li class="text-gray-500">Loading users...</li>';
+        previewBox.classList.remove("hidden");
+    }
 
-    receiverList.innerHTML = "";
+    try {
+        const response = await fetch(`/api/get-users-by-role/?role=${role}`);
+        if (!response.ok) throw new Error("Failed to load");
 
-    if(
-        scopeSelect.value === "specific_super_admin" ||
-        scopeSelect.value === "specific_admin"
-    ){
+        const data = await response.json();
+        currentUsers = data.users || [];
 
-        const selectedId = targetUser.value;
-
-        if(selectedId){
-
-            const user = allUsers.find(u => u.id === selectedId);
-
-            previewBox.classList.remove("hidden");
-
-            const li = document.createElement("li");
-            li.textContent = user.username + " (" + user.role + ")";
-            receiverList.appendChild(li);
+        if (isForDropdown) {
+            // Fill dropdown for Specific options
+            targetUserSelect.innerHTML = '<option value="">Select User</option>';
+            currentUsers.forEach(user => {
+                const option = document.createElement("option");
+                option.value = user.id;
+                option.textContent = `${user.username} (${user.role})`;
+                targetUserSelect.appendChild(option);
+            });
+        } else {
+            // Show full list in preview for "All ..." options
+            updatePreviewList();
         }
-
+    } catch (error) {
+        console.error(error);
+        if (isForDropdown) {
+            targetUserSelect.innerHTML = '<option value="">Error loading users</option>';
+        } else {
+            receiverList.innerHTML = '<li class="text-red-500">Error loading users</li>';
+        }
     }
-
-    else if(scopeSelect.value === "staff"){
-
-        previewBox.classList.remove("hidden");
-
-        const staffUsers = allUsers.filter(u => u.role === "field_staff");
-
-        staffUsers.forEach(user => {
-
-            const li = document.createElement("li");
-            li.textContent = user.username + " (staff)";
-            receiverList.appendChild(li);
-
-        });
-
-    }
-
-    else if(scopeSelect.value === "admin"){
-
-        previewBox.classList.remove("hidden");
-
-        const adminUsers = allUsers.filter(u =>
-            u.role === "admin" ||
-            u.role === "super_admin" ||
-            u.role === "master_admin"
-        );
-
-        adminUsers.forEach(user => {
-
-            const li = document.createElement("li");
-            li.textContent = user.username + " (" + user.role + ")";
-            receiverList.appendChild(li);
-
-        });
-
-    }
-    else if(scopeSelect.value === "gd_munsi"){
-
-        previewBox.classList.remove("hidden");
-
-        const users = allUsers.filter(u => u.role === "gd_munsi");
-
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (GD Munsi)";
-            receiverList.appendChild(li);
-        });
-
-    }
-
-    else if(scopeSelect.value === "super_admin"){
-
-        previewBox.classList.remove("hidden");
-
-        const users = allUsers.filter(u => u.role === "super_admin");
-
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.textContent = user.username + " (Super Admin)";
-            receiverList.appendChild(li);
-        });
-
-    }
-
 }
 
+function updatePreviewList() {
+    receiverList.innerHTML = "";
 
-scopeSelect.addEventListener("change", function(){
+    if (currentUsers.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "No users found";
+        receiverList.appendChild(li);
+        return;
+    }
 
-    if(
-        this.value === "specific_super_admin" ||
-        this.value === "specific_admin"
-    ){
+    currentUsers.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = `${user.username} (${user.role})`;
+        receiverList.appendChild(li);
+    });
+}
+
+// Main logic on scope change
+scopeSelect.addEventListener("change", function() {
+    const scope = this.value;
+
+    // Reset everything
+    targetUserSelect.value = "";
+    currentUsers = [];
+    previewBox.classList.add("hidden");
+    receiverList.innerHTML = "";
+
+    if (scope.includes("specific")) {
+        // === SPECIFIC USER CASE ===
         userSelectBox.style.display = "block";
-    }
-    else{
+
+        let roleToFetch = "";
+        if (scope === "specific_staff") roleToFetch = "field_staff";
+        else if (scope === "specific_vvip") roleToFetch = "vvip";
+        else if (scope === "specific_admin") roleToFetch = "admin";
+        else if (scope === "specific_super_admin") roleToFetch = "super_admin";
+
+        if (roleToFetch) {
+            loadUsersByRole(roleToFetch, true);   // true = for dropdown
+        }
+    } 
+    else {
+        // === ALL USERS CASE ===
         userSelectBox.style.display = "none";
+
+        let roleToFetch = "";
+        if (scope === "staff") roleToFetch = "field_staff";
+        else if (scope === "all_vvip") roleToFetch = "vvip";
+        else if (scope === "gd_munsi") roleToFetch = "gd_munsi";
+        else if (scope === "admin" || scope === "all_admin") roleToFetch = "admin";
+        else if (scope === "super_admin" || scope === "all_super_admin") roleToFetch = "super_admin";
+        else if (scope === "master_admin") roleToFetch = "master_admin";
+        else if (scope === "developer") roleToFetch = "developer";
+
+        if (roleToFetch) {
+            loadUsersByRole(roleToFetch, false);   // false = for preview list
+        }
     }
-
-    updatePreview();
-
 });
 
+// When user selects someone from Specific dropdown
+targetUserSelect.addEventListener("change", function() {
+    if (this.value) {
+        // Show only the selected user in preview
+        previewBox.classList.remove("hidden");
+        receiverList.innerHTML = "";
 
-targetUser.addEventListener("change", updatePreview);
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption) {
+            const li = document.createElement("li");
+            li.textContent = selectedOption.textContent;
+            receiverList.appendChild(li);
+        }
+    } else {
+        previewBox.classList.add("hidden");
+    }
+});
 
 </script>
 

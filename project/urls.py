@@ -89,6 +89,7 @@ urlpatterns = [
 
     #centralized notification sending panel
     path("centrelize_notify/",views.centrelize_notify,name="centrelize_notify"),
+    path('api/get-users-by-role/', views.get_users_by_scope, name='get_users_by_role'),
     path("centrelize-notify-history/", views.centrelize_notify_history, name="centrelize_notify_history"),
 
 
