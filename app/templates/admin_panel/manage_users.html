@@ -22,13 +22,21 @@
                             id="search-input"
                             name="search"
                             value="{{ request.GET.search|default:'' }}"
-                            placeholder="Search by name, email, phone..."
+                            placeholder="Search by name, email, phone"
                             class="text-blue-600 w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm transition"
                             x-data="{ searchTerm: '{{ request.GET.search|default:'' }}' }"
                             x-model="searchTerm"
                             @input="if(searchTerm === '') document.getElementById('search-form').submit()"
                         >
-                        
+                        <div class="absolute right-6 bottom-10 -translate-y-1/2 group cursor-pointer">
+                            <div class="hidden group-hover:block absolute bottom-full right-0 mb-3 w-64 text-[11px] font-medium tracking-wide uppercase bg-slate-800/95 backdrop-blur-sm text-slate-100 p-3 rounded-lg shadow-xl ring-1 ring-white/10 transition-all duration-200 ease-out animate-in fade-in slide-in-from-bottom-2">
+                                <div class="flex flex-col gap-1">
+                                    <span class="opacity-70">Search by</span>
+                                    <span class="text-sky-400">Name • Email • Phone • Rank</span>
+                                </div>
+                                <div class="absolute -bottom-1 right-4 w-2 h-2 bg-slate-800 rotate-45"></div>
+                            </div>
+                        </div>
                         <!-- Search Icon -->
                         <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
                             🔍︎
@@ -69,25 +77,25 @@
                     {% if request.user.role == "admin" %}
                     <button @click="activeTab = 'users'"
                         :class="activeTab === 'users' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
-                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        class="py-3 px-1 border-b-2 font-medium text-sm cursor-pointer">
                         Field Staff
                     </button>
 
                     <button @click="activeTab = 'gd'"
                         :class="activeTab === 'gd' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
-                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        class="py-3 px-1 border-b-2 font-medium text-sm cursor-pointer">
                         GD Munshi
                     </button>
                     {% endif %}
                     <button @click="activeTab = 'all'"
                         :class="activeTab === 'all' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
-                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        class="py-3 px-1 border-b-2 font-medium text-sm cursor-pointer">
                         All Staff
                     </button>
 
                     <button @click="activeTab = 'suspended'"
                         :class="activeTab === 'suspended' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'"
-                        class="py-3 px-1 border-b-2 font-medium text-sm">
+                        class="py-3 px-1 border-b-2 font-medium text-sm cursor-pointer">
                         Suspended
                     </button>
 
@@ -133,13 +141,13 @@
 
                                         {% if officer.is_active %}
                                             <button type="submit"
-                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded cursor-pointer"
                                                     onclick="return confirm('Suspend {{ officer.username }}?')">
                                                 Suspend
                                             </button>
                                         {% else %}
                                             <button type="submit"
-                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded cursor-pointer"
                                                     onclick="return confirm('Activate {{ officer.username }}?')">
                                                 Activate
                                             </button>
@@ -226,13 +234,13 @@
 
                                         {% if officer.is_active %}
                                             <button type="submit"
-                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded cursor-pointer"
                                                     onclick="return confirm('Suspend {{ officer.username }}?')">
                                                 Suspend
                                             </button>
                                         {% else %}
                                             <button type="submit"
-                                                    class="px-3 py-1 bg-green-600 text-white rounded"
+                                                    class="px-3 py-1 bg-green-600 text-white rounded cursor-pointer"
                                                     onclick="return confirm('Activate {{ officer.username }}?')">
                                                 Activate
                                             </button>
@@ -325,7 +333,7 @@
 
                                         {% if officer.is_active %}
                                             <button type="submit"
-                                                    class="px-3 py-1 bg-red-600 text-white rounded"
+                                                    class="px-3 py-1 bg-red-600 text-white rounded cursor-pointer"
                                                     onclick="return confirm('Suspend {{ officer.username }}?')">
                                                 Suspend
                                             </button>
