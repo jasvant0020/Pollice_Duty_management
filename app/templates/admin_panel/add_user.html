@@ -4,12 +4,7 @@
 {% block content %}
 {% include "error_message/error_message.html" %}
 
-<div class="mb-4">
-    <button onclick="toggleFormMode()"
-        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-        Toggle Quick Create
-    </button>
-</div>
+
 <!-- ================= EXCEL BULK UPLOAD WITH VISUAL PROGRESS ================= -->
 <div class="mb-8 bg-white p-6 shadow border-t-4 border-green-600 rounded-2xl" id="bulk_upload_section">
     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -190,7 +185,7 @@ class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-ind
 
 </div>
 
-<!-- ================= QUICK FORM ================= -->
+{% comment %} <!-- ================= QUICK FORM ================= -->
 
 <div id="quick_form" style="display:none">
 
@@ -218,7 +213,7 @@ class="bg-white max-w-2xl p-6 shadow border-t-4 rounded-2xl space-y-4 border-ind
     <span onclick="togglePassword('confirm_quick', this)" class="absolute right-3 top-9 cursor-pointer text-gray-500">👁</span>
 </div>
 
-</div>
+</div> {% endcomment %}
 
 <!-- Role -->
 
@@ -281,7 +276,7 @@ Save </button>
 
 <script>
 
-let quickMode = false
+{% comment %} let quickMode = false
 
 function toggleFormMode(){
 
@@ -291,19 +286,36 @@ function toggleFormMode(){
     quickMode = !quickMode
 
     if(quickMode){
-
         full.style.display = "none"
         quick.style.display = "block"
 
-    }else{
+        // disable full form inputs
+        full.querySelectorAll("input, select").forEach(el => el.disabled = true)
+        quick.querySelectorAll("input, select").forEach(el => el.disabled = false)
 
+    }else{
         full.style.display = "block"
         quick.style.display = "none"
 
+        // disable quick form inputs
+        quick.querySelectorAll("input, select").forEach(el => el.disabled = true)
+        full.querySelectorAll("input, select").forEach(el => el.disabled = false)
     }
+} {% endcomment %}
+{% comment %}  
+// 🔥 IMPORTANT FIX
+document.addEventListener("DOMContentLoaded", function() {
 
-}
+    const full = document.getElementById("full_form")
+    const quick = document.getElementById("quick_form")
 
+    // Full form enabled
+    full.querySelectorAll("input, select").forEach(el => el.disabled = false)
+
+    // Quick form disabled
+    quick.querySelectorAll("input, select").forEach(el => el.disabled = true)
+
+}); {% endcomment %}
 
 function toggleGDMunsi(){
 
