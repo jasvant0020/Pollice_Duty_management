@@ -1,10 +1,10 @@
-# 🚔 Police Duty Management System 2.0
+#  Police Duty Management System 2.0
 
 A **role-based, real-time police duty management platform** designed to efficiently manage VVIP security, staff deployment, live tracking, and centralized communication across hierarchical roles.
 
 ---
 
-# 📌 Table of Contents
+#  Table of Contents
 
 * [Overview](#-overview)
 * [Key Features](#-key-features)
@@ -22,7 +22,7 @@ A **role-based, real-time police duty management platform** designed to efficien
 
 ---
 
-# 🧠 Overview
+#  Overview
 
 The **Police Duty Management System 2.0** is a centralized platform that enables law enforcement agencies to:
 
@@ -36,14 +36,14 @@ It ensures **accountability, transparency, and real-time coordination** across a
 
 ---
 
-# ⚡ Key Features
+#  Key Features
 
-### 🔹 Role-Based Access Control
+###  Role-Based Access Control
 
 * Multi-level hierarchy (Master → Field Staff)
 * Restricted data visibility per role
 
-### 🔹 Real-Time Location Tracking
+###  Real-Time Location Tracking
 
 * Live GPS tracking of:
 
@@ -51,7 +51,7 @@ It ensures **accountability, transparency, and real-time coordination** across a
   * Assigned Staff
 * Interactive map integration
 
-### 🔹 Duty Assignment System
+###  Duty Assignment System
 
 * Assign duties in batches
 * Define:
@@ -60,7 +60,7 @@ It ensures **accountability, transparency, and real-time coordination** across a
   * Radius
   * Time duration
 
-### 🔹 Centralized Notification System
+###  Centralized Notification System
 
 * Send notifications to:
 
@@ -69,19 +69,19 @@ It ensures **accountability, transparency, and real-time coordination** across a
   * Entire role-based hierarchy
 * Supports **SOS (critical alerts)**
 
-### 🔹 WebSocket Integration
+###  WebSocket Integration
 
 * Real-time notification delivery
 * Instant UI updates without refresh
 
-### 🔹 Firebase Push Notifications
+###  Firebase Push Notifications
 
 * Mobile push alerts
 * Background notifications
 
 ---
 
-# 🏗️ System Architecture
+#  System Architecture
 
 ```
 Frontend (HTML, Tailwind, JS)
@@ -97,7 +97,7 @@ Firebase Cloud Messaging (Push Notifications)
 
 ---
 
-# 👥 User Roles & Permissions
+#  User Roles & Permissions
 
 | Role             | Permissions                                    |
 | ---------------- | ---------------------------------------------- |
@@ -110,11 +110,11 @@ Firebase Cloud Messaging (Push Notifications)
 
 ---
 
-# 📦 Core Modules
+#  Core Modules
 
 ---
 
-## 1️⃣ Duty Management
+##  Duty Management
 
 ### Features:
 
@@ -134,7 +134,7 @@ Admin → GD Munsi → Staff Assignment → Live Monitoring
 
 ---
 
-## 2️⃣ Live Map Tracking
+##  Live Map Tracking
 
 ### Capabilities:
 
@@ -147,7 +147,7 @@ Admin → GD Munsi → Staff Assignment → Live Monitoring
 
 ---
 
-## 3️⃣ Centralized Notification System
+##  Centralized Notification System
 
 ### Supports:
 
@@ -162,7 +162,7 @@ Admin → GD Munsi → Staff Assignment → Live Monitoring
 
 ---
 
-## 4️⃣ Notification History
+##  Notification History
 
 * Tracks:
 
@@ -174,7 +174,7 @@ Admin → GD Munsi → Staff Assignment → Live Monitoring
 
 ---
 
-## 5️⃣ Profile Management
+##  Profile Management
 
 * Update user details
 * Upload profile images
@@ -182,7 +182,7 @@ Admin → GD Munsi → Staff Assignment → Live Monitoring
 
 ---
 
-# ⚡ Real-Time Features
+#  Real-Time Features
 
 ### WebSocket Events
 
@@ -200,7 +200,7 @@ user_<user_id>
 
 ---
 
-# 🔔 Notification System
+#  Notification System
 
 ## Backend Flow
 
@@ -242,7 +242,7 @@ CentralizedNotifyLog:
 
 ---
 
-# 🗄️ Database Design (Simplified)
+#  Database Design (Simplified)
 
 ### User Model
 
@@ -274,9 +274,9 @@ CentralizedNotifyLog:
 
 ---
 
-# ⚙️ Installation Guide
+#  Installation Guide
 
-## 1️⃣ Clone Repository
+##  Clone Repository
 
 ```bash
 git clone https://github.com/your-repo/police-duty-management.git
@@ -285,7 +285,7 @@ cd police-duty-management
 
 ---
 
-## 2️⃣ Create Virtual Environment
+##  Create Virtual Environment
 
 ```bash
 python -m venv venv
@@ -295,7 +295,7 @@ venv\Scripts\activate      # Windows
 
 ---
 
-## 3️⃣ Install Dependencies
+##  Install Dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -303,7 +303,7 @@ pip install -r requirements.txt
 
 ---
 
-## 4️⃣ Setup Database
+##  Setup Database
 
 ```bash
 python manage.py makemigrations
@@ -312,7 +312,7 @@ python manage.py migrate
 
 ---
 
-## 5️⃣ Run Server
+##  Run Server
 
 ```bash
 python manage.py runserver
@@ -320,7 +320,7 @@ python manage.py runserver
 
 ---
 
-## 6️⃣ Run Redis (for Channels)
+##  Run Redis (for Channels)
 
 ```bash
 redis-server
@@ -328,21 +328,21 @@ redis-server
 
 ---
 
-# 🔄 Usage Flow
+#  Usage Flow
 
-### 🔹 Admin Workflow
+###  Admin Workflow
 
 ```
 Login → Create Users → Assign Duties → Monitor → Send Notifications
 ```
 
-### 🔹 GD Munsi Workflow
+###  GD Munsi Workflow
 
 ```
 View Duty → Assign Staff → Monitor Activity
 ```
 
-### 🔹 Staff Workflow
+###  Staff Workflow
 
 ```
 Receive Duty → Share Location → Execute Task
@@ -350,7 +350,7 @@ Receive Duty → Share Location → Execute Task
 
 ---
 
-# 🔐 Security Features
+#  Security Features
 
 * CSRF Protection
 * Role-based access decorators
@@ -360,18 +360,18 @@ Receive Duty → Share Location → Execute Task
 
 ---
 
-# 🚀 Future Enhancements
+#  Future Enhancements
 
-* 📱 Mobile App Integration
-* 🧠 AI-based duty optimization
-* 📊 Analytics dashboard
-* 🛰️ Offline GPS sync
-* 🔍 Advanced filtering & search
-* 📍 Geo-fencing alerts
+*  Mobile App Integration
+*  AI-based duty optimization
+*  Analytics dashboard
+*  Offline GPS sync
+*  Advanced filtering & search
+*  Geo-fencing alerts
 
 ---
 
-# 🧰 Tech Stack
+#  Tech Stack
 
 ### Backend
 
@@ -399,7 +399,7 @@ Receive Duty → Share Location → Execute Task
 
 ---
 
-# 💡 Project Highlights
+#  Project Highlights
 
 * Scalable role-based architecture
 * Real-time communication system
@@ -408,7 +408,7 @@ Receive Duty → Share Location → Execute Task
 
 ---
 
-# 💡 Project Architecture
+#  Project Architecture
 
 ### 1. FULL SYSTEM ARCHITECTURE
 ```mermaid
@@ -562,19 +562,19 @@ Channels->>Client: Push message (real-time)
 
 
 ---
-# 🤝 Contribution
+#  Contribution
 
 Feel free to fork this repository and submit pull requests.
 
 ---
 
-# 📄 License
+#  License
 
 This project is licensed under the MIT License.
 
 ---
 
-# 👨‍💻 Author
+#  Author
 
 Developed as part of a **Police Duty Management System** for efficient law enforcement operations.
 
